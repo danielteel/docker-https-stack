@@ -1,0 +1,85 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:rw
+      - ./vhost.d:/etc/nginx/vhost.d
+      - html_data:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - web
+    restart: unless-stopped
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - ./certs:/etc/nginx/certs:rw
+      - ./vhost.d:/etc/nginx/vhost.d
+      - html_data:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    networks:
+      - web
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    environment:
+      - VIRTUAL_HOST=${LETSENCRYPT_HOST}
+      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - HTTPS_METHOD=redirect
+    networks:
+      - web
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: backend
+    environment:
+      - VIRTUAL_PATH=${API_VIRTUAL_PATH}
+      - VIRTUAL_HOST=${LETSENCRYPT_HOST}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+    networks:
+      - web
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - web
+    restart: unless-stopped
+      
+  desec-ddns:
+    build: ./desec-ddns
+    container_name: desec-ddns
+    environment:
+      DESEC_TOKEN: ${DESEC_TOKEN}
+      DESEC_DOMAIN: ${DESEC_DOMAIN}
+    restart: unless-stopped
+
+networks:
+   web:  
+
+volumes:
+  postgres_data:
+  html_data:
