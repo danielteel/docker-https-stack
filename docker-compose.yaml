@@ -48,10 +48,29 @@ services:
     container_name: backend
     environment:
       - VIRTUAL_PATH=${API_VIRTUAL_PATH}
+      - VIRTUAL_PORT=${API_PORT}
       - VIRTUAL_HOST=${LETSENCRYPT_HOST}
-      - DATABASE_URL=${DATABASE_URL}
+      - API_PORT=${API_PORT}
+      - DEVICE_PORT=${DEVICE_PORT}
+      - PLAIN_DEVICE_PORT=${PLAIN_DEVICE_PORT}
+      - SUPER_PASSWORD=${SUPER_PASSWORD}
+      - SUPER_USERNAME=${SUPER_USERNAME}
+      - DOMAIN=${DOMAIN}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_PORT=${EMAIL_PORT}
     depends_on:
       - postgres
+    ports:
+      - "3000:3000"
+      - "4004:4004"
+      - "4005:4005"
     networks:
       - web
     restart: unless-stopped
@@ -64,7 +83,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
     networks:
       - web
     restart: unless-stopped

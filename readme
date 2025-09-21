@@ -1,0 +1,28 @@
+Make a .env file at top level (same as this readme) with the variables below, customized to your setup
+
+API_VIRTUAL_PATH=/api
+API_PORT=3000
+DEVICE_PORT=4004
+
+SUPER_PASSWORD=randompasswordhere
+SUPER_USERNAME=youremailhere
+
+DESEC_TOKEN=the token you get from DESEC
+
+DOMAIN=your domain (e.g. jeff.dedyn.io)
+DESEC_DOMAIN=same as DOMAIN
+LETSENCRYPT_HOST=same as DOMAIN
+
+LETSENCRYPT_EMAIL=your email for lets encrypt purposes
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=databasename
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+
+EMAIL_HOST=your email host, e.g. smtp.dreamhost.com
+EMAIL_USER=your email account, e.g. jeff@verify.jeff.com
+EMAIL_PASS=the password to the email account
+EMAIL_PORT=465
+

@@ -1,3 +1,4 @@
 certs
 vhost.d
 .env
+postgres_data
