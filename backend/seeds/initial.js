@@ -10,7 +10,7 @@ exports.seed = async function(knex) {
 
     const superUser = process.env.SUPER_USERNAME || ('super_'+generateVerificationCode(2));
     const superPass = process.env.SUPER_PASSWORD || generateVerificationCode(8);
-    console.log(`SQLite mode active: super user is ${superUser} and password is ${superPass}`);
+    console.log(`Super user is ${superUser} and password is ${superPass}`);
 
     await knex('users').insert({email: superUser, pass_hash: getHash(superPass), role: 'super'});
     //const devices=[
