@@ -10,6 +10,8 @@ services:
       - ./vhost.d:/etc/nginx/vhost.d
       - html_data:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
+    environment:
+      - TRUST_DOWNSTREAM_PROXY=false
     networks:
       - web
     restart: unless-stopped
@@ -68,11 +70,11 @@ services:
     depends_on:
       - postgres
     ports:
-      - "3000:3000"
-      - "4004:4004"
-      - "4005:4005"
+      - ${DEVICE_PORT}:${DEVICE_PORT}
+      - ${PLAIN_DEVICE_PORT}:${PLAIN_DEVICE_PORT}
     networks:
       - web
+      - database
     restart: unless-stopped
 
   postgres:
@@ -85,7 +87,7 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     networks:
-      - web
+      - database
     restart: unless-stopped
       
   desec-ddns:
@@ -97,7 +99,9 @@ services:
     restart: unless-stopped
 
 networks:
-   web:  
+   web:
+   database:
+     internal: true  
 
 volumes:
   postgres_data:
