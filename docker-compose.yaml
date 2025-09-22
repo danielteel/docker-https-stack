@@ -67,6 +67,10 @@ services:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_PORT=${EMAIL_PORT}
+      - DEVICE1_NAME=${DEVICE1_NAME}
+      - DEVICE1_KEY=${DEVICE1_KEY}
+      - DEVICE2_NAME=${DEVICE2_NAME}
+      - DEVICE2_KEY=${DEVICE2_KEY}
     depends_on:
       - postgres
     ports:
