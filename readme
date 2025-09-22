@@ -10,8 +10,8 @@ SUPER_USERNAME=youremailhere
 DESEC_TOKEN=the token you get from DESEC
 
 DOMAIN=your domain (e.g. jeff.dedyn.io)
-DESEC_DOMAIN=same as DOMAIN
-LETSENCRYPT_HOST=same as DOMAIN
+DESEC_DOMAIN=$DOMAIN
+LETSENCRYPT_HOST=$DOMAIN
 
 LETSENCRYPT_EMAIL=your email for lets encrypt purposes
 

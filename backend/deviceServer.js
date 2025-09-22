@@ -1,3 +1,4 @@
+const {encrypt, decrypt} = require('./encro');
 const crypto = require('crypto');
 const {getKnex} = require('./database');
 
@@ -10,7 +11,7 @@ let server = null;
 
 
 
-class PLAINPACKETSTATE {
+class PACKETSTATE {
     // Private Fields
     static get NAMELEN() { return 0; }
     static get NAME() { return 1; }
@@ -22,13 +23,13 @@ class PLAINPACKETSTATE {
     static get ERROR() { return 7; }
 }
 
-class PLAINNETSTATUS {
+class NETSTATUS {
     static get OPENED() { return 1; }
     static get READY() { return 2; }
     static get ERROR() { return 3; }
 }
 
-class PlainDeviceIO {
+class DeviceIO {
     static socketTimeoutTime = 30000;
     static devices=[];
     
@@ -74,8 +75,8 @@ class PlainDeviceIO {
     
         socket.on('data', this.onData);
 
-        this.netStatus=PLAINNETSTATUS.OPENED;
-        this.packetState=PLAINPACKETSTATE.NAMELEN;
+        this.netStatus=NETSTATUS.OPENED;
+        this.packetState=PACKETSTATE.NAMELEN;
 
         this.pauseReading=false;
         this.buffersWhilePaused=[];
@@ -84,14 +85,15 @@ class PlainDeviceIO {
         this.nameWriteIndex=0;
         this.name=null;
         this.key=null;
+        this.clientHandshake=Uint32Array.from([0]);
+        this.serverHandshake=Uint32Array.from([crypto.randomInt(4294967295)]); 
 
         this.payloadLength=0;
         this.payloadWriteIndex=0;
         this.payload=null;
 
         this.actions=null;
-
-        this.deviceValues={};
+        this.values={};
 
         socket.on('end', () => {
             console.log('name',this.name, this.socket.address, 'disconnected');
@@ -144,45 +146,69 @@ class PlainDeviceIO {
         this.socket.destroy();
         this.socket=null;
         this.payload=null;
-        this.packetState=PLAINPACKETSTATE.ERROR;
-        this.netStatus=PLAINNETSTATUS.ERROR;
+        this.packetState=PACKETSTATE.ERROR;
+        this.netStatus=NETSTATUS.ERROR;
         this.onDone(this);
         this.constructor.removeDevice(this);
     }
 
     sendPacket = (data) => {
         if (typeof data==='string') data=textEncoder.encode(data);
-        if (data && data.length>0xFFFFFFFF){
+        if (data && data.length>0x0FFFF0){
             console.log(this.name, 'cant send a message bigger than 0x0FFFF0');
             return false;
         }
   
+        const encryptedData = encrypt(this.serverHandshake[0], data, this.key);
         const header=new Uint8Array([0, 0, 0, 0]);
-        (new DataView(header.buffer)).setUint32(0, data.length, true);
+        (new DataView(header.buffer)).setUint32(0, encryptedData.length, true);
         this.socket.write(header);
-        this.socket.write(data);
+        this.socket.write(encryptedData);
+
+        this.serverHandshake[0]++;
+
         return true;
     }
 
-    onFullPacket = (data) => {
-        if (data){
-            if (data[0]===0xFF && data[1]===0xD8){
-                this.image=data;
-            }else if (data[0]==='i'.charCodeAt(0) && data[1]==='='.charCodeAt(0)){
-                //Device sent interface information
-                this.actions=[];
-                const actions=textDecoder.decode(data).slice(2).split(',');
-                for (const action of actions){
-                    const [title, type, commandByte] = action.split(':');
-                    this.actions.push({title, type, commandByte});
-                }
-            }else{
-                const [name, value]=textDecoder.decode(data).split('=');
-                if (name && typeof name==='string'){
-                    this.deviceValues[name]=value;
-                    console.log(name, value);
+    onFullPacket = (handshake, data) => {
+        if (this.netStatus===NETSTATUS.OPENED){                        
+            this.clientHandshake[0]=handshake;
+            this.clientHandshake[0]++;
+            this.netStatus=NETSTATUS.READY;
+            this.sendPacket(null);
+        }else{
+            if (this.clientHandshake[0]!==handshake){
+                console.log(this.name, 'incorrect handshake, exepcted '+this.clientHandshake[0]+' but recvd '+handshake);
+                this.deviceErrored();
+                return;
+            }
+            
+            if (data){
+                if (data[0]===0xFF && data[1]===0xD8){
+                    this.image=data;
+                }else if (data[0]===0xFF && data[1]===0x01){
+                    //Device sent interface information
+                    this.actions=[];
+                    const actions=textDecoder.decode(data).slice(2).split(',');
+                    for (const action of actions){
+                        const [title, type, commandByte] = action.split(':');
+                        this.actions.push({title, type, commandByte});
+                    }
+                }else{
+                    const [dataName, dataVal]=textDecoder.decode(data).split('=');
+
+                    if (dataName.toLowerCase()==='log'){
+                        getKnex()('device_logs').insert({device_id: this.deviceId, data: this.values}).then( (val) => {
+                            console.log("Device Log: ", this.values);
+                        }).catch((e)=>{
+                            console.log("Failed to store into logs", {device_id: this.deviceId, data: this.values});
+                        });
+                    }else{
+                        this.values[dataName]=dataVal;
+                    }
                 }
             }
+            this.clientHandshake[0]++;
         }
     }
 
@@ -194,11 +220,11 @@ class PlainDeviceIO {
 
         for (let i=0;i<buffer.length;i++){
             const byte=buffer[i];
-            if (this.netStatus===PLAINNETSTATUS.OPENED && this.packetState===PLAINPACKETSTATE.NAMELEN){
+            if (this.netStatus===NETSTATUS.OPENED && this.packetState===PACKETSTATE.NAMELEN){
                 this.nameLength=byte;
                 this.name="";
-                this.packetState=PLAINPACKETSTATE.NAME;
-            }else if (this.netStatus===PLAINNETSTATUS.OPENED && this.packetState===PLAINPACKETSTATE.NAME){
+                this.packetState=PACKETSTATE.NAME;
+            }else if (this.netStatus===NETSTATUS.OPENED && this.packetState===PACKETSTATE.NAME){
                 this.name+=String.fromCharCode(byte);
                 this.nameWriteIndex++;
                 if (this.nameWriteIndex>=this.nameLength){
@@ -207,19 +233,21 @@ class PlainDeviceIO {
                     if (i+1<buffer.length){
                         this.buffersWhilePaused.push(buffer.subarray(i+1));
                     }
-                    getKnex()('devices').select('encro_key').where({name: this.name}).then( (val) => {
-                        if (val && val[0] && val[0].encro_key.trim()===""){
+                    getKnex()('devices').select('encro_key', 'id').where({name: this.name}).then( (val) => {
+                        if (val && val[0] && val[0].encro_key){
+                            this.key=val[0].encro_key;
+                            this.deviceId=val[0].id;
                             if (this.constructor.isNameConnected(this.name)){
                                 this.deviceErrored();
                                 console.log('device "'+this.name+'"is already connected');
                             }else{
-                                this.packetState=PLAINPACKETSTATE.LEN1;
+                                this.packetState=PACKETSTATE.LEN1;
                                 this.unpauseIncomingData();
                                 this.constructor.addDevice(this);
                             }
                         }else{
                             this.deviceErrored();
-                            console.log('device record "'+this.name+'" with no encryption key not found');
+                            console.log('device record "'+this.name+'" not found');
                         }
                     }).catch((e)=>{
                         this.deviceErrored();
@@ -227,24 +255,24 @@ class PlainDeviceIO {
                     });
                     return;
                 }
-            }else if (this.packetState===PLAINPACKETSTATE.LEN1){
+            }else if (this.packetState===PACKETSTATE.LEN1){
                 this.payloadLength=byte;
-                this.packetState=PLAINPACKETSTATE.LEN2;
+                this.packetState=PACKETSTATE.LEN2;
 
-            }else if (this.packetState===PLAINPACKETSTATE.LEN2){
+            }else if (this.packetState===PACKETSTATE.LEN2){
                 this.payloadLength|=byte<<8;
-                this.packetState=PLAINPACKETSTATE.LEN3;
+                this.packetState=PACKETSTATE.LEN3;
 
-            }else if (this.packetState===PLAINPACKETSTATE.LEN3){
+            }else if (this.packetState===PACKETSTATE.LEN3){
                 this.payloadLength|=byte<<16;
-                this.packetState=PLAINPACKETSTATE.LEN4;
+                this.packetState=PACKETSTATE.LEN4;
 
-            }else if (this.packetState===PLAINPACKETSTATE.LEN4){
+            }else if (this.packetState===PACKETSTATE.LEN4){
                 this.payloadLength|=byte<<24;
-                this.packetState=PLAINPACKETSTATE.PAYLOAD;
+                this.packetState=PACKETSTATE.PAYLOAD;
 
-                if (this.payloadLength>0x0FFFFFFFF){
-                    console.log(this.name, 'device sent packet larger than 0x0FFFFFFFF', this.payloadLength);
+                if (this.payloadLength>0x0FFFFF){
+                    console.log(this.name, 'device sent packet larger than 0x0FFFFF', this.payloadLength);
                     this.deviceErrored();
                     return;
                 }
@@ -257,17 +285,18 @@ class PlainDeviceIO {
                 this.payload = Buffer.alloc(this.payloadLength);
                 this.payloadWriteIndex=0;
 
-            }else if (this.packetState===PLAINPACKETSTATE.PAYLOAD){
+            }else if (this.packetState===PACKETSTATE.PAYLOAD){
                 const howFar = Math.min(this.payloadLength-this.payloadWriteIndex, buffer.length-i);
                 buffer.copy(this.payload, this.payloadWriteIndex, i, howFar+i);
                 this.payloadWriteIndex+=howFar;
                 if (this.payloadWriteIndex>=this.payloadLength){
                     //Process complete packet here
                     try{
-                        this.onFullPacket(this.payload);
-                        this.packetState=PLAINPACKETSTATE.LEN1;
+                        const {data: decrypted, handshake: recvdHandshake} = decrypt(this.payload, this.key);
+                        this.onFullPacket(recvdHandshake, decrypted);
+                        this.packetState=PACKETSTATE.LEN1;
                     }catch(e){
-                        console.log('name',this.name, 'failed to process packet:', e);
+                        console.log('name',this.name, 'failed to decrypt packet:', e);
                         this.deviceErrored();
                         return;
                     }
@@ -282,16 +311,16 @@ class PlainDeviceIO {
     }
 }
 
-function createPlainDeviceServer(){
+function createDeviceServer(){
     if (server) return;
     
     server = new (require('net')).Server();
 
     server.on('connection', function(socket) {
-        new PlainDeviceIO(socket);
+        new DeviceIO(socket);
     });
 
     return server;
 }
 
-module.exports = {createPlainDeviceServer, PlainDeviceIO};
+module.exports = {createDeviceServer, DeviceIO};

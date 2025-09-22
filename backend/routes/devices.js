@@ -4,8 +4,7 @@ const { needKnex } = require('../database');
 const {getHash, verifyFields, generateVerificationCode, isLegalPassword, isHexadecimal} = require('../common/common');
 const fetch = require('node-fetch');
 
-const {DeviceIO}=require('../newDeviceServer');
-const {PlainDeviceIO}=require('../plainDeviceServer');
+const {DeviceIO}=require('../deviceServer');
 
 const router = express.Router();
 module.exports = router;
@@ -37,28 +36,6 @@ async function getAndValidateDevices(knex, userRole, wantDevIO=false){
             }catch{}
         }
     }
-
-    const connectedPlainDevices=PlainDeviceIO.getDevices();
-    for (const connectedDevice of connectedPlainDevices){
-        let isValid=false;
-        for (const device of devices){
-            if (connectedDevice?.name===device.name && ((userRole!='super' && userRole!='admin'))){
-                isValid=true;
-                if (wantDevIO) device.devio=connectedDevice;
-                device.connected=true;
-                if (connectedDevice?.actions){
-                    device.actions=connectedDevice.actions;
-                }
-                break;
-            }
-        }
-        if (!isValid){
-            try {
-                connectedDevice.onDeviceDatabaseDelete();
-            }catch{}
-        }
-    }
-
     return devices;
 }
 
@@ -80,19 +57,6 @@ async function getADevice(knex, userRole, deviceId, wantDevIO=false){
                         device.actions=connectedDevice.actions;
                     }
                     break;
-            }
-        }
-        if (!device.connected){
-            const connectedDevices=PlainDeviceIO.getDevices();
-            for (const connectedDevice of connectedDevices){
-                if (connectedDevice.name===device.name){
-                    if (wantDevIO) device.devio=connectedDevice;
-                    device.connected=true;
-                    if (connectedDevice.actions){
-                        device.actions=connectedDevice.actions;
-                    }
-                    break;
-                }
             }
         }
         return device;
@@ -138,8 +102,6 @@ router.get('/weather/:device_id', [needKnex, authenticate.bind(null, 'member')],
         if (device && device.devio){
             if (device.devio.weather){
                 return res.status(200).json(device.devio.weather);
-            }else if (device.devio.deviceValues){
-                return res.status(200).json(device.devio.deviceValues);
             }else{
                 return res.status(400).json({error: 'device hasnt sent any weather data yet'});
             }

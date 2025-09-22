@@ -10,8 +10,17 @@ exports.up = function(knex) {
     knex.schema.createTable('devices', table=>{
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
-        table.string('encro_key');
+        table.string('encro_key').notNullable();
         table.string('name').unique().notNullable();
+    }).then(()=>{});
+
+    knex.schema.createTable('device_logs', table=>{
+        table.increments('id');
+        table.timestamp('time').defaultTo(knex.fn.now());
+        table.json('data');
+        table.integer('device_id').unique().notNullable();
+
+        table.foreign('device_id').references('id').inTable('devices');
     }).then(()=>{});
 
     knex.schema.createTable('unverified_users', table => {
@@ -54,6 +63,7 @@ exports.up = function(knex) {
 exports.down = function(knex) {
     knex.schema.dropTableIfExists('crypto').then(()=>{});
     knex.schema.dropTableIfExists('devices').then(()=>{});
+    knex.schema.dropTableIfExists('device_logs').then(()=>{});
     knex.schema.dropTableIfExists('unverified_users').then(()=>{});
     knex.schema.dropTableIfExists('users').then(()=>{});
     knex.schema.dropTableIfExists('user_changepassword').then(()=>{});
