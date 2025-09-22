@@ -18,7 +18,7 @@ exports.up = function(knex) {
         table.increments('id');
         table.timestamp('time').defaultTo(knex.fn.now());
         table.json('data');
-        table.integer('device_id').unique().notNullable();
+        table.integer('device_id').notNullable();
 
         table.foreign('device_id').references('id').inTable('devices');
     }).then(()=>{});

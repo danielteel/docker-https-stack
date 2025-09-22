@@ -13,8 +13,5 @@ exports.seed = async function(knex) {
     console.log(`Super user is ${superUser} and password is ${superPass}`);
 
     await knex('users').insert({email: superUser, pass_hash: getHash(superPass), role: 'super'});
-    //const devices=[
-    //];
 
-    //await knex('devices').insert(devices);
 };

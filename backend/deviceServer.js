@@ -199,7 +199,7 @@ class DeviceIO {
 
                     if (dataName.toLowerCase()==='log'){
                         getKnex()('device_logs').insert({device_id: this.deviceId, data: this.values}).then( (val) => {
-                            console.log("Device Log: ", this.values);
+                            console.log("Device Log: ", new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  this.values);
                         }).catch((e)=>{
                             console.log("Failed to store into logs", {device_id: this.deviceId, data: this.values});
                         });
