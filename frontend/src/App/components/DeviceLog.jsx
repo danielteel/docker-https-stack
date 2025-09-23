@@ -7,7 +7,6 @@ import { LineChart } from '@mui/x-charts';
 export default function DeviceLog({ deviceId }) {
     const { api } = useAppContext();
     const [log, setLog] = useState(null);
-    const [ticks, setTicks] = useState([]);
 
 
     useEffect(() => {
@@ -23,21 +22,14 @@ export default function DeviceLog({ deviceId }) {
             if (cancel) return;
             let [passed, fetchedLogs, ] = await getLast24HoursLog(deviceId);
             if (passed && Array.isArray(fetchedLogs)) {
-                const newTicks=[];
-                const mappedLogs = fetchedLogs.map(log => {
-                    const time=new Date(log.time);
-                    newTicks.push(time);
-                    return ({
-                    time: time,
+                const mappedLogs = fetchedLogs.map(log => ({
+                    time: new Date(log.time),
                     humidity: Number(log.data.humidity),
                     temperature: Number(log.data.temperature),
-                })});
+                }));
                 setLog(mappedLogs);
-                console.log(mappedLogs);
-                setTicks(newTicks);
             } else {
                 setLog(null);
-                setTicks([]);
             }
         }
         getLog();
@@ -49,7 +41,7 @@ export default function DeviceLog({ deviceId }) {
 
     return (
         <LineChart
-            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', ticks: ticks }]}
+            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', tickMinStep: 60*1000, tickMaxStep: 60*1000 }]}
             series={[
                 { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false, connectNulls: false },
                 { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false, connectNulls: false },
