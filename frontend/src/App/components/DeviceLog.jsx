@@ -42,12 +42,14 @@ export default function DeviceLog({ deviceId }) {
 
     return (
         <LineChart
-            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time' }]}
+            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time',  }]}
             series={[
                 { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false, connectNulls: false },
                 { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false, connectNulls: false },
             ]}
             dataset={log || []}
+            height={600}
+            tooltip={{ trigger: 'axis' }}
         />
     );
 }
