@@ -3,13 +3,13 @@ import Avatar from '@mui/material/Avatar';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/GridLegacy';
 import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { LoadingButton } from '@mui/lab';
-import { Alert, Stack } from '@mui/material';
+import { Alert } from '@mui/material';
 
 import { Link as WouterLink } from 'wouter';
 import Copyright from '../common/Copyright';
@@ -86,10 +86,14 @@ export default function Login() {
                     <Alert severity='error' style={{width:'100%', ...(error?{}:{display:'none'})}}>{error}</Alert>
                     <LoadingButton loading={inProgress} type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>Sign In</LoadingButton>
 
-                    <Stack>
-                        <WouterLink href="/forgotpassword" variant="body2">Forgot password?</WouterLink>
-                        <WouterLink href="/signup" variant="body2">Don't have an account? Sign Up</WouterLink>
-                    </Stack>
+                    <Grid container>
+                        <Grid item xs>
+                            <WouterLink href="/forgotpassword" variant="body2">Forgot password?</WouterLink>
+                        </Grid>
+                        <Grid item>
+                            <WouterLink href="/signup" variant="body2">Don't have an account? Sign Up</WouterLink>
+                        </Grid>
+                    </Grid>
                 </Box>
             </Box>
             <Copyright sx={{ mt: 8, mb: 4 }} />

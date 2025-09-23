@@ -5,7 +5,7 @@ import Button from '@mui/material/Button';
 import Title from './Title';
 import { useAppContext } from '../../contexts/AppContext';
 import { Container } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/GridLegacy';
 import Box from '@mui/material/Box';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import Snackbar from '@mui/material/Snackbar';

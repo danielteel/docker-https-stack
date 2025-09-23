@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 import Title from './Title';
 import { useAppContext } from '../../contexts/AppContext';
 import { Container } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/GridLegacy';
 import EditIcon from '@mui/icons-material/Edit';
 import IconButton from '@mui/material/IconButton';
 import UserEditDialog from './UserEditDialog';
