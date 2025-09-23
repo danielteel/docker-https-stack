@@ -1,4 +1,4 @@
-const equal = require('fast-deep-equal');
+import equal from 'fast-deep-equal';
 
 let lastDevices=[];
 

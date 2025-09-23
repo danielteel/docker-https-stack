@@ -1,13 +1,12 @@
-import { Provider } from "@/components/ui/provider"
-import { StrictMode } from 'react'
+import React from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import { CssBaseline } from '@mui/material';
+import Index from './Index';
+
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Provider>
-      <App />
-    </Provider>
-  </StrictMode>,
+  <React.StrictMode>
+      <CssBaseline />
+      <Index/>
+  </React.StrictMode>,
 )
