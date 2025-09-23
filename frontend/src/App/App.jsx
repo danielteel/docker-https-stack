@@ -111,11 +111,9 @@ function hrefMatchesLocation(href, location){
 
 const navigationItems = [
     {text: 'home',          href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
-    {text: 'video',         href: '/video',    minRole:'member',        icon: <OndemandVideoIcon/>},
     {text: 'devices',       href: '/devices',  minRole:'member',        icon: <SettingsRemoteIcon/>},
-    {text: 'users',         href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
-    {text: 'settings',      href: '/settings', minRole:'admin',         icon: <DisplaySettingsIcon/>},
     {text: 'managedevices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
+    {text: 'users',         href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
     {text: 'profile',       href: '/profile',  minRole:'unverified',    icon: <AccountCircleIcon/>},
 ];
 
