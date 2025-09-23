@@ -41,7 +41,7 @@ export default function DeviceLog({ deviceId }) {
 
     return (
         <LineChart
-            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', tickMinStep: 60*1000, tickMaxStep: 60*1000 }]}
+            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', tickMinStep: 60*1000, tickNumber: 3600 }]}
             series={[
                 { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false, connectNulls: false },
                 { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false, connectNulls: false },
@@ -49,6 +49,7 @@ export default function DeviceLog({ deviceId }) {
             dataset={log || []}
             height={600}
             tooltip={{ trigger: 'axis' }}
+            axisHighlight={{ x: 'line' }}
         />
     );
 }
