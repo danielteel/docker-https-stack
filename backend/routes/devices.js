@@ -110,7 +110,7 @@ router.get('/log/:device_id/:start_time/:end_time', [needKnex, authenticate.bind
         if (isNaN(Date.parse(endTime))) return res.status(400).json({error: 'invalid end time'});
 
     
-        const log = await req.knex('device_logs').select(['time', 'data']).where('device_id', deviceId).andWhere('time', '>=', startTime).andWhere('time', '<=', endTime).orderBy('time', 'desc');
+        const log = await req.knex('device_logs').select(['time', 'data']).where('device_id', deviceId).andWhere('time', '>=', startTime).andWhere('time', '<=', endTime).orderBy('time', 'asc');
 
         res.json(log);
     }catch(e){
