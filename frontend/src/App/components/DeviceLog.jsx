@@ -48,6 +48,7 @@ export default function DeviceLog({ deviceId }) {
             ]}
             dataset={log || []}
             height={600}
+            tooltip={{ trigger: 'axis' }}
         />
     );
 }
