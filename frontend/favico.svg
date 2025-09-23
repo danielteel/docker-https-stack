@@ -1,0 +1,32 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded square background -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+
+  <!-- House outline -->
+  <path d="M18 36 L32 22 L46 36" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 36 V50 H46 V36" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Interior 50/50 divider -->
+  <line x1="32" y1="36" x2="32" y2="50" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Left side: minimalist lightbulb (silhouette) -->
+  <!-- Bulb glass -->
+  <circle cx="26" cy="43" r="5.5" fill="#000000"/>
+  <!-- Bulb base -->
+  <rect x="23.5" y="48.5" width="5" height="2.5" rx="1" fill="#000000"/>
+
+  <!-- Right side: minimalist hub icon -->
+  <!-- Central hollow node -->
+  <circle cx="38" cy="43" r="4.5" fill="none" stroke="#000000" stroke-width="3"/>
+  <!-- Connectors -->
+  <line x1="38" y1="38" x2="38" y2="34" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="38" y1="48" x2="38" y2="52" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="42" y1="43" x2="46" y2="43" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <line x1="34" y1="43" x2="32.5" y2="43" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Peripheral solid nodes -->
+  <circle cx="38" cy="32.5" r="2.2" fill="#000000"/>
+  <circle cx="38" cy="53.5" r="2.2" fill="#000000"/>
+  <circle cx="48" cy="43" r="2.2" fill="#000000"/>
+  <circle cx="31" cy="43" r="2.2" fill="#000000"/>
+</svg>
