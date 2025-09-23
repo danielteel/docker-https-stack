@@ -47,7 +47,7 @@ export default function DeviceLog({ deviceId }) {
                 { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue' },
                 { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red' },
             ]}
-            dataset={log}
+            dataset={log || []}
             width={600}
             height={300}
         />
