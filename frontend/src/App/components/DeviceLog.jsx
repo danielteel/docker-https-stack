@@ -24,10 +24,11 @@ export default function DeviceLog({ deviceId }) {
             if (passed && Array.isArray(fetchedLogs)) {
                 const mappedLogs = fetchedLogs.map(log => ({
                     time: new Date(log.time),
-                    humidity: log.data.humidity,
-                    temperature: log.data.temperature,
+                    humidity: Number(log.data.humidity),
+                    temperature: Number(log.data.temperature),
                 }));
                 setLog(mappedLogs);
+                console.log(mappedLogs);
             } else {
                 setLog(null);
             }
@@ -46,7 +47,7 @@ export default function DeviceLog({ deviceId }) {
                 { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue' },
                 { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red' },
             ]}
-            dataset={log || []}
+            dataset={log}
             width={600}
             height={300}
         />
