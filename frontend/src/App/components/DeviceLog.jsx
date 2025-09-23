@@ -41,10 +41,10 @@ export default function DeviceLog({ deviceId }) {
 
     return (
         <LineChart
-            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', tickMinStep: 60*1000, tickNumber: 3600 }]}
+            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
             series={[
-                { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false, connectNulls: false },
-                { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false, connectNulls: false },
+                { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
+                { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
             ]}
             dataset={log || []}
             height={600}
