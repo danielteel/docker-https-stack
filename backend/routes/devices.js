@@ -98,9 +98,10 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
 //Times should be in UTC
 router.get('/log/:device_id/:start_time/:end_time', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
     try {
-        let [fieldCheck, deviceId] = verifyFields(req.params, ['device_id:number']);
+        let [fieldCheck, deviceId] = verifyFields(req.params, ['device_id:string']);
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
         
+        deviceId=Number(deviceId);
         const startTime=req.params.start_time;
         const endTime=req.params.end_time;
 

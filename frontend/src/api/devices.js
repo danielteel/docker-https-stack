@@ -166,7 +166,7 @@ export async function devicesAction(id, action, data){
 
 export async function devicesLog(id, startTime, endTime){
     try {
-        const response = await fetch('/api/devices/log/'+Number(id)+'/'+startTime+'/'+endTime, {credentials: 'include', method: 'GET', cache: 'no-cache'});
+        const response = await fetch('/api/devices/log/'+id+'/'+startTime+'/'+endTime, {credentials: 'include', method: 'GET', cache: 'no-cache'});
         const message = await response.json();
         console.log(message);
         return [response.status>=200 && response.status<=299, await response.json(), response.status];
