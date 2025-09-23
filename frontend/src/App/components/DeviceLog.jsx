@@ -20,7 +20,7 @@ export default function DeviceLog({ deviceId }) {
 
         async function getLog() {
             if (cancel) return;
-            let [passed, fetchedLogs] = await getLast24HoursLog(deviceId);
+            let [passed, fetchedLogs, ] = await getLast24HoursLog(deviceId);
             if (passed && Array.isArray(fetchedLogs)) {
                 const mappedLogs = fetchedLogs.map(log => ({
                     time: new Date(log.time),
