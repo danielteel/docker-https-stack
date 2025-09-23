@@ -15,7 +15,7 @@ export default function DeviceLog({ deviceId }) {
         async function getLast24HoursLog(deviceId) {
             const endTime = new Date().toISOString(); // now, in UTC ISO format
             const startTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 24 hours ago
-            return await api.devicesLog(deviceId, startTime, endTime);
+            return await api.devicesLog(Number(deviceId), startTime, endTime);
         }
 
         async function getLog() {
