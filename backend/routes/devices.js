@@ -94,22 +94,26 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
     }
 });
 
-router.get('/weather/:device_id', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
+
+//Times should be in UTC
+router.get('/log/:device_id/:start_time/:end_time', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
     try {
-        const device_id = Number(req.params.device_id);
+        let [fieldCheck, deviceId] = verifyFields(req.params, ['device_id:number']);
+        if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
+        
+        const startTime=req.params.start_time;
+        const endTime=req.params.end_time;
 
-        const device=await getADevice(req.knex, req.user.role, device_id, true);
-        if (device && device.devio){
-            if (device.devio.weather){
-                return res.status(200).json(device.devio.weather);
-            }else{
-                return res.status(400).json({error: 'device hasnt sent any weather data yet'});
-            }
-        }
+        //check if start time and end time is valid
+        if (isNaN(Date.parse(startTime))) return res.status(400).json({error: 'invalid start time'});
+        if (isNaN(Date.parse(endTime))) return res.status(400).json({error: 'invalid end time'});
 
-        return res.status(400).json({error: 'invalid device id or its not connected'});
+    
+        const log = await req.knex('device_logs').select(['time', 'data']).where('device_id', deviceId).andWhere('time', '>=', startTime).andWhere('time', '<=', endTime).orderBy('time', 'desc');
+
+        res.json(log);
     }catch(e){
-        console.error('ERROR GET /devices/weather', req.body, e);
+        console.error('ERROR GET /log', req.params, e);
         return res.status(400).json({error: 'error'});
     }
 });

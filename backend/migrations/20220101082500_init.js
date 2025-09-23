@@ -16,7 +16,7 @@ exports.up = function(knex) {
 
     knex.schema.createTable('device_logs', table=>{
         table.increments('id');
-        table.timestamp('time').defaultTo(knex.fn.now());
+        table.timestamp('time', { useTz: true }).defaultTo(knex.fn.now());
         table.json('data');
         table.integer('device_id').notNullable();
 

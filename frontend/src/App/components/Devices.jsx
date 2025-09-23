@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { Button, Card, CardContent, CardHeader, CardMedia, CardActions, FormControlLabel, FormGroup, Input, Stack, Paper } from '@mui/material';
 import Switch from '@mui/material/Switch';
-import { devicesWeather } from '../../api/devices';
+import DeviceLog from './DeviceLog';
 
 export default function Devices(){
     const [devices, setDevices] = useState(null);
@@ -13,7 +12,6 @@ export default function Devices(){
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [showActions, setShowActions] = useState(false);
     const imgRef = useRef(null);
-    const [weather, setWeather] = useState({});
 
     useEffect(() => {
         let timeoutId = null;
@@ -26,7 +24,6 @@ export default function Devices(){
                 setDevices(fetchedDevices);
                 if (fetchedDevices.length){
                     setSelectedDevice(fetchedDevices[0]);        
-                    setWeather({});
                 }
             } else {
                 timeoutId = setTimeout(getDevices, 2000);
@@ -77,12 +74,6 @@ export default function Devices(){
         async function loadNext(){
             if (cancelling) return;
             await updateImage();
-            const [success, values]=await devicesWeather(selectedDevice.device_id);
-            if (success){
-                setWeather(values);
-            }else{
-                setWeather({});
-            }
             timeoutId=setTimeout(loadNext, 2000);
         }
 
@@ -101,7 +92,6 @@ export default function Devices(){
 
     const handleChange = (event, newValue) => {
         setSelectedDevice(newValue);
-        setWeather({});
     };
 
     return <>
@@ -123,15 +113,6 @@ export default function Devices(){
                         </FormGroup>
                     </CardActions>
                     <CardContent>
-                        <Stack>
-                            {
-                                Object.entries(weather || {}).map( ([k, v])=>{
-                                    return  <Paper>
-                                                {k+': '+v}
-                                            </Paper>
-                                })
-                            }
-                        </Stack>
                     {
                         !showActions ?
                             null
@@ -157,6 +138,7 @@ export default function Devices(){
                             }
                             </Stack>
                         }
+                        <DeviceLog deviceId={selectedDevice.device_id}/>
                     </CardContent>
                 </Card>
         }

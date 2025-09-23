@@ -25,8 +25,8 @@ export async function devicesList(){
             return [false, devices, response.status];
         }
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
 }
 
 export async function devicesImage(id){
@@ -44,18 +44,10 @@ export async function devicesImage(id){
             return [false, null, response.status];
         }
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
 }
 
-export async function devicesWeather(id){
-    try {
-        const response = await fetch('/api/devices/weather/'+id, {credentials: 'include', method: 'GET', cache: 'no-cache'});
-        return [response.status>=200 && response.status<=299, await response.json(), response.status];
-    }catch(e){
-    }
-    return [false, 'failed', 400];
-}
 
 export async function devicesAdd(name, encroKey){
     try{
@@ -87,8 +79,8 @@ export async function devicesAdd(name, encroKey){
             return [false, devices, response.status];
         }
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
 }
 export async function devicesUpdate(id, name, encroKey){
     try{
@@ -120,8 +112,8 @@ export async function devicesUpdate(id, name, encroKey){
             return [false, devices, response.status];
         }
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
 }
 export async function devicesDelete(id){
     try{
@@ -153,8 +145,8 @@ export async function devicesDelete(id){
             return [false, devices, response.status];
         }
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
 }
 export async function devicesAction(id, action, data){
     try{
@@ -168,6 +160,15 @@ export async function devicesAction(id, action, data){
         const response = await fetch('/api/devices/action', options);
         return [response.status>=200 && response.status<=299, true, response.status];
     }catch(e){
+        return [false, 'failed', 400];
     }
-    return [false, 'failed', 400];
+}
+
+export async function devicesLog(id, startTime, endTime){
+    try {
+        const response = await fetch('/api/devices/log/'+id+'/'+startTime+'/'+endTime, {credentials: 'include', method: 'GET', cache: 'no-cache'});
+        return [response.status>=200 && response.status<=299, await response.json(), response.status];
+    }catch(e){
+        return [false, 'failed', 400];
+    }
 }
