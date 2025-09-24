@@ -45,11 +45,21 @@ export default function DeviceLog({ deviceId }) {
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
-                    { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
                     { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
                 ]}
                 dataset={log || []}
-                height={600}
+                height={300}
+                tooltip={{ trigger: 'axis' }}
+                axisHighlight={{ x: 'line' }}
+                grid={{ vertical: true, horizontal: true }}
+            />
+            <LineChart
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
+                series={[
+                    { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
+                ]}
+                dataset={log || []}
+                height={300}
                 tooltip={{ trigger: 'axis' }}
                 axisHighlight={{ x: 'line' }}
                 grid={{ vertical: true, horizontal: true }}
