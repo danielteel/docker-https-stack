@@ -6,7 +6,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
 import { LineChart } from '@mui/x-charts';
-import { Container } from '@mui/material';
+import { Button, Container } from '@mui/material';
 
 
 
@@ -79,7 +79,7 @@ export default function DeviceLog({ deviceId }) {
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
                 />
-            </LocalizationProvider>            
+            </LocalizationProvider> 
             <Button onClick={()=>{
                 setEndDate(dayjs(new Date()));
                 setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
