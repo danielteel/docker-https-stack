@@ -138,7 +138,7 @@ export default function Devices(){
                             }
                             </Stack>
                         }
-                        <DeviceLog deviceId={selectedDevice.device_id}/>
+                        <Button href={'/devicelog/'+selectedDevice.device_id}>Device Log</Button>
                     </CardContent>
                 </Card>
         }

@@ -1,6 +1,7 @@
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
 import { LineChart } from '@mui/x-charts';
+import { Container } from '@mui/material';
 
 
 
@@ -40,16 +41,19 @@ export default function DeviceLog({ deviceId }) {
     }, [deviceId, api]);
 
     return (
-        <LineChart
-            xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
-            series={[
-                { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
-                { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
-            ]}
-            dataset={log || []}
-            height={600}
-            tooltip={{ trigger: 'axis' }}
-            axisHighlight={{ x: 'line' }}
-        />
+        <Container maxWidth='xl'>
+            <LineChart
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
+                series={[
+                    { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
+                    { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
+                ]}
+                dataset={log || []}
+                height={600}
+                tooltip={{ trigger: 'axis' }}
+                axisHighlight={{ x: 'line' }}
+                grid={{ vertical: true, horizontal: true }}
+            />
+        </Container>
     );
 }
