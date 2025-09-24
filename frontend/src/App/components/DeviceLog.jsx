@@ -116,7 +116,7 @@ export default function DeviceLog({ deviceId }) {
             </ButtonGroup>
 
             <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', valueFormatter: (value) => (new Date(value).toLocaleString()) }]}
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
                     { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
                 ]}
