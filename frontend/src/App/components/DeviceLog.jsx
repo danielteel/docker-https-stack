@@ -79,7 +79,27 @@ export default function DeviceLog({ deviceId }) {
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
                 />
-            </LocalizationProvider>
+            </LocalizationProvider>            
+            <Button onClick={()=>{
+                setEndDate(dayjs(new Date()));
+                setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
+            }}>Last 7 Days</Button>            
+            <Button onClick={()=>{
+                setEndDate(dayjs(new Date()));
+                setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
+            }}>Last 24 hours</Button>
+            <Button onClick={()=>{
+                setEndDate(dayjs(new Date()));
+                setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
+            }}>Last 12 hours</Button>            
+            <Button onClick={()=>{
+                setEndDate(dayjs(new Date()));
+                setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
+            }}>Last 6 hours</Button>            
+            <Button onClick={()=>{
+                setEndDate(dayjs(new Date()));
+                setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
+            }}>Last 3 hours</Button>
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
