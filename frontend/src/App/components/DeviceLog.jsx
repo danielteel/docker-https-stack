@@ -32,7 +32,7 @@ export default function DeviceLog({ deviceId }) {
         }else{
             _setEndDate(newValue);
         }  
-    
+    }
 
 
     useEffect(() => {
