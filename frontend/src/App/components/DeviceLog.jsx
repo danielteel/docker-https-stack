@@ -1,3 +1,8 @@
+import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimeRangePicker } from '@mui/x-date-pickers-pro/DateTimeRangePicker';
+
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
 import { LineChart } from '@mui/x-charts';
@@ -8,14 +13,17 @@ import { Container } from '@mui/material';
 export default function DeviceLog({ deviceId }) {
     const { api } = useAppContext();
     const [log, setLog] = useState(null);
-
+    const [dateRange, setDateRange] = useState([
+        dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)),
+        dayjs(new Date())
+    ]);
 
     useEffect(() => {
         let cancel = false;
 
         async function getLast24HoursLog(deviceId) {
-            const endTime = new Date().toISOString(); // now, in UTC ISO format
-            const startTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 24 hours ago
+            const startTime = dateRange[0].toDate().toISOString(); // 24 hours ago
+            const endTime = dateRange[1].toDate().toISOString(); // now, in UTC ISO format
             return await api.devicesLog(deviceId, startTime, endTime);
         }
 
@@ -38,10 +46,17 @@ export default function DeviceLog({ deviceId }) {
         return () => {
             cancel = true;
         }
-    }, [deviceId, api]);
+    }, [deviceId, dateRange, api]);
 
     return (
         <Container maxWidth='xl'>
+            
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimeRangePicker
+                value={dateRange}
+                onChange={(newValue) => setDateRange(newValue)}
+            />
+        </LocalizationProvider>
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
