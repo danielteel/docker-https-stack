@@ -44,7 +44,7 @@ export default function DeviceLog({ deviceId }) {
         return () => {
             cancel = true;
         }
-    }, [deviceId, dateRange, api]);
+    }, [deviceId, startDate, endDate, api]);
 
     return (
         <Container maxWidth='xl'>
