@@ -76,14 +76,14 @@ export default function DeviceLog({ deviceId }) {
                     justifyContent: "center",
                     alignItems: "center",
                 }}>
-                    <Grid size={6} alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                    <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
                         <DateTimePicker
                             label="Start Date & Time"
                             value={startDate}
                             onChange={(newValue) => setStartDate(newValue)}
                         />
                     </Grid>
-                    <Grid size={6} alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                    <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
                         <DateTimePicker
                             label="End Date & Time"
                             value={endDate}
