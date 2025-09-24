@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimeRangePicker } from '@mui/x-date-pickers-pro/DateTimeRangePicker';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
@@ -13,17 +13,15 @@ import { Container } from '@mui/material';
 export default function DeviceLog({ deviceId }) {
     const { api } = useAppContext();
     const [log, setLog] = useState(null);
-    const [dateRange, setDateRange] = useState([
-        dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)),
-        dayjs(new Date())
-    ]);
+    const [startDate, setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
+    const [endDate, setEndDate] = useState(dayjs(new Date()));
 
     useEffect(() => {
         let cancel = false;
 
         async function getLast24HoursLog(deviceId) {
-            const startTime = dateRange[0].toDate().toISOString(); // 24 hours ago
-            const endTime = dateRange[1].toDate().toISOString(); // now, in UTC ISO format
+            const startTime = startDate.toDate().toISOString(); // 24 hours ago
+            const endTime = endDate.toDate().toISOString(); // now, in UTC ISO format
             return await api.devicesLog(deviceId, startTime, endTime);
         }
 
@@ -51,12 +49,18 @@ export default function DeviceLog({ deviceId }) {
     return (
         <Container maxWidth='xl'>
             
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimeRangePicker
-                value={dateRange}
-                onChange={(newValue) => setDateRange(newValue)}
-            />
-        </LocalizationProvider>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateTimePicker
+                    label="Start Date & Time"
+                    value={startDate}
+                    onChange={(newValue) => setStartDate(newValue)}
+                />
+                <DateTimePicker
+                    label="End Date & Time"
+                    value={endDate}
+                    onChange={(newValue) => setEndDate(newValue)}
+                />
+            </LocalizationProvider>
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
