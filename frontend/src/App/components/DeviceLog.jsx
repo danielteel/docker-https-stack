@@ -6,7 +6,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
 import { LineChart } from '@mui/x-charts';
-import { Button, Container } from '@mui/material';
+import { Button, ButtonGroup, Container, Grid } from '@mui/material';
 
 
 
@@ -69,37 +69,52 @@ export default function DeviceLog({ deviceId }) {
         <Container maxWidth='xl'>
             
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DateTimePicker
-                    label="Start Date & Time"
-                    value={startDate}
-                    onChange={(newValue) => setStartDate(newValue)}
-                />
-                <DateTimePicker
-                    label="End Date & Time"
-                    value={endDate}
-                    onChange={(newValue) => setEndDate(newValue)}
-                />
+                <Grid 
+                container
+                spacing={0.5}   
+                sx={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}>
+                    <Grid size={6}>
+                        <DateTimePicker
+                            label="Start Date & Time"
+                            value={startDate}
+                            onChange={(newValue) => setStartDate(newValue)}
+                        />
+                    </Grid>
+                    <Grid size={6}>
+                        <DateTimePicker
+                            label="End Date & Time"
+                            value={endDate}
+                            onChange={(newValue) => setEndDate(newValue)}
+                        />
+                    </Grid>
+                </Grid>
             </LocalizationProvider> 
-            <Button onClick={()=>{
-                setEndDate(dayjs(new Date()));
-                setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
-            }}>Last 7 Days</Button>            
-            <Button onClick={()=>{
-                setEndDate(dayjs(new Date()));
-                setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
-            }}>Last 24 hours</Button>
-            <Button onClick={()=>{
-                setEndDate(dayjs(new Date()));
-                setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
-            }}>Last 12 hours</Button>            
-            <Button onClick={()=>{
-                setEndDate(dayjs(new Date()));
-                setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
-            }}>Last 6 hours</Button>            
-            <Button onClick={()=>{
-                setEndDate(dayjs(new Date()));
-                setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
-            }}>Last 3 hours</Button>
+            <ButtonGroup>
+                <Button onClick={()=>{
+                    setEndDate(dayjs(new Date()));
+                    setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
+                }}>Last 7 Days</Button>            
+                <Button onClick={()=>{
+                    setEndDate(dayjs(new Date()));
+                    setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
+                }}>Last 24 hours</Button>
+                <Button onClick={()=>{
+                    setEndDate(dayjs(new Date()));
+                    setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
+                }}>Last 12 hours</Button>            
+                <Button onClick={()=>{
+                    setEndDate(dayjs(new Date()));
+                    setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
+                }}>Last 6 hours</Button>            
+                <Button onClick={()=>{
+                    setEndDate(dayjs(new Date()));
+                    setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
+                }}>Last 3 hours</Button>
+            </ButtonGroup>
+
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
