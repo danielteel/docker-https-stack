@@ -7,6 +7,7 @@ import Profile from "./components/Profile";
 
 import Devices from './components/Devices';
 import ManageDevices from './components/ManageDevices';
+import DeviceLog from "./components/DeviceLog";
 
 
 function RedirectWithParams({to, params}){
