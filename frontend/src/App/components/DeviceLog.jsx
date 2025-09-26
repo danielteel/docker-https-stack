@@ -120,12 +120,10 @@ export default function DeviceLog({ deviceId }) {
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
-                    {id: 'sync', dataKey: 'temperature', highlightScope:{highlight:'item', fade:'global'}, label: 'Temp (°F)', color: 'red', showMark: false},
+                    {id: 'sync', dataKey: 'temperature', label: 'Temp (°F)', color: 'red', showMark: false},
                 ]}
                 dataset={log || []}
                 height={300}
-                tooltip={{ trigger: 'axis' }}
-                axisHighlight={{ x: 'line' }}
                 grid={{ vertical: true, horizontal: true }}
                 highlightedItem={highlightedItem}
                 onHighlightChange={setHighlightedItem}
@@ -133,12 +131,10 @@ export default function DeviceLog({ deviceId }) {
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 series={[
-                    {id: 'sync', dataKey: 'humidity', highlightScope:{highlight:'item', fade:'global'}, label: 'Humidity (%RH)', color: 'blue', showMark: false},
+                    {id: 'sync', dataKey: 'humidity', label: 'Humidity (%RH)', color: 'blue', showMark: false},
                 ]}
                 dataset={log || []}
                 height={300}
-                tooltip={{ trigger: 'axis' }}
-                axisHighlight={{ x: 'line' }}
                 grid={{ vertical: true, horizontal: true }}
                 highlightedItem={highlightedItem}
                 onHighlightChange={setHighlightedItem}
