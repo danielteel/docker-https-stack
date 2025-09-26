@@ -6,7 +6,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useAppContext } from '../../contexts/AppContext';
 import { useEffect, useState } from "react";
 import { LineChart } from '@mui/x-charts';
-import { Button, ButtonGroup, Container, Grid } from '@mui/material';
+import { Button, ButtonGroup, Container, Grid, Stack } from '@mui/material';
 
 
 
@@ -68,53 +68,54 @@ export default function DeviceLog({ deviceId }) {
 
     return (
         <Container maxWidth='xl'>
-            
-            <Grid 
-            container
-            spacing={0.5}   
-            sx={{
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                            <DateTimePicker
-                                label="Start Date & Time"
-                                value={startDate}
-                                onChange={(newValue) => setStartDate(newValue)}
-                            />
-                        </Grid>
-                        <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                            <DateTimePicker
-                                label="End Date & Time"
-                                value={endDate}
-                                onChange={(newValue) => setEndDate(newValue)}
-                            />
-                        </Grid>
-                </LocalizationProvider> 
-            </Grid>
-            <ButtonGroup>
-                <Button onClick={()=>{
-                    setEndDate(dayjs(new Date()));
-                    setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
-                }}>Last 7 Days</Button>            
-                <Button onClick={()=>{
-                    setEndDate(dayjs(new Date()));
-                    setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
-                }}>Last 24 hours</Button>
-                <Button onClick={()=>{
-                    setEndDate(dayjs(new Date()));
-                    setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
-                }}>Last 12 hours</Button>            
-                <Button onClick={()=>{
-                    setEndDate(dayjs(new Date()));
-                    setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
-                }}>Last 6 hours</Button>            
-                <Button onClick={()=>{
-                    setEndDate(dayjs(new Date()));
-                    setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
-                }}>Last 3 hours</Button>
-            </ButtonGroup>
+            <Stack>
+                <Grid 
+                container
+                spacing={0.5}   
+                sx={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                                <DateTimePicker
+                                    label="Start Date & Time"
+                                    value={startDate}
+                                    onChange={(newValue) => setStartDate(newValue)}
+                                />
+                            </Grid>
+                            <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                                <DateTimePicker
+                                    label="End Date & Time"
+                                    value={endDate}
+                                    onChange={(newValue) => setEndDate(newValue)}
+                                />
+                            </Grid>
+                    </LocalizationProvider> 
+                </Grid>
+                <ButtonGroup>
+                    <Button onClick={()=>{
+                        setEndDate(dayjs(new Date()));
+                        setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
+                    }}>Last 7 Days</Button>            
+                    <Button onClick={()=>{
+                        setEndDate(dayjs(new Date()));
+                        setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
+                    }}>Last 24 hours</Button>
+                    <Button onClick={()=>{
+                        setEndDate(dayjs(new Date()));
+                        setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
+                    }}>Last 12 hours</Button>            
+                    <Button onClick={()=>{
+                        setEndDate(dayjs(new Date()));
+                        setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
+                    }}>Last 6 hours</Button>            
+                    <Button onClick={()=>{
+                        setEndDate(dayjs(new Date()));
+                        setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
+                    }}>Last 3 hours</Button>
+                </ButtonGroup>
+            </Stack>
 
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
@@ -124,7 +125,6 @@ export default function DeviceLog({ deviceId }) {
                 dataset={log || []}
                 height={300}
                 grid={{ vertical: true, horizontal: true }}
-                showToolbar={true}
             />
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
@@ -134,7 +134,6 @@ export default function DeviceLog({ deviceId }) {
                 dataset={log || []}
                 height={300}
                 grid={{ vertical: true, horizontal: true }}
-                showToolbar={true}
             />
         </Container>
     );
