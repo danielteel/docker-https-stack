@@ -15,6 +15,7 @@ export default function DeviceLog({ deviceId }) {
     const [log, setLog] = useState(null);
     const [startDate, _setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
     const [endDate, _setEndDate] = useState(dayjs(new Date()));
+    const [highlightedItem, setHighlightedItem] = useState(null);
 
     const setStartDate = (newValue) => {
         if (newValue>endDate){
@@ -117,17 +118,29 @@ export default function DeviceLog({ deviceId }) {
 
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
-                yAxis={[{id:'leftAxis', scaleType:'linear', position:'left'},
-                        {id:"rightAxis", scaleType:'linear', position:'right'}]}
                 series={[
-                    { yAxisId:'leftAxis', dataKey: 'temperature', label: 'Temp (°F)', color: 'red', showMark: false},
-                    { yAxisId:'rightAxis', dataKey: 'humidity', label: 'Humidity (%RH)', color: 'blue', showMark: false},
+                    {id: 'sync', dataKey: 'temperature', highlightScope:{highlight:'item', fade:'global'}, label: 'Temp (°F)', color: 'red', showMark: false},
                 ]}
                 dataset={log || []}
                 height={300}
                 tooltip={{ trigger: 'axis' }}
                 axisHighlight={{ x: 'line' }}
                 grid={{ vertical: true, horizontal: true }}
+                highlightedItem={highlightedItem}
+                onHighlightChange={setHighlightedItem}
+            />
+            <LineChart
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
+                series={[
+                    {id: 'sync', dataKey: 'humidity', highlightScope:{highlight:'item', fade:'global'}, label: 'Humidity (%RH)', color: 'blue', showMark: false},
+                ]}
+                dataset={log || []}
+                height={300}
+                tooltip={{ trigger: 'axis' }}
+                axisHighlight={{ x: 'line' }}
+                grid={{ vertical: true, horizontal: true }}
+                highlightedItem={highlightedItem}
+                onHighlightChange={setHighlightedItem}
             />
         </Container>
     );
