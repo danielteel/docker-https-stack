@@ -117,7 +117,8 @@ export default function DeviceLog({ deviceId }) {
 
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', valueFormatter: (v, ctx)=>{
-                    if (ctx==='tooltip') return dayjs(v).format('MM/DD/YYYY HH:mm:ss');
+                    if (ctx==='tooltip') return v.toLocaleString();
+                    return v;
                 }}]}
                 yAxis={[{id:'leftAxis', scaleType:'linear', position:'left'},
                         {id:"rightAxis", scaleType:'linear', position:'right'}]}
