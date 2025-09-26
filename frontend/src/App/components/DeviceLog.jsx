@@ -50,6 +50,7 @@ export default function DeviceLog({ deviceId }) {
             let [passed, fetchedLogs, ] = await getLast24HoursLog(deviceId);
             if (passed && Array.isArray(fetchedLogs)) {
                 const mappedLogs = fetchedLogs.map(log => ({
+                    id: log.time,
                     time: new Date(log.time),
                     humidity: Number(log.data.humidity),
                     temperature: Number(log.data.temperature),
