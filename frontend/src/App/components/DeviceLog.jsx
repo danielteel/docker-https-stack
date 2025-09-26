@@ -68,30 +68,30 @@ export default function DeviceLog({ deviceId }) {
     return (
         <Container maxWidth='xl'>
             
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Grid 
-                container
-                spacing={0.5}   
-                sx={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}>
-                    <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                        <DateTimePicker
-                            label="Start Date & Time"
-                            value={startDate}
-                            onChange={(newValue) => setStartDate(newValue)}
-                        />
-                    </Grid>
-                    <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                        <DateTimePicker
-                            label="End Date & Time"
-                            value={endDate}
-                            onChange={(newValue) => setEndDate(newValue)}
-                        />
-                    </Grid>
-                </Grid>
-            </LocalizationProvider> 
+            <Grid 
+            container
+            spacing={0.5}   
+            sx={{
+                justifyContent: "center",
+                alignItems: "center",
+            }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                            <DateTimePicker
+                                label="Start Date & Time"
+                                value={startDate}
+                                onChange={(newValue) => setStartDate(newValue)}
+                            />
+                        </Grid>
+                        <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
+                            <DateTimePicker
+                                label="End Date & Time"
+                                value={endDate}
+                                onChange={(newValue) => setEndDate(newValue)}
+                            />
+                        </Grid>
+                </LocalizationProvider> 
+            </Grid>
             <ButtonGroup>
                 <Button onClick={()=>{
                     setEndDate(dayjs(new Date()));
@@ -117,8 +117,10 @@ export default function DeviceLog({ deviceId }) {
 
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
+                yAxis={[{id:'leftAxis', scaleType:'linear', position:'left'},{id:"rightAxis", scaleType:'linear', position:'right'}]}
                 series={[
-                    { dataKey: 'temperature', label: 'Temperature (°C)', color: 'red', showMark: false},
+                    { yAxisId:'left', dataKey: 'temperature', label: 'Temp (°F)', color: 'red', showMark: false},
+                    { yAxisId:'rightAxis', dataKey: 'humidity', label: 'Humidity (%RH)', color: 'blue', showMark: false},
                 ]}
                 dataset={log || []}
                 height={300}
