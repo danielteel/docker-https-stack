@@ -116,7 +116,9 @@ export default function DeviceLog({ deviceId }) {
             </ButtonGroup>
 
             <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', valueFormatter: (v, ctx)=>{
+                    if (ctx==='tooltip') return dayjs(v).format('MM/DD/YYYY HH:mm:ss');
+                }}]}
                 yAxis={[{id:'leftAxis', scaleType:'linear', position:'left'},
                         {id:"rightAxis", scaleType:'linear', position:'right'}]}
                 series={[
