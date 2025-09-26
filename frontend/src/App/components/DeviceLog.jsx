@@ -15,7 +15,6 @@ export default function DeviceLog({ deviceId }) {
     const [log, setLog] = useState(null);
     const [startDate, _setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
     const [endDate, _setEndDate] = useState(dayjs(new Date()));
-    const [highlightedItem, setHighlightedItem] = useState(null);
 
     const setStartDate = (newValue) => {
         if (newValue>endDate){
@@ -125,8 +124,7 @@ export default function DeviceLog({ deviceId }) {
                 dataset={log || []}
                 height={300}
                 grid={{ vertical: true, horizontal: true }}
-                highlightedItem={highlightedItem}
-                onHighlightChange={setHighlightedItem}
+                showToolbar={true}
             />
             <LineChart
                 xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
@@ -136,8 +134,7 @@ export default function DeviceLog({ deviceId }) {
                 dataset={log || []}
                 height={300}
                 grid={{ vertical: true, horizontal: true }}
-                highlightedItem={highlightedItem}
-                onHighlightChange={setHighlightedItem}
+                showToolbar={true}
             />
         </Container>
     );
