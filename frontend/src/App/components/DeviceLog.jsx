@@ -116,26 +116,12 @@ export default function DeviceLog({ deviceId }) {
             </ButtonGroup>
 
             <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time', valueFormatter: (v, ctx)=>{
-                    if (ctx==='tooltip') return v.toLocaleString();
-                    return v;
-                }}]}
+                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
                 yAxis={[{id:'leftAxis', scaleType:'linear', position:'left'},
                         {id:"rightAxis", scaleType:'linear', position:'right'}]}
                 series={[
                     { yAxisId:'leftAxis', dataKey: 'temperature', label: 'Temp (°F)', color: 'red', showMark: false},
                     { yAxisId:'rightAxis', dataKey: 'humidity', label: 'Humidity (%RH)', color: 'blue', showMark: false},
-                ]}
-                dataset={log || []}
-                height={300}
-                tooltip={{ trigger: 'axis' }}
-                axisHighlight={{ x: 'line' }}
-                grid={{ vertical: true, horizontal: true }}
-            />
-            <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
-                series={[
-                    { dataKey: 'humidity', label: 'Humidity (%)', color: 'blue', showMark: false},
                 ]}
                 dataset={log || []}
                 height={300}
