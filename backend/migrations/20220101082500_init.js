@@ -1,71 +1,76 @@
-exports.up = function(knex) {
-    knex.schema.createTable('crypto', table => {
+exports.up = async function(knex) {
+    await knex.schema.createTable('crypto', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('crypto_id').unique().notNullable();
-        table.string('publicKey', 1000);
-        table.string('privateKey', 4000);
-    }).then( () => {} );
+        table.string('public_key', 1000);
+        table.string('private_key', 4000);
+    })
 
-    knex.schema.createTable('devices', table=>{
+    await knex.schema.createTable('devices', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('encro_key').notNullable();
         table.string('name').unique().notNullable();
-    }).then(()=>{});
+    });
 
-    knex.schema.createTable('device_logs', table=>{
+    await knex.schema.createTable('device_logs', table => {
         table.increments('id');
         table.timestamp('time', { useTz: true }).defaultTo(knex.fn.now());
         table.json('data');
-        table.integer('device_id').notNullable();
+        table.integer('device_id').unsigned().notNullable()
+            .references('id').inTable('devices')
+            .onDelete('CASCADE'); // delete logs if device is deleted
 
-        table.foreign('device_id').references('id').inTable('devices');
-    }).then(()=>{});
+        table.index(['device_id'], 'idx_device_logs_device_id');
+    });
 
-    knex.schema.createTable('unverified_users', table => {
+    await knex.schema.createTable('unverified_users', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('email').unique().notNullable();
         table.string('pass_hash');
         table.string('confirmation_code');
-    }).then( () => {} );
+    });
 
-    knex.schema.createTable('users', table => {
+    await knex.schema.createTable('users', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('email').unique().notNullable();
         table.string('session').defaultTo('session');
         table.string('pass_hash');
-        table.string('role').checkIn(['super', 'admin', 'manager', 'member', 'unverified']);
-    }).then( () => {} );
+        table.string('role').checkIn(['super', 'admin', 'member', 'unverified']);
 
-    knex.schema.createTable('user_changepassword', table => {
+        table.index(['id', 'session'], 'idx_users_id_session');
+    });
+
+    await knex.schema.createTable('user_changepassword', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('confirmation_code').notNullable();
-        table.integer('user_id').unique().notNullable();
-        
-        table.foreign('user_id').references('id').inTable('users');
-    }).then( () => {} );
+        table.integer('user_id').unsigned().unique().notNullable()
+        .references('id').inTable('users')
+        .onDelete('CASCADE'); // delete password changes if user deleted
+    });
     
-    return knex.schema.createTable('user_changeemail', table => {
+    await knex.schema.createTable('user_changeemail', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
-        table.integer('user_id').unique().notNullable();
+        table.integer('user_id').unsigned().unique().notNullable()
+        .references('id').inTable('users')
+        .onDelete('CASCADE'); // delete email changes if user deleted
         table.string('confirmation_code');
         table.string('new_email').notNullable();
-
-        table.foreign('user_id').references('id').inTable('users');
     });
 };
 
-exports.down = function(knex) {
-    knex.schema.dropTableIfExists('crypto').then(()=>{});
-    knex.schema.dropTableIfExists('devices').then(()=>{});
-    knex.schema.dropTableIfExists('device_logs').then(()=>{});
-    knex.schema.dropTableIfExists('unverified_users').then(()=>{});
-    knex.schema.dropTableIfExists('users').then(()=>{});
-    knex.schema.dropTableIfExists('user_changepassword').then(()=>{});
-    return knex.schema.dropTableIfExists('user_changeemail');
+
+exports.down = async function(knex) {
+  await knex.schema.dropTableIfExists('user_changeemail');
+  await knex.schema.dropTableIfExists('user_changepassword');
+  await knex.schema.dropTableIfExists('users');
+  await knex.schema.dropTableIfExists('unverified_users');
+  await knex.schema.dropTableIfExists('device_logs');
+  await knex.schema.dropTableIfExists('devices');
+  await knex.schema.dropTableIfExists('crypto');
 };

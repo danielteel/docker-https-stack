@@ -8,9 +8,9 @@ const router = express.Router();
 module.exports = router;
 
 
-router.get('/users/:roleFilter?', [needKnex, authenticate.bind(null, 'manager')], async (req, res) => {
+router.get('/users/:roleFilter?', [needKnex, authenticate.bind(null, 'admin')], async (req, res) => {
     try {
-        const [fieldCheck, roleFilter] = verifyFields(req.params, ['roleFilter:~super,admin,manager,member,unverified:?']);
+        const [fieldCheck, roleFilter] = verifyFields(req.params, ['roleFilter:~super,admin,member,unverified:?']);
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
         let users=[];
@@ -18,8 +18,6 @@ router.get('/users/:roleFilter?', [needKnex, authenticate.bind(null, 'manager')]
             users = await req.knex('users').select(['id as user_id', 'email', 'role']);
         }else if (req.user.role==='admin'){
             users = await req.knex('users').select(['id as user_id', 'email', 'role']).whereNotIn('role', ['admin', 'super']);
-        }else if (req.user.role==='manager'){
-            users = await req.knex('users').select(['id as user_id', 'email', 'role']).whereNotIn('role', ['admin', 'super', 'manager']);
         }
         if (roleFilter){
             users=users.filter(u=>u.role===roleFilter);
@@ -31,9 +29,9 @@ router.get('/users/:roleFilter?', [needKnex, authenticate.bind(null, 'manager')]
     }
 });
 
-router.post('/user/role', [needKnex, authenticate.bind(null, 'manager')], async (req, res) => {
+router.post('/user/role', [needKnex, authenticate.bind(null, 'admin')], async (req, res) => {
     try {
-        const [fieldCheck, newRole, userId] = verifyFields(req.body, ['newRole:~super,admin,manager,member,unverified', 'userId:number']);
+        const [fieldCheck, newRole, userId] = verifyFields(req.body, ['newRole:~super,admin,member,unverified', 'userId:number']);
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
         const [{role: oldRole}] = await req.knex('users').select('role').where({id: userId});

@@ -13,7 +13,7 @@ app.set('trust proxy', true);
 //Logging
 app.use((req, res, next) => {console.log(req.method, req.originalUrl, req.ip); next();});
 
-app.use(cors({ origin: ['http://' + process.env.DOMAIN], credentials: true }));
+app.use(cors({ origin: ['http://' + process.env.DOMAIN, 'https://' + process.env.DOMAIN], credentials: true }));
 
 app.use(helmet());
 app.use(cookieparser());

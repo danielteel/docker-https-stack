@@ -3,9 +3,7 @@ const crypto = require('crypto');
 //Returns a SHA-256 hash of input string in hex format
 function getHash(string){
     if (!string) return null;
-    var hash = crypto.createHash('sha256');
-    data = hash.update(string, 'utf-8');
-    return (data.digest('hex'));
+    return crypto.createHash("sha256").update(string, "utf-8").digest("hex");
 }
 
 //verifyFields - will return a string with reasons failed if obj doesnt match fields array

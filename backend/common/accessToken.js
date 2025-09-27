@@ -2,48 +2,41 @@ const {generateKeyPairSync, constants, privateEncrypt, publicDecrypt} = require(
 const {getKnex} = require('../database');
 const {getHash, generateVerificationCode} = require('./common');
 
-let accessToken = null;
+let globalAccessToken = null;
 
-function getNewKeys(){
-    const publicKeyEncoding={
-        type: 'spki',
-        format: 'pem'
-    }
+function getNewKeys() {
+  const keys = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
 
-    const privateKeyEncoding={
-        type: 'pkcs8',
-        format: 'pem',
-    }
-
-    const keys = generateKeyPairSync('rsa', {
-        modulusLength: 2048,
-        publicKeyEncoding,
-        privateKeyEncoding
-    });
-
-    keys.crypto_id = 'access_token';
-    return keys;
+  return {
+    crypto_id: 'access_token',
+    private_key: keys.privateKey,
+    public_key: keys.publicKey,
+  };
 }
 
 async function initAccessToken(knex, forceNew=false){
     try {
         const [existingRecord] = await knex('crypto').select(['*']).where({crypto_id: 'access_token'})
-        if (existingRecord) hasExisting = true;
         if (forceNew && existingRecord){
             await knex('crypto').delete().where({crypto_id: 'access_token'});
         }else if (existingRecord){
-            accessToken=existingRecord;
+            globalAccessToken=existingRecord;
             return;
         }
 
-        let newKeys = getNewKeys();
+        const newKeys = getNewKeys();
         await knex('crypto').insert([newKeys]);
+
         const [accessTokenRecord] = await knex('crypto').select(['*']).where({crypto_id: 'access_token'});
         if (!accessTokenRecord){
             throw Error("Unable to generate and store access keys");
         }
         console.log("Initial access tokens generated");
-        accessToken=accessTokenRecord;
+        globalAccessToken=accessTokenRecord;
     } catch (e) {
         console.error('unable to generate and store access keys', e)
     }
@@ -51,63 +44,61 @@ async function initAccessToken(knex, forceNew=false){
 
 
 function generateAccessToken(data){
-    data=JSON.stringify(data);
+    if (!globalAccessToken?.private_key) throw Error('global access token not initialized');
+
+    const jsonData=JSON.stringify(data);
     return privateEncrypt(
-        {
-            key: accessToken.privateKey,
-            padding: constants.RSA_PKCS1_PADDING
-        },
-        Buffer.from(data)
+        {key: globalAccessToken.private_key, padding: constants.RSA_PKCS1_PADDING}, 
+        Buffer.from(jsonData)
     ).toString('base64');
 }
 
 function decryptAccessToken(data){
+    if (!globalAccessToken?.public_key) throw Error('global access token not initialized');
+    
     try {
-        return JSON.parse(
-            publicDecrypt({
-                key: accessToken.publicKey,
-                padding: constants.RSA_PKCS1_PADDING
-            }, Buffer.from(data, 'base64')).toString()
+        const decrypted = publicDecrypt(
+            {key: globalAccessToken.public_key, padding: constants.RSA_PKCS1_PADDING},
+            Buffer.from(data, 'base64')
         );
+
+        return JSON.parse(decrypted.toString());
     } catch (e) {
         return null;
     }
 }
 
+
+
+const ROLES = ['unverified', 'member', 'admin', 'super'];
+
 function isHigherRanked(a, b){
-    const roles = ['unverified', 'member', 'manager', 'admin', 'super'];
-    const aRank = roles.indexOf(a.trim().toLowerCase());
-    const bRank = roles.indexOf(b.trim().toLowerCase());
+    const aRank = ROLES.indexOf(a.trim().toLowerCase());
+    const bRank = ROLES.indexOf(b.trim().toLowerCase());
 
     if (aRank===-1 || bRank===-1){
         throw Error('isHigherRanked: invalid role on either '+a+' or '+b);
     }
-    if (aRank>bRank) return true;
-    return false;
+
+    return aRank>bRank;
 }
 
 function setAccessCookies(res, user, remember=false){
     const hashcess = generateVerificationCode();
-    const accessToken = generateAccessToken({id: user.id, session: user.session, hashcess});
+    const generatedAccessToken = generateAccessToken({id: user.id, session: user.session, hashcess});
 
-    let maxAgeObj = {};
+    let cookieBase = {
+        sameSite:'lax',
+        secure: true,
+        domain: process.env.DOMAIN
+    };
+
     if (remember){
-        maxAgeObj={maxAge: 31536000000};
+        cookieBase.maxAge=31536000000;
     }
 
-    res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: true,
-        domain: process.env.DOMAIN,
-        ...maxAgeObj
-    });
-    res.cookie('hashcess', getHash(hashcess), {
-        sameSite: 'lax',
-        secure: true,
-        domain: process.env.DOMAIN,
-        ...maxAgeObj
-    });
+    res.cookie('accessToken', generatedAccessToken, {httpOnly: true, ...cookieBase});
+    res.cookie('hashcess', getHash(hashcess), cookieBase);
 }
 
 async function getUserFromToken(token){
@@ -121,42 +112,42 @@ async function getUserFromToken(token){
 
 async function authenticate(minRole, req, res, next){
     try {
-        if (! ['super', 'admin', 'manager', 'member', 'unverified'].includes(minRole)){
-            throw Error('unknown min role '+minRole+', expected either super admin manager member unverified');
+        if (!ROLES.includes(minRole)){
+            throw Error('unknown min role '+minRole+', expected one of '+ROLES.join(', '));
         }
-        if (req.user) req.user=null;
-        const accessToken = decryptAccessToken(req.cookies['accessToken']);
-        if (accessToken){
-            if (getHash(accessToken.hashcess) === req.cookies['hashcess']){
-                const user=await getUserFromToken(accessToken);
-                if (user){
-                    let notAllowed=false;
-                    notAllowed ||= minRole==='super' && user.role!=='super';
-                    notAllowed ||= minRole==='admin' && !['super', 'admin'].includes(user.role);
-                    notAllowed ||= minRole==='manager' && !['super', 'admin', 'manager'].includes(user.role);
-                    notAllowed ||= minRole==='member' && !['super', 'admin', 'manager', 'member'].includes(user.role);
-                    notAllowed ||= minRole==='unverified' && !['super', 'admin', 'manager', 'member', 'unverified'].includes(user.role);
-                    if (notAllowed){
-                        return res.status(403).json({error: 'insufficient privileges'});
-                    }
-                    req.user=user;
-                    return next();
-                }
-            }else{
-                res.clearCookie('accessToken', {
-                    httpOnly: true,
-                    sameSite: 'lax',
-                    secure: true,
-                    domain: process.env.DOMAIN
-                });
-                res.clearCookie('hashcess', {
-                    sameSite: 'lax',
-                    secure: true,
-                    domain: process.env.DOMAIN
-                });
-            }
+        
+        req.user=null;
+
+        const login = () => res.status(401).json({error: 'log in'});
+
+        const decryptedAccessToken = decryptAccessToken(req.cookies['accessToken']);
+        if (!decryptedAccessToken) return login();
+
+        if (getHash(decryptedAccessToken.hashcess) !== req.cookies['hashcess']){
+            res.clearCookie('accessToken', {
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: true,
+                domain: process.env.DOMAIN
+            });
+            res.clearCookie('hashcess', {
+                sameSite: 'lax',
+                secure: true,
+                domain: process.env.DOMAIN
+            });
+            return login();
         }
-        return res.status(401).json({error: 'log in'});
+
+        const user=await getUserFromToken(decryptedAccessToken);
+        if (!user) return login();
+
+        const userRank = ROLES.indexOf(user.role.toLowerCase());
+        const minRank = ROLES.indexOf(minRole.toLowerCase());
+        if (userRank < minRank) return res.status(403).json({error: 'insufficient privileges'});
+
+        req.user=user;
+        return next();
+        
     }catch (e){
         console.error('ERROR authenticate', e);
         return res.status(400).json({error: 'failed'});
