@@ -71,6 +71,8 @@ services:
       - DEVICE1_KEY=${DEVICE1_KEY}
       - DEVICE2_NAME=${DEVICE2_NAME}
       - DEVICE2_KEY=${DEVICE2_KEY}
+    tmpfs:
+      - /usr/src/app/tmp:rw,size=50m
     depends_on:
       - postgres
     ports:
