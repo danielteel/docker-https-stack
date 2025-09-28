@@ -6,6 +6,7 @@ function getHash(string){
     return crypto.createHash("sha256").update(string, "utf-8").digest("hex");
 }
 
+
 //verifyFields - will return a string with reasons failed if obj doesnt match fields array
 //If passes the check, will return an empty string and the rest of the named fields.
 //fields should look something like ['username:string:*:lt', 'age:number', 'extraWhatever:any', 'optionalBool:bool:?']

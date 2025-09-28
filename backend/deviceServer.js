@@ -171,7 +171,7 @@ class DeviceIO {
     }
 
     onFullPacket = (handshake, data) => {
-        if (this.netStatus===NETSTATUS.OPENED){                        
+        if (this.netStatus===NETSTATUS.OPENED){
             this.clientHandshake[0]=handshake;
             this.clientHandshake[0]++;
             this.netStatus=NETSTATUS.READY;

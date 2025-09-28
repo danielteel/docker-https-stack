@@ -12,6 +12,9 @@ exports.up = async function(knex) {
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.string('encro_key').notNullable();
         table.string('name').unique().notNullable();
+
+        table.json('log_items');   // what parameters the device logs
+        table.json('actions');     // actions available on the device
     });
 
     await knex.schema.createTable('device_logs', table => {

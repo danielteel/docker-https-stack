@@ -123,7 +123,7 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
     try {
         const fields = [
             'name:string:*:t',
-            'encro_key:string:*:t'
+            'encro_key:string:*:t',
         ]
         let [fieldCheck, name, encro_key] = verifyFields(req.body, fields);
         if (!fieldCheck){
