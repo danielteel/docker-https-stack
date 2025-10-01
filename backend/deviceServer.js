@@ -2,76 +2,33 @@ const {encrypt, decrypt} = require('./encro');
 const crypto = require('crypto');
 const {getKnex} = require('./database');
 
-
 const textDecoder = new TextDecoder;
 const textEncoder = new TextEncoder;
 
 
-let server = null;
+const PACKETSTATE = Object.freeze({
+  NAMELEN: 0,
+  NAME: 1,
+  LEN1: 2,
+  LEN2: 3,
+  LEN3: 4,
+  LEN4: 5,
+  PAYLOAD: 6,
+  ERROR: 7,
+});
 
-
-
-class PACKETSTATE {
-    // Private Fields
-    static get NAMELEN() { return 0; }
-    static get NAME() { return 1; }
-    static get LEN1() { return 2; }
-    static get LEN2() { return 3; }
-    static get LEN3() { return 4; }
-    static get LEN4() { return 5; }
-    static get PAYLOAD() { return 6; }
-    static get ERROR() { return 7; }
-}
-
-class NETSTATUS {
-    static get OPENED() { return 1; }
-    static get READY() { return 2; }
-    static get ERROR() { return 3; }
-}
+const NETSTATUS = Object.freeze({
+  OPENED: 1,
+  READY: 2,
+  ERROR: 3,
+});
 
 class DeviceIO {
-    static socketTimeoutTime = 30000;
-    static devices=[];
-    
-
-    static getDevices = () => {
-        return this.devices;
-    }
-
-    static removeDevice = (device) => {
-        try{
-            if (device.socket){
-                device.socket.destroy();
-            }
-        }catch{
-        }
-        this.devices=this.devices.filter( v => {
-            if (v===device) return false;
-            return true;
-        });
-    }
-
-    static isNameConnected = (name) =>{
-        for (const device of this.devices){
-            if (device.name===name){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static addDevice = (device) => {
-        this.devices.push(device);
-    }
-
-    constructor(socket){
-        this.onDone=()=>{
-            console.log("Device disconnected: ",this.name);
-            this.constructor.removeDevice(this);
-        };
+    constructor(socket, deviceServer, socketTimeoutTime=30000){
+        this.deviceServer=deviceServer;
 
         this.socket=socket;
-        this.socket.setTimeout(this.constructor.socketTimeoutTime);
+        this.socket.setTimeout(socketTimeoutTime);
     
         socket.on('data', this.onData);
 
@@ -96,16 +53,13 @@ class DeviceIO {
         this.values={};
 
         socket.on('end', () => {
-            console.log('name',this.name, this.socket.address, 'disconnected');
-            this.deviceErrored();
+            this.disconnect(this.name+' '+this.socket.address+' disconnected.');
         });        
         socket.on('timeout', () => {
-            console.log('name',this.name, this.socket.address, 'timed out');
-            this.deviceErrored();
+            this.disconnect(this.name+' '+this.socket.address+' timed out.');
         });
         socket.on('error', (err)=>{
-            console.log('name',this.name, this.socket.address, 'error occured', err);
-            this.deviceErrored();
+            this.disconnect(this.name+' '+this.socket.address+' error occured: '+err);
         });
     }
 
@@ -129,6 +83,7 @@ class DeviceIO {
     pauseIncomingData = () => {
         this.pauseReading=true;
     }
+
     unpauseIncomingData = () => {
         //Must not pause incoming data again until this returns
         this.pauseReading=false;
@@ -137,19 +92,19 @@ class DeviceIO {
         }
         this.buffersWhilePaused=[];
     }
-    
-    onDeviceDatabaseDelete = () => {
-        this.deviceErrored();
-        console.log(this.name, 'device was deleted from database, closing connection');
-    }
-    deviceErrored = () => {
-        this.socket.destroy();
+
+
+    disconnect = (logMessage) => {
+        try {
+            this.socket.destroy();
+        }catch{}
         this.socket=null;
         this.payload=null;
         this.packetState=PACKETSTATE.ERROR;
         this.netStatus=NETSTATUS.ERROR;
-        this.onDone(this);
-        this.constructor.removeDevice(this);
+        if (logMessage) console.log(logMessage);
+        console.log('name',this.name, 'connection closed');
+        this.deviceServer?.removeDevice(this);
     }
 
     sendPacket = (data) => {
@@ -178,8 +133,7 @@ class DeviceIO {
             this.sendPacket(null);
         }else{
             if (this.clientHandshake[0]!==handshake){
-                console.log(this.name, 'incorrect handshake, exepcted '+this.clientHandshake[0]+' but recvd '+handshake);
-                this.deviceErrored();
+                this.disconnect(this.name+' incorrect handshake, exepcted '+this.clientHandshake[0]+' but recvd '+handshake);
                 return;
             }
             
@@ -197,7 +151,7 @@ class DeviceIO {
                 }else{
                     const [dataName, dataVal]=textDecoder.decode(data).split('=');
 
-                    if (dataName.toLowerCase()==='log'){
+                    if (dataName.toLowerCase().trim()==='log'){
                         getKnex()('device_logs').insert({device_id: this.deviceId, data: JSON.stringify(this.values)}).then( (val) => {
                             console.log("Device Log: ", new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  this.values);
                         }).catch((e)=>{
@@ -237,21 +191,15 @@ class DeviceIO {
                         if (val && val[0] && val[0].encro_key){
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
-                            if (this.constructor.isNameConnected(this.name)){
-                                this.deviceErrored();
-                                console.log('device "'+this.name+'"is already connected');
-                            }else{
-                                this.packetState=PACKETSTATE.LEN1;
-                                this.unpauseIncomingData();
-                                this.constructor.addDevice(this);
-                            }
+
+                            this.packetState=PACKETSTATE.LEN1;
+                            this.unpauseIncomingData();
+
                         }else{
-                            this.deviceErrored();
-                            console.log('device record "'+this.name+'" not found');
+                            this.disconnect('device record "'+this.name+'" not found');
                         }
                     }).catch((e)=>{
-                        this.deviceErrored();
-                        console.log("failed to retrieve device info for '"+this.name+"' from database");
+                        this.disconnect("failed to retrieve device info for '"+this.name+"' from database");
                     });
                     return;
                 }
@@ -272,14 +220,12 @@ class DeviceIO {
                 this.packetState=PACKETSTATE.PAYLOAD;
 
                 if (this.payloadLength>0x0FFFFF){
-                    console.log(this.name, 'device sent packet larger than 0x0FFFFF', this.payloadLength);
-                    this.deviceErrored();
+                    this.disconnect(this.name+' device sent packet larger than 0x0FFFFF -> '+this.payloadLength);
                     return;
                 }
 
                 if (this.payloadLength<0){
-                    console.log(this.name, 'device sent packet smaller than 0', this.payloadLength);
-                    this.deviceErrored();
+                    this.disconnect(this.name+' device sent packet smaller than 0 -> '+this.payloadLength);
                     return;
                 }
                 this.payload = Buffer.alloc(this.payloadLength);
@@ -296,31 +242,66 @@ class DeviceIO {
                         this.onFullPacket(recvdHandshake, decrypted);
                         this.packetState=PACKETSTATE.LEN1;
                     }catch(e){
-                        console.log('name',this.name, 'failed to decrypt packet:', e);
-                        this.deviceErrored();
+                        this.disconnect(this.name+' failed to decrypt packet: '+String(e));
                         return;
                     }
                 }
                 i+=howFar-1;
             }else{
-                console.log('name',this.name, 'unknown packet/net status', this.packetState+'/'+this.netStatus);
-                this.deviceErrored();
+                this.disconnect(this.name+' unknown packet/net status '+this.packetState+'/'+this.netStatus);
                 return;
             }
         }
     }
 }
 
-function createDeviceServer(){
-    if (server) return;
+
+class DeviceServer{
+    static socketTimeoutTime = 30000;
+    constructor(port){
+        this.port=port;
+        this.server=new (require('net')).Server();
+
+        this.devices=[];
+
+        server.on('connection', (socket) => {
+            const newDevice=new DeviceIO(socket, this, this.constructor.socketTimeoutTime);
+            this.devices.push(newDevice);
+        });
+    }
+
+    removeDevice = (device) => {
+        try {
+            if (device.socket) device.socket.destroy();
+        }catch{}
+        this.devices=this.devices.filter(v => !(v===device));
+    }
+
+    disconnectDeviceId = (deviceId) => {
+        this.devices=this.devices.filter( (device) => {
+            if (device.deviceId===deviceId){
+                try{
+                    device.disconnect();
+                }catch{}
+                return false;
+            }
+            return true;
+        });
+    }
     
-    server = new (require('net')).Server();
+    getDevices = () => {
+        return this.devices;
+    }
 
-    server.on('connection', function(socket) {
-        new DeviceIO(socket);
-    });
-
-    return server;
+    getDevicesOfName = (name) =>{
+        const foundDevices=[];
+        for (const device of this.devices){
+            if (device.name===name){
+                foundDevices.push(device);
+            }
+        }
+        return devices;
+    }
 }
 
-module.exports = {createDeviceServer, DeviceIO};
+module.exports = {DeviceServer, DeviceIO};

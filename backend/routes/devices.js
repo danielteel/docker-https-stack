@@ -18,10 +18,8 @@ async function getAndValidateDevices(knex, userRole, wantDevIO=false){
     }
     const connectedDevices=DeviceIO.getDevices();
     for (const connectedDevice of connectedDevices){
-        let isValid=false;
         for (const device of devices){
             if (connectedDevice?.name===device.name && ((userRole!='super' && userRole!='admin') || (connectedDevice?.key===device.encro_key))){
-                isValid=true;
                 if (wantDevIO) device.devio=connectedDevice;
                 device.connected=true;
                 if (connectedDevice?.actions){
@@ -29,11 +27,6 @@ async function getAndValidateDevices(knex, userRole, wantDevIO=false){
                 }
                 break;
             }
-        }
-        if (!isValid){
-            try{
-                connectedDevice.onDeviceDatabaseDelete();
-            }catch{}
         }
     }
     return devices;
@@ -167,6 +160,8 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
         await req.knex('devices').update({name, encro_key}).where({id: device_id});
 
+        //TODO: Tell device server that this device has been updated, so disconnect all devices with this device id
+
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
         console.error('ERROR POST /devices/update', req.body, e);
@@ -182,7 +177,10 @@ router.post('/delete', [needKnex, authenticate.bind(null, 'admin')], async (req,
         const deviceExists = await req.knex('devices').select(['id']).where('id', device_id);
         if (!deviceExists.length) return res.status(400).json({error: 'device with id '+device_id+' doesnt exist'});
 
+
         await req.knex('devices').where({id: device_id}).delete();
+
+        //TODO: Tell device server that this device has been deleted, so disconnect all devices with this device id
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
