@@ -1,4 +1,4 @@
-import sharp from 'sharp';
+const sharp = require('sharp');
 
 /**
  * Combine multiple JPEG buffers into one tall JPEG,
