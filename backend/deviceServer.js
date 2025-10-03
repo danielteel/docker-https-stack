@@ -5,6 +5,12 @@ const {getKnex} = require('./database');
 const textDecoder = new TextDecoder;
 const textEncoder = new TextEncoder;
 
+let deviceServer = null;
+
+function getDeviceServer(){
+    return deviceServer;
+}
+
 
 const PACKETSTATE = Object.freeze({
   NAMELEN: 0,
@@ -260,6 +266,9 @@ class DeviceServer{
     static socketTimeoutTime = 30000;
 
     constructor(port){
+        
+        deviceServer=this;
+
         this.port=port;
         this.server=new (require('net')).Server();
 
@@ -311,4 +320,4 @@ class DeviceServer{
     }
 }
 
-module.exports = {DeviceServer, DeviceIO};
+module.exports = {DeviceServer, DeviceIO, getDeviceServer};

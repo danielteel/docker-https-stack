@@ -16,9 +16,3 @@ process.on('SIGTERM', ()=>{
   console.log('SIGTERM recieved, exiting process');
   process.exit(0);
 });
-
-function getDeviceServer(){
-  return deviceServer;
-}
-
-module.exports = {getDeviceServer};

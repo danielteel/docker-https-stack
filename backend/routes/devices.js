@@ -3,10 +3,10 @@ const {authenticate, isAtLeastRanked} = require('../common/accessToken');
 const { needKnex } = require('../database');
 const {getHash, verifyFields, generateVerificationCode, isLegalPassword, isHexadecimal} = require('../common/common');
 const fetch = require('node-fetch');
+const {getDeviceServer} = require('../deviceServer');
 
 const {stackVertically} = require('../common/images');
 
-const {getDeviceServer}=require('../index.js');
 
 const router = express.Router();
 module.exports = router;
