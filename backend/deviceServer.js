@@ -258,6 +258,7 @@ class DeviceIO {
 
 class DeviceServer{
     static socketTimeoutTime = 30000;
+
     constructor(port){
         this.port=port;
         this.server=new (require('net')).Server();
@@ -267,6 +268,10 @@ class DeviceServer{
         server.on('connection', (socket) => {
             const newDevice=new DeviceIO(socket, this, this.constructor.socketTimeoutTime);
             this.devices.push(newDevice);
+        });
+
+        this.server.listen(port, function(){
+            console.log(`Device server listening on port ${port}`);
         });
     }
 
@@ -278,8 +283,9 @@ class DeviceServer{
     }
 
     disconnectDeviceId = (deviceId) => {
+        deviceId=Number(deviceId);
         this.devices=this.devices.filter( (device) => {
-            if (device.deviceId===deviceId){
+            if (Number(device.deviceId)===deviceId){
                 try{
                     device.disconnect();
                 }catch{}
@@ -288,6 +294,7 @@ class DeviceServer{
             return true;
         });
     }
+
     
     getDevices = () => {
         return this.devices;

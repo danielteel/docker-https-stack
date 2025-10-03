@@ -1,60 +1,67 @@
 const express = require('express');
-const {authenticate} = require('../common/accessToken');
+const {authenticate, isAtLeastRanked} = require('../common/accessToken');
 const { needKnex } = require('../database');
 const {getHash, verifyFields, generateVerificationCode, isLegalPassword, isHexadecimal} = require('../common/common');
 const fetch = require('node-fetch');
 
-const {DeviceIO}=require('../deviceServer');
+const {stackVertically} = require('../common/images');
+
+const {deviceServer}=require('../index.js');
 
 const router = express.Router();
 module.exports = router;
 
-async function getAndValidateDevices(knex, userRole, wantDevIO=false){
+async function getAndValidateDevices(knex, userRole, wantDirectObject=false){
     let devices;
-    if (userRole==='admin' || userRole==='super'){
-        devices = await knex('devices').select(['id as device_id', 'name', 'encro_key']);
+    const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
+    if (isAtLeastAdmin){
+        devices = await knex('devices').select(['id as device_id', 'name', 'encro_key', 'log_items', 'actions']);
     }else{
-        devices = await knex('devices').select(['id as device_id', 'name']);
+        devices = await knex('devices').select(['id as device_id', 'name', 'log_items', 'actions']);
     }
-    const connectedDevices=DeviceIO.getDevices();
-    for (const connectedDevice of connectedDevices){
-        for (const device of devices){
-            if (connectedDevice?.name===device.name && ((userRole!='super' && userRole!='admin') || (connectedDevice?.key===device.encro_key))){
-                if (wantDevIO) device.devio=connectedDevice;
-                device.connected=true;
-                if (connectedDevice?.actions){
-                    device.actions=connectedDevice.actions;
-                }
-                break;
+    if (devices.length===0) return [];
+
+
+    const connectedDevices=deviceServer.getDevices();
+
+    for (const device of devices){
+        device.connected=[];
+
+        for (const connectedDevice of connectedDevices){
+            if (connectedDevice.name===device.name){
+                device.connected.push(connectedDevice);
             }
         }
+        if (!wantDirectObject){
+            device.connected=device.connected.length;
+        }
     }
+
     return devices;
 }
 
-async function getADevice(knex, userRole, deviceId, wantDevIO=false){
+async function getADevice(knex, userRole, deviceId, wantDirectObject=false){
     let device;
-    if (userRole==='admin' || userRole==='super'){
-        device = await knex('devices').select(['id as device_id', 'name', 'encro_key']).where('id', deviceId);
+    const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
+    if (isAtLeastAdmin){
+        device = await knex('devices').select(['id as device_id', 'name', 'encro_key', 'log_items', 'actions']).where('id', deviceId).first();
     }else{
-        device = await knex('devices').select(['id as device_id', 'name']).where('id', deviceId);
+        device = await knex('devices').select(['id as device_id', 'name', 'log_items', 'actions']).where('id', deviceId).first();
     }
-    if (device.length){
-        device=device[0];
-        const connectedDevices=DeviceIO.getDevices();
-        for (const connectedDevice of connectedDevices){
-            if (connectedDevice.name===device.name){
-                    if (wantDevIO) device.devio=connectedDevice;
-                    device.connected=true;
-                    if (connectedDevice.actions){
-                        device.actions=connectedDevice.actions;
-                    }
-                    break;
-            }
+    if (!device) return null;
+    
+    device.connected=[];
+    
+    for (const connectedDevice of deviceServer.getDevices()){
+        if (connectedDevice.name===device.name){
+            device.connected.push(connectedDevice);
         }
-        return device;
     }
-    return null;
+
+    if (!wantDirectObject){
+        device.connected=device.connected.length;
+    }
+    return device;
 }
 
 router.get('/list', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
@@ -71,16 +78,33 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
         const device_id = Number(req.params.device_id);
 
         const device=await getADevice(req.knex, req.user.role, device_id, true);
-        if (device && device.devio){
-            if (device.devio.image){
+
+
+        if (device?.connected?.length===1){//TODO: REMOVE, ONLY FOR TESTING SHARP LIBRARY
+            res.writeHead(200, { 'content-type': 'image/jpeg' });
+            return res.end(await stackVertically([device.connected[0].image, device.connected[0].image]), 'binary');
+        }
+
+
+        if (device?.connected?.length===1){
+            if (device.connected[0].image){
                 res.writeHead(200, { 'content-type': 'image/jpeg' });
-                return res.end(device.devio.image, 'binary');
+                return res.end(device.connected[0].image, 'binary');
             }else{
                 return res.status(400).json({error: 'device hasnt sent an image yet'});
             }
+        }else if (device?.connected?.length>1){
+            //stack images vertically
+            const buffers = [];
+            for (const connectedDevice of device.connected){
+                if (connectedDevice.image) buffers.push(connectedDevice.image);
+            }
+            res.writeHead(200, { 'content-type': 'image/jpeg' });
+            return res.end(await stackVertically(buffers), 'binary');
         }
 
         return res.status(400).json({error: 'invalid device id or its not connected'});
+
     }catch(e){
         console.error('ERROR GET /devices/image', req.body, e);
         return res.status(400).json({error: 'error'});
@@ -102,7 +126,7 @@ router.get('/log/:device_id/:start_time/:end_time', [needKnex, authenticate.bind
         if (isNaN(Date.parse(startTime))) return res.status(400).json({error: 'invalid start time'});
         if (isNaN(Date.parse(endTime))) return res.status(400).json({error: 'invalid end time'});
 
-    
+
         const log = await req.knex('device_logs').select(['time', 'data']).where('device_id', deviceId).andWhere('time', '>=', startTime).andWhere('time', '<=', endTime).orderBy('time', 'asc');
 
         res.json(log);
@@ -160,7 +184,8 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
         await req.knex('devices').update({name, encro_key}).where({id: device_id});
 
-        //TODO: Tell device server that this device has been updated, so disconnect all devices with this device id
+        deviceServer.disconnectDeviceId(device_id);
+
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
@@ -180,7 +205,7 @@ router.post('/delete', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
         await req.knex('devices').where({id: device_id}).delete();
 
-        //TODO: Tell device server that this device has been deleted, so disconnect all devices with this device id
+        deviceServer.disconnectDeviceId(device_id);
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){

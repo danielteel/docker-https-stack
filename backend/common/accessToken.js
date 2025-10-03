@@ -20,7 +20,7 @@ function getNewKeys() {
 
 async function initAccessToken(knex, forceNew=false){
     try {
-        const [existingRecord] = await knex('crypto').select(['*']).where({crypto_id: 'access_token'})
+        const existingRecord = await knex('crypto').select(['*']).where({crypto_id: 'access_token'}).first();
         if (forceNew && existingRecord){
             await knex('crypto').delete().where({crypto_id: 'access_token'});
         }else if (existingRecord){
@@ -31,7 +31,7 @@ async function initAccessToken(knex, forceNew=false){
         const newKeys = getNewKeys();
         await knex('crypto').insert([newKeys]);
 
-        const [accessTokenRecord] = await knex('crypto').select(['*']).where({crypto_id: 'access_token'});
+        const accessTokenRecord = await knex('crypto').select(['*']).where({crypto_id: 'access_token'}).first();
         if (!accessTokenRecord){
             throw Error("Unable to generate and store access keys");
         }
@@ -83,6 +83,15 @@ function isHigherRanked(a, b){
     return aRank>bRank;
 }
 
+function isAtLeastRanked(a, b){
+    const aRank = ROLES.indexOf(a.trim().toLowerCase());
+    const bRank = ROLES.indexOf(b.trim().toLowerCase());
+    if (aRank===-1 || bRank===-1){
+        throw Error('isAtLeastRanked: invalid role on either '+a+' or '+b);
+    }
+    return aRank>=bRank;
+}
+
 function setAccessCookies(res, user, remember=false){
     const hashcess = generateVerificationCode();
     const generatedAccessToken = generateAccessToken({id: user.id, session: user.session, hashcess});
@@ -103,7 +112,7 @@ function setAccessCookies(res, user, remember=false){
 
 async function getUserFromToken(token){
     const knex=getKnex();
-    const [user] = await knex('users').select('id', 'email', 'role').where({id: token.id, session: token.session});;
+    const user = await knex('users').select('id', 'email', 'role').where({id: token.id, session: token.session}).first();
     if (user){
         return {id: user.id, email: user.email, role: user.role};
     }
@@ -155,4 +164,4 @@ async function authenticate(minRole, req, res, next){
 }
 
 
-module.exports = {initAccessToken, generateAccessToken, decryptAccessToken, authenticate, getUserFromToken, isHigherRanked, setAccessCookies};
+module.exports = {initAccessToken, generateAccessToken, decryptAccessToken, authenticate, getUserFromToken, isHigherRanked, isAtLeastRanked, setAccessCookies};

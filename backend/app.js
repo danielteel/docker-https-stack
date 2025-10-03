@@ -3,7 +3,6 @@ const cors = require('cors');
 const helmet = require("helmet");
 const cookieparser = require("cookie-parser");
 const { connect } = require('./database');
-const {createDeviceServer} = require('./deviceServer.js');
 
 const { initAccessToken } = require('./common/accessToken');
 
@@ -24,8 +23,6 @@ app.use('/api/user', require('./routes/user'));
 app.use('/api/manage', require('./routes/manage'));
 
 
-const deviceServer=createDeviceServer();
-
 const knexConfig = require('./knexfile').production;
 
 connect(knexConfig, async (knex) => {
@@ -45,4 +42,4 @@ connect(knexConfig, async (knex) => {
 })
 
 
-module.exports = { app, deviceServer };
+module.exports = { app };
