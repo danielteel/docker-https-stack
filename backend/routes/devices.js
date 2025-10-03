@@ -79,13 +79,6 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
 
         const device=await getADevice(req.knex, req.user.role, device_id, true);
 
-
-        if (device?.connected?.length===1){//TODO: REMOVE, ONLY FOR TESTING SHARP LIBRARY
-            res.writeHead(200, { 'content-type': 'image/jpeg' });
-            return res.end(await stackVertically([device.connected[0].image, device.connected[0].image]), 'binary');
-        }
-
-
         if (device?.connected?.length===1){
             if (device.connected[0].image){
                 res.writeHead(200, { 'content-type': 'image/jpeg' });
@@ -94,7 +87,8 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
                 return res.status(400).json({error: 'device hasnt sent an image yet'});
             }
         }else if (device?.connected?.length>1){
-            //stack images vertically
+            //More than one device connected with this id
+            //stack images vertically if we got more than one image
             const buffers = [];
             for (const connectedDevice of device.connected){
                 if (connectedDevice.image) buffers.push(connectedDevice.image);
@@ -226,9 +220,12 @@ router.post('/action', [needKnex, authenticate.bind(null, 'member')], async (req
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
         const device = await getADevice(req.knex, req.user.role, device_id, true);
-
-        if (device.devio){
-            if (device.devio.sendAction(action, data)){
+        if (device?.connected){
+            let didNotFail=true;
+            for (const connectedDevice of device.connected){
+                didNotFail&&=connectedDevice.sendAction(action, data);
+            }
+            if (didNotFail){
                 return res.status(200).end();
             }
         }
