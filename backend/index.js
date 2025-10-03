@@ -17,4 +17,8 @@ process.on('SIGTERM', ()=>{
   process.exit(0);
 });
 
-module.exports = {deviceServer};
+function getDeviceServer(){
+  return deviceServer;
+}
+
+module.exports = {getDeviceServer};

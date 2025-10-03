@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 
 const {stackVertically} = require('../common/images');
 
-const {deviceServer}=require('../index.js');
+const {getDeviceServer}=require('../index.js');
 
 const router = express.Router();
 module.exports = router;
@@ -22,7 +22,7 @@ async function getAndValidateDevices(knex, userRole, wantDirectObject=false){
     if (devices.length===0) return [];
 
 
-    const connectedDevices=deviceServer.getDevices();
+    const connectedDevices=getDeviceServer().getDevices();
 
     for (const device of devices){
         device.connected=[];
@@ -52,7 +52,7 @@ async function getADevice(knex, userRole, deviceId, wantDirectObject=false){
     
     device.connected=[];
     
-    for (const connectedDevice of deviceServer.getDevices()){
+    for (const connectedDevice of getDeviceServer().getDevices()){
         if (connectedDevice.name===device.name){
             device.connected.push(connectedDevice);
         }
@@ -184,7 +184,7 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
         await req.knex('devices').update({name, encro_key}).where({id: device_id});
 
-        deviceServer.disconnectDeviceId(device_id);
+        getDeviceServer().disconnectDeviceId(device_id);
 
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
@@ -205,7 +205,7 @@ router.post('/delete', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
         await req.knex('devices').where({id: device_id}).delete();
 
-        deviceServer.disconnectDeviceId(device_id);
+        getDeviceServer().disconnectDeviceId(device_id);
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
