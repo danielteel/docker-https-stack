@@ -265,7 +265,7 @@ class DeviceServer{
 
         this.devices=[];
 
-        server.on('connection', (socket) => {
+        this.server.on('connection', (socket) => {
             const newDevice=new DeviceIO(socket, this, this.constructor.socketTimeoutTime);
             this.devices.push(newDevice);
         });
