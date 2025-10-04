@@ -11,6 +11,50 @@ const {stackVertically} = require('../common/images');
 const router = express.Router();
 module.exports = router;
 
+function isBadActions(actions){
+    const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
+    const actionNames = new Set();
+    const actionBytes = new Set();
+    if (actions===null || actions===undefined) return false;
+    if (!Array.isArray(actions)) return 'actions not an array';
+    for (const action of actions){
+        if (!action) return 'actions has null/undefined entry';
+        if (typeof action.name!=='string') return 'actions has entry with name not a string';
+        if (action.name.trim()==='') return 'actions has entry with empty name';
+        if (actionNames.has(action.name.toLowerCase().trim())) return 'actions has entry with duplicate name';
+        actionNames.add(action.name.toLowerCase().trim());
+
+        if (typeof action.byte!=='number') return 'actions has entry with byte not a number';
+        if (action.byte<0 || action.byte>255) return 'actions has entry with byte not in range 0-255';
+        if (actionBytes.has(action.byte)) return 'actions has entry with duplicate byte';
+        actionBytes.add(action.byte);
+        
+        if (typeof action.type!=='string') return 'actions has entry with type not a string';
+        if (!actionTypes.includes(action.type.toLowerCase().trim())) return 'actions has entry with invalid type';
+        if (typeof action.description!=='string') return 'actions has entry with description not a string';
+    }
+    return false;
+}
+
+function isBadLogItems(logItems){
+    const logItemTypes = ['degree', 'percent', 'number', 'bool', 'string', 'time'];
+    const logItemNames = new Set();
+    if (logItems===null || logItems===undefined) return false;
+    if (!Array.isArray(logItems)) return 'log_items not an array';
+    for (const logItem of logItems){
+        if (!logItem) return 'log_items has null/undefined entry';
+        if (typeof logItem.name!=='string') return 'log_items has entry with name not a string';
+        if (logItem.name.trim()==='') return 'log_items has entry with empty name';
+        if (logItemNames.has(logItem.name.toLowerCase().trim())) return 'log_items has entry with duplicate name';
+        logItemNames.add(logItem.name.toLowerCase().trim());
+
+        if (typeof logItem.type!=='string') return 'log_items has entry with type not a string';
+        if (!logItemTypes.includes(logItem.type.toLowerCase().trim())) return 'log_items has entry with invalid type';
+        if (typeof logItem.description!=='string') return 'log_items has entry with description not a string';
+    }
+    return false;
+}
+
 async function getAndValidateDevices(knex, userRole, wantDirectObject=false){
     let devices;
     const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
@@ -146,14 +190,19 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
 
             try {
                 log_items=JSON.parse(log_items);
+                const badLogItems = isBadLogItems(log_items);
+                if (badLogItems) fieldCheck+=badLogItems+' ';
             }catch(e){
                 fieldCheck+='log_items is not valid JSON. ';
             }
             try {
                 actions=JSON.parse(actions);
+                const badActions = isBadActions(actions);
+                if (badActions) fieldCheck+=badActions+' ';
             }catch(e){
                 fieldCheck+='actions is not valid JSON. ';
             }
+
         }
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
@@ -186,11 +235,15 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
 
             try {
                 log_items=JSON.parse(log_items);
+                const badLogItems = isBadLogItems(log_items);
+                if (badLogItems) fieldCheck+=badLogItems+' ';
             }catch(e){
                 fieldCheck+='log_items is not valid JSON. ';
             }
             try {
                 actions=JSON.parse(actions);
+                const badActions = isBadActions(actions);
+                if (badActions) fieldCheck+=badActions+' ';
             }catch(e){
                 fieldCheck+='actions is not valid JSON. ';
             }

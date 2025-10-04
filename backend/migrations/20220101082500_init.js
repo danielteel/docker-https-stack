@@ -55,7 +55,7 @@ exports.up = async function(knex) {
         .references('id').inTable('users')
         .onDelete('CASCADE'); // delete password changes if user deleted
     });
-    
+
     await knex.schema.createTable('user_changeemail', table => {
         table.increments('id');
         table.timestamp('created_at').defaultTo(knex.fn.now());
