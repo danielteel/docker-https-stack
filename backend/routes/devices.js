@@ -135,19 +135,32 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
         const fields = [
             'name:string:*:t',
             'encro_key:string:*:t',
+            'log_items:string',
+            'actions:string'
         ]
-        let [fieldCheck, name, encro_key] = verifyFields(req.body, fields);
+        let [fieldCheck, name, encro_key, log_items, actions] = verifyFields(req.body, fields);
         if (!fieldCheck){
             if (name==='') fieldCheck+='name cannot be empty. ';
             if (typeof encro_key==='string' && encro_key.length!=64) fieldCheck+='encro_key length needs to be 64 hexadecimal characters. ';
             if (!isHexadecimal(encro_key)) fieldCheck+='encro_key needs to be hexadecimal character. ';
+
+            try {
+                log_items=JSON.parse(log_items);
+            }catch(e){
+                fieldCheck+='log_items is not valid JSON. ';
+            }
+            try {
+                actions=JSON.parse(actions);
+            }catch(e){
+                fieldCheck+='actions is not valid JSON. ';
+            }
         }
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
         const deviceExists = await req.knex('devices').select(['name']).where('name', name);
         if (deviceExists.length) return res.status(400).json({error: 'device with name '+name+' already exists'});
 
-        await req.knex('devices').insert({name, encro_key});
+        await req.knex('devices').insert({name, encro_key, log_items, actions});
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
@@ -161,13 +174,26 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
         const fields = [
             'device_id:number',
             'name:string:*:t',
-            'encro_key:string:*:t'
+            'encro_key:string:*:t',
+            'log_items:string',
+            'actions:string'
         ]
-        let [fieldCheck, device_id, name, encro_key] = verifyFields(req.body, fields);
+        let [fieldCheck, device_id, name, encro_key, log_items, actions] = verifyFields(req.body, fields);
         if (!fieldCheck){
             if (name==='') fieldCheck+='name cannot be empty. ';
             if (typeof encro_key==='string' && encro_key.length!=64) fieldCheck+='encro_key length needs to be 64 hexadecimal characters. ';
             if (!isHexadecimal(encro_key)) fieldCheck+='encro_key needs to be hexadecimal character. ';
+
+            try {
+                log_items=JSON.parse(log_items);
+            }catch(e){
+                fieldCheck+='log_items is not valid JSON. ';
+            }
+            try {
+                actions=JSON.parse(actions);
+            }catch(e){
+                fieldCheck+='actions is not valid JSON. ';
+            }
         }
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
@@ -176,7 +202,7 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
             if (deviceExists[0].device_id!=device_id) return res.status(400).json({error: 'device with name '+name+' already exists'});
         }
 
-        await req.knex('devices').update({name, encro_key}).where({id: device_id});
+        await req.knex('devices').update({name, encro_key, log_items, actions}).where({id: device_id});
 
         getDeviceServer().disconnectDeviceId(device_id);
 
