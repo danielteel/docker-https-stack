@@ -54,9 +54,12 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
                 setDevices(newDevices);
                 setOpen(false);
             }else{
+                const error=newDevices?.error;
                 const existingName = devices?.find(r=>(name.trim().toLowerCase() === r.name.trim().toLowerCase()));
                 const badKey = !isValidEncroKey(encroKey);
-                if (badKey){
+                if (error){
+                    setError(error);
+                }else if (badKey){
                     setError('Bad encro key, needs to be hexadecimal characters and 64 characters long');
                 }else if (existingName){
                     setError('Device name already exists, try a different name');
