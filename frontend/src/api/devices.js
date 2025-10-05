@@ -49,14 +49,14 @@ export async function devicesImage(id){
 }
 
 
-export async function devicesAdd(name, encroKey){
+export async function devicesAdd(name, encroKey, logItems, actions){
     try{
         const options = {
             credentials: 'include',
             method: "POST",
             cache: "no-cache",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({name, encro_key: encroKey})
+            body: JSON.stringify({name, encro_key: encroKey, log_items: logItems, actions})
         };
         const response = await fetch('/api/devices/add', options);
         const devices = await response.json();
@@ -82,14 +82,14 @@ export async function devicesAdd(name, encroKey){
         return [false, 'failed', 400];
     }
 }
-export async function devicesUpdate(id, name, encroKey){
+export async function devicesUpdate(id, name, encroKey, logItems, actions){
     try{
         const options = {
             credentials: 'include',
             method: "POST",
             cache: "no-cache",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({device_id: id, name, encro_key: encroKey})
+            body: JSON.stringify({device_id: id, name, encro_key: encroKey, log_items: logItems, actions})
         };
         const response = await fetch('/api/devices/update', options);
         const devices = await response.json();

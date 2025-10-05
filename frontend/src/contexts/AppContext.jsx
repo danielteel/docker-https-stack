@@ -47,8 +47,8 @@ function makeApiObject(setUserFn) {
 
         devicesList: async () => checkForLogout(...await devicesList()),
         devicesImage: async (id) => checkForLogout(...await devicesImage(id)),
-        devicesAdd: async (name, encroKey) => checkForLogout(...await devicesAdd(name, encroKey)),
-        devicesUpdate: async (id, name, encroKey) => checkForLogout(...await devicesUpdate(id, name, encroKey)),
+        devicesAdd: async (name, encroKey, logItems, actions) => checkForLogout(...await devicesAdd(name, encroKey, logItems, actions)),
+        devicesUpdate: async (id, name, encroKey, logItems, actions) => checkForLogout(...await devicesUpdate(id, name, encroKey, logItems, actions)),
         devicesDelete: async (id) => checkForLogout(...await devicesDelete(id)),
         devicesAction: async (id, action, data) => checkForLogout(...await devicesAction(id, action, data)),
         devicesLog: async (id, startTime, endTime) => checkForLogout(...await devicesLog(id, startTime, endTime)),
