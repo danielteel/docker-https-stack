@@ -64,9 +64,12 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
                 setDevices(newDevices);
                 setEditItem({ open: false, item: null });
             }else{
+                const error=newDevices?.error;
                 const existingName = devices?.find(r=>(name.trim().toLowerCase() === r.name.trim().toLowerCase()));
                 const badKey = !isValidEncroKey(encroKey);
-                if (badKey){
+                if (error){
+                    setError(error);
+                }else if (badKey){
                     setError('Bad encro key, needs to be hexadecimal characters and 64 characters long');
                 }else if (existingName){
                     setError('Device name already exists, try a different name');
