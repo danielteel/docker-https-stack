@@ -5,8 +5,10 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Alert } from '@mui/material';
+import { Alert, IconButton, List, ListItem } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
+
+import EditIcon from '@mui/icons-material/Edit';
 
 function isHexadecimal(str){
     return /^[a-fA-F0-9]+$/i.test(str);
@@ -24,7 +26,19 @@ function generateRandomEncroKey() {
     const randomBytes = new Uint8Array(32);
     window.crypto.getRandomValues(randomBytes);
     return Array.from(randomBytes).map((i) => i.toString(16).padStart(2, '0')).join('');
-  }
+}
+
+function LogItems({logItems, setLogItems}){
+    return <List dense={false} sx={{maxWidth: '360px'}}>
+        {
+            logItems?.map?.((item) => (
+                <ListItem secondaryAction={<IconButton edge='end' aria-label="Delete"><EditIcon/></IconButton>}>
+                    <ListItemText primary={item?.name} secondary={item?.type}/>
+                </ListItem>
+            ))
+        }
+    </List>
+}
 
 export default function DeviceAddDialog({ api, devices, setDevices, open, setOpen }) {
     const [error, setError] = useState(null);
@@ -83,6 +97,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
             <DialogContent>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Encro Key' value={encroKey} onChange={e=>setEncroKey(e.target.value)}/>
+                <LogItems logItems={logItems} setLogItems={setLogItems}/>
             </DialogContent>
             <DialogActions disableSpacing>
                 <Alert style={error?{width:'100%'}:{display: 'none'}} variant='filled' severity={'error'}>{error}</Alert>
