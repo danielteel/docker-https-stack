@@ -32,16 +32,16 @@ function generateRandomEncroKey() {
 
 const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
 const actionColumns = [
-        {field: 'name', headerName: 'Name', type: 'string', width: 100, editable: true},
-        {field: 'byte', headerName: 'Byte', type: 'byte', width: 80, editable: true},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 100, editable: true},
+        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true},
+        {field: 'byte', headerName: 'Byte', type: 'byte', width: 120, editable: true},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 120, editable: true},
         {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
 ];
 
 const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
 const logItemColumns=[
-        {field: 'name', headerName: 'Name', type: 'string', width: 100, editable: true},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 100, editable: true},
+        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 120, editable: true},
         {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
 ];
 
