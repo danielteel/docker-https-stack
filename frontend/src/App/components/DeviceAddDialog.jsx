@@ -87,7 +87,7 @@ function LogItems({logItems, setLogItems}){
         <Stack sx={{width:'100%', height:'100%'}}>
             <h2>Log Items</h2>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
-                <DataGrid rows={logItemsWithIds} columns={localLogItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick/>
+                <DataGrid rows={logItemsWithIds} columns={localLogItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick hideFooterPagination/>
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
                 + Add Log Item
@@ -147,6 +147,7 @@ function Actions({ actions, setActions }) {
                 processRowUpdate={processRowUpdate}
                 sx={{ flex: 1 }}
                 disableSelectionOnClick
+                hideFooterPagination
                 />
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
