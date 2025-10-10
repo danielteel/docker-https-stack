@@ -85,12 +85,13 @@ function LogItems({logItems, setLogItems}){
 ], [handleDeleteRow]);
 
     return (
-        <Stack sx={{width:'100%', height:'100%'}} spacing={1}>
+        <Stack sx={{width:'100%', height:'100%'}}>
+            <h2>Log Items</h2>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
                 <DataGrid rows={logItemsWithIds} columns={localLogItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick/>
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
-                + Add Row
+                + Add Log Item
             </Button>
         </Stack>
     );
@@ -208,7 +209,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
     }
 
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleClose} maxWidth='lg' fullWidth>
         <DialogTitle sx={{py:'12px'}}>Add Device</DialogTitle>
             <DialogContent>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
