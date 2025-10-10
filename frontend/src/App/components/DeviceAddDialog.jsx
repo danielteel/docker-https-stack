@@ -45,10 +45,10 @@ function LogItems({logItems, setLogItems}){
     </List>
 }
 
-function ActionItems({actionItems, setActionItems}){
+function ActionItems({actions, setActions}){
     return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Actions</ListSubheader>}>
         {
-            actionItems?.map?.((item) => (
+            actions?.map?.((item) => (
                 <ListItem secondaryAction={<IconButton edge='end' aria-label="Edit"><EditIcon/></IconButton>}>
                     <ListItemText primary={item?.name} secondary={item?.type}/>
                     <ListItemText primary={item?.byte} secondary={item?.description}/>
@@ -57,7 +57,7 @@ function ActionItems({actionItems, setActionItems}){
         }
         <ListItem>
             <Button onClick={()=>{
-                setActionItems([...actionItems, {name:'New Item', type:'void', byte:0, description:''}])
+                setActions([...actions, {name:'New Item', type:'void', byte:0, description:''}])
             }}>+</Button>
         </ListItem>
     </List>
@@ -121,6 +121,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Encro Key' value={encroKey} onChange={e=>setEncroKey(e.target.value)}/>
                 <LogItems logItems={logItems} setLogItems={setLogItems}/>
+                <Actions actions={actions} setActions={setActions}/>
             </DialogContent>
             <DialogActions disableSpacing>
                 <Alert style={error?{width:'100%'}:{display: 'none'}} variant='filled' severity={'error'}>{error}</Alert>
