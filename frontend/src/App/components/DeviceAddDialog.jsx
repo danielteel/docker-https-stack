@@ -1,14 +1,15 @@
-import {  useState, useEffect } from 'react';
+import {  useState, useEffect, useMemo, useCallback } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Alert, IconButton, List, ListItem, ListItemText, ListSubheader } from '@mui/material';
+import { Alert, Box, IconButton, List, ListItem, ListItemText, ListSubheader, Stack } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import EditIcon from '@mui/icons-material/Edit';
+import { DataGrid } from '@mui/x-data-grid';
 
 function isHexadecimal(str){
     return /^[a-fA-F0-9]+$/i.test(str);
@@ -28,39 +29,81 @@ function generateRandomEncroKey() {
     return Array.from(randomBytes).map((i) => i.toString(16).padStart(2, '0')).join('');
 }
 
+
+const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
+const actionColumns = [
+        {field: 'name', headerName: 'Name', type: 'string', width: 100, editable: true},
+        {field: 'byte', headerName: 'Byte', type: 'byte', width: 80, editable: true},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 100, editable: true},
+        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
+];
+
+const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
+const logItemColumns=[
+        {field: 'name', headerName: 'Name', type: 'string', width: 100, editable: true},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 100, editable: true},
+        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
+];
+
 function LogItems({logItems, setLogItems}){
-    return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Log Items</ListSubheader>}>
-        {
-            logItems?.map?.((item) => (
-                <ListItem secondaryAction={<IconButton edge='end' aria-label="Edit"><EditIcon/></IconButton>}>
-                    <ListItemText primary={item?.name} secondary={item?.type}/>
-                </ListItem>
-            ))
-        }
-        <ListItem>
-            <Button onClick={()=>{
-                setLogItems([...logItems, {name:'New Item', type:'number', description:''}])
-            }}>+</Button>
-        </ListItem>
-    </List>
+    const logItemsWithIds = useMemo(() => {
+        return logItems.map((item, index) => ({ id: index, ...item }))
+    }, [logItems]);
+
+    const processRowUpdate = useCallback((newRow) => {
+        setLogItems((prev) => prev.map((row) => (row.id === newRow.id ? {name: newRow.name, type: newRow.type, description: newRow.description} : row)));
+        return newRow;
+    }, [setLogItems]);
+
+    const handleAddRow = useCallback(() => {
+        const newItem = { name: '', type: logItemTypes[0], description: '' };
+        setLogItems((prev) => [...prev, newItem]);
+    }, [setLogItems]);
+
+    return (
+        <Stack sx={{width:'100%', height:'100%'}} spacing={1}>
+            <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
+                <DataGrid rows={logItemsWithIds} columns={logItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} checkboxSelection disableSelectionOnClick/>
+            </Box>
+            <Button variant="contained" onClick={handleAddRow}>
+                + Add Row
+            </Button>
+        </Stack>
+    );
 }
 
-function Actions({actions, setActions}){
-    return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Actions</ListSubheader>}>
-        {
-            actions?.map?.((item) => (
-                <ListItem secondaryAction={<IconButton edge='end' aria-label="Edit"><EditIcon/></IconButton>}>
-                    <ListItemText primary={item?.name} secondary={item?.type}/>
-                    <ListItemText primary={item?.byte} secondary={item?.description}/>
-                </ListItem>
-            ))
-        }
-        <ListItem>
-            <Button onClick={()=>{
-                setActions([...actions, {name:'New Item', type:'void', byte:0, description:''}])
-            }}>+</Button>
-        </ListItem>
-    </List>
+
+function Actions({ actions, setActions }) {
+    const actionsWithIds = useMemo(() => actions.map((item, index) => ({ id: index, ...item }))
+    , [actions]);
+
+    const processRowUpdate = useCallback( (newRow) => {
+        setActions((prev) => prev.map((row, index) => index === newRow.id? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
+        return newRow;
+    }, [setActions]);
+
+    const handleAddRow = useCallback(() => {
+        const newAction = { name: '', byte: '', type: actionTypes[0], description: '' };
+        setActions((prev) => [...prev, newAction]);
+    }, [setActions]);
+
+    return (
+        <Stack sx={{ width: '100%', height: '100%' }} spacing={1}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <DataGrid
+                rows={actionsWithIds}
+                columns={actionColumns}
+                processRowUpdate={processRowUpdate}
+                sx={{ flex: 1 }}
+                checkboxSelection
+                disableSelectionOnClick
+                />
+            </Box>
+            <Button variant="contained" onClick={handleAddRow}>
+                + Add Row
+            </Button>
+        </Stack>
+    );
 }
 
 export default function DeviceAddDialog({ api, devices, setDevices, open, setOpen }) {
