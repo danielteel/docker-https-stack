@@ -62,7 +62,7 @@ function LogItems({logItems, setLogItems}){
     
     const handleDeleteRow = useCallback( (id) => {
         setLogItems((prev) => {
-            const filtered = prev.filter((row) => row.id !== id)
+            const filtered = prev.filter((row, index) => index !== id)
             return filtered.map( item => ({name: item.name, type: item.type, description: item.description}));
     });
     }, [setLogItems]);
@@ -113,7 +113,7 @@ function Actions({ actions, setActions }) {
 
     const handleDeleteRow = useCallback( (id) => {
         setActions((prev) => {
-            const filtered = prev.filter((row) => row.id !== id)
+            const filtered = prev.filter((row, index) => index !== id)
             return filtered.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
     });
     }, [setActions]);
