@@ -51,7 +51,7 @@ function LogItems({logItems, setLogItems}){
     }, [logItems]);
 
     const processRowUpdate = useCallback((newRow) => {
-        setLogItems((prev) => prev.map((row) => (row.id === newRow.id ? {name: newRow.name, type: newRow.type, description: newRow.description} : row)));
+        setLogItems((prev) => prev.map((row, index) => (index === newRow.id ? {name: newRow.name, type: newRow.type, description: newRow.description} : row)));
         return newRow;
     }, [setLogItems]);
 
@@ -71,18 +71,17 @@ function LogItems({logItems, setLogItems}){
     {
         field: 'actions',
         type: 'actions',
-        headerName: 'Actions',
+        headerName: '',
         width: 80,
         getActions: (params) => [
         <GridActionsCellItem
             icon={<DeleteIcon />}
             label="Delete"
             onClick={() => handleDeleteRow(params.id)}
-            showInMenu={false}
+            showInMenu={true}
         />,
         ],
-    },
-], [handleDeleteRow]);
+    }], [handleDeleteRow]);
 
     return (
         <Stack sx={{width:'100%', height:'100%'}}>
@@ -103,7 +102,7 @@ function Actions({ actions, setActions }) {
     , [actions]);
 
     const processRowUpdate = useCallback( (newRow) => {
-        setActions((prev) => prev.map((row) => row.id === newRow.id ? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
+        setActions((prev) => prev.map((row, index) => index === newRow.id ? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
         return newRow;
     }, [setActions]);
 
@@ -123,14 +122,14 @@ function Actions({ actions, setActions }) {
         {
             field: 'actions',
             type: 'actions',
-            headerName: 'Actions',
+            headerName: '',
             width: 80,
             getActions: (params) => [
             <GridActionsCellItem
                 icon={<DeleteIcon />}
                 label="Delete"
                 onClick={() => handleDeleteRow(params.id)}
-                showInMenu={false}
+                showInMenu={true}
             />,
             ],
         },
