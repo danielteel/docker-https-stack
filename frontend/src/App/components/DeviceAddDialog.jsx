@@ -45,7 +45,7 @@ function LogItems({logItems, setLogItems}){
     </List>
 }
 
-function ActionItems({actions, setActions}){
+function Actions({actions, setActions}){
     return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Actions</ListSubheader>}>
         {
             actions?.map?.((item) => (
