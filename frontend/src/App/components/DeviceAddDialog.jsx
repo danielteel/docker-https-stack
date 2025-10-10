@@ -8,8 +8,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Alert, Box, IconButton, List, ListItem, ListItemText, ListSubheader, Stack } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import EditIcon from '@mui/icons-material/Edit';
-import { DataGrid } from '@mui/x-data-grid';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { DataGrid, GridActionsCellItem  } from '@mui/x-data-grid';
 
 function isHexadecimal(str){
     return /^[a-fA-F0-9]+$/i.test(str);
@@ -63,7 +63,7 @@ function LogItems({logItems, setLogItems}){
     return (
         <Stack sx={{width:'100%', height:'100%'}} spacing={1}>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
-                <DataGrid rows={logItemsWithIds} columns={logItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} checkboxSelection disableSelectionOnClick/>
+                <DataGrid rows={logItemsWithIds} columns={logItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick/>
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
                 + Add Row
@@ -78,7 +78,7 @@ function Actions({ actions, setActions }) {
     , [actions]);
 
     const processRowUpdate = useCallback( (newRow) => {
-        setActions((prev) => prev.map((row, index) => index === newRow.id? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
+        setActions((prev) => prev.map((row) => row.id === newRow.id ? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
         return newRow;
     }, [setActions]);
 
@@ -87,20 +87,44 @@ function Actions({ actions, setActions }) {
         setActions((prev) => [...prev, newAction]);
     }, [setActions]);
 
+    const localActionColumns = useMemo(() => [...actionColumns,
+        {
+            field: 'actions',
+            type: 'actions',
+            headerName: 'Actions',
+            width: 80,
+            getActions: (params) => [
+            <GridActionsCellItem
+                icon={<DeleteIcon />}
+                label="Delete"
+                onClick={() => handleDeleteRow(params.id)}
+                showInMenu={false}
+            />,
+            ],
+        },
+    ], [handleDeleteRow]);
+
+    const handleDeleteRow = useCallback( (id) => {
+        setActions((prev) => {
+            const filtered = prev.filter((row) => row.id !== id)
+            return filtered.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
+    });
+    }, [setActions]);
+
     return (
-        <Stack sx={{ width: '100%', height: '100%' }} spacing={1}>
+        <Stack sx={{ width: '100%', height: '100%' }}>
+            <h2>Actions</h2>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 <DataGrid
                 rows={actionsWithIds}
-                columns={actionColumns}
+                columns={localActionColumns}
                 processRowUpdate={processRowUpdate}
                 sx={{ flex: 1 }}
-                checkboxSelection
                 disableSelectionOnClick
                 />
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
-                + Add Row
+                + Add Action
             </Button>
         </Stack>
     );
