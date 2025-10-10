@@ -5,7 +5,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Alert, IconButton, List, ListItem } from '@mui/material';
+import { Alert, IconButton, List, ListItem, ListSubheader } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,14 +29,37 @@ function generateRandomEncroKey() {
 }
 
 function LogItems({logItems, setLogItems}){
-    return <List dense={false} sx={{maxWidth: '360px'}}>
+    return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Log Items</ListSubheader>}>
         {
             logItems?.map?.((item) => (
-                <ListItem secondaryAction={<IconButton edge='end' aria-label="Delete"><EditIcon/></IconButton>}>
+                <ListItem secondaryAction={<IconButton edge='end' aria-label="Edit"><EditIcon/></IconButton>}>
                     <ListItemText primary={item?.name} secondary={item?.type}/>
                 </ListItem>
             ))
         }
+        <ListItem>
+            <Button onClick={()=>{
+                setLogItems([...logItems, {name:'New Item', type:'number', description:''}])
+            }}>+</Button>
+        </ListItem>
+    </List>
+}
+
+function ActionItems({actionItems, setActionItems}){
+    return <List dense={false} sx={{maxWidth: '360px'}} subheader={<ListSubheader>Actions</ListSubheader>}>
+        {
+            actionItems?.map?.((item) => (
+                <ListItem secondaryAction={<IconButton edge='end' aria-label="Edit"><EditIcon/></IconButton>}>
+                    <ListItemText primary={item?.name} secondary={item?.type}/>
+                    <ListItemText primary={item?.byte} secondary={item?.description}/>
+                </ListItem>
+            ))
+        }
+        <ListItem>
+            <Button onClick={()=>{
+                setActionItems([...actionItems, {name:'New Item', type:'void', byte:0, description:''}])
+            }}>+</Button>
+        </ListItem>
     </List>
 }
 

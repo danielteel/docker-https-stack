@@ -31,6 +31,7 @@ function isBadActions(actions){
         
         if (typeof action.type!=='string') return 'actions has entry with type not a string';
         if (!actionTypes.includes(action.type.toLowerCase().trim())) return 'actions has entry with invalid type';
+
         if (typeof action.description!=='string') return 'actions has entry with description not a string';
     }
     return false;
@@ -50,6 +51,7 @@ function isBadLogItems(logItems){
 
         if (typeof logItem.type!=='string') return 'log_items has entry with type not a string';
         if (!logItemTypes.includes(logItem.type.toLowerCase().trim())) return 'log_items has entry with invalid type';
+        
         if (typeof logItem.description!=='string') return 'log_items has entry with description not a string';
     }
     return false;
