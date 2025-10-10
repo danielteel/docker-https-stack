@@ -59,11 +59,35 @@ function LogItems({logItems, setLogItems}){
         const newItem = { name: '', type: logItemTypes[0], description: '' };
         setLogItems((prev) => [...prev, newItem]);
     }, [setLogItems]);
+    
+    const handleDeleteRow = useCallback( (id) => {
+        setLogItems((prev) => {
+            const filtered = prev.filter((row) => row.id !== id)
+            return filtered.map( item => ({name: item.name, type: item.type, description: item.description}));
+    });
+    }, [setLogItems]);
+
+    const localLogItemColumns = useMemo(() => [...logItemColumns,
+    {
+        field: 'actions',
+        type: 'actions',
+        headerName: 'Actions',
+        width: 80,
+        getActions: (params) => [
+        <GridActionsCellItem
+            icon={<DeleteIcon />}
+            label="Delete"
+            onClick={() => handleDeleteRow(params.id)}
+            showInMenu={false}
+        />,
+        ],
+    },
+], [handleDeleteRow]);
 
     return (
         <Stack sx={{width:'100%', height:'100%'}} spacing={1}>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
-                <DataGrid rows={logItemsWithIds} columns={logItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick/>
+                <DataGrid rows={logItemsWithIds} columns={localLogItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick/>
             </Box>
             <Button variant="contained" onClick={handleAddRow}>
                 + Add Row
@@ -87,6 +111,13 @@ function Actions({ actions, setActions }) {
         setActions((prev) => [...prev, newAction]);
     }, [setActions]);
 
+    const handleDeleteRow = useCallback( (id) => {
+        setActions((prev) => {
+            const filtered = prev.filter((row) => row.id !== id)
+            return filtered.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
+    });
+    }, [setActions]);
+
     const localActionColumns = useMemo(() => [...actionColumns,
         {
             field: 'actions',
@@ -104,12 +135,7 @@ function Actions({ actions, setActions }) {
         },
     ], [handleDeleteRow]);
 
-    const handleDeleteRow = useCallback( (id) => {
-        setActions((prev) => {
-            const filtered = prev.filter((row) => row.id !== id)
-            return filtered.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
-    });
-    }, [setActions]);
+
 
     return (
         <Stack sx={{ width: '100%', height: '100%' }}>
