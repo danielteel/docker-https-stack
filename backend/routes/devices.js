@@ -33,6 +33,7 @@ function isBadActions(actions){
         if (!actionTypes.includes(action.type.toLowerCase().trim())) return 'actions has entry with invalid type';
 
         if (typeof action.description!=='string') return 'actions has entry with description not a string';
+        console.log(actions);
     }
     return false;
 }
