@@ -33,7 +33,7 @@ function generateRandomEncroKey() {
 const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
 const actionColumns = [
         {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true, sortable: false, filterable: false},
-        {field: 'byte', headerName: 'Byte', type: 'byte', width: 120, editable: true, sortable: false, filterable: false},
+        {field: 'byte', headerName: 'Byte', type: 'number', width: 120, editable: true, sortable: false, filterable: false},
         {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 120, editable: true, sortable: false, filterable: false},
         {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
 ];
@@ -184,7 +184,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
         try{
             setInProgress('adding');
             const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, description: item.description})));
-            const sanitizedActions = JSON.stringify(logItems.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description})));
+            const sanitizedActions = JSON.stringify(logItems.map( item => ({name: item.name, byte: Number(item.byte), type: item.type, description: item.description})));
             const [passed, newDevices] = await api.devicesAdd(name, encroKey, sanitizedLogItems, sanitizedActions);
             if (passed) {
                 setDevices(newDevices);
