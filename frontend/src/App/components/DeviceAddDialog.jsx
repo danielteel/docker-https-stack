@@ -32,17 +32,17 @@ function generateRandomEncroKey() {
 
 const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
 const actionColumns = [
-        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true},
-        {field: 'byte', headerName: 'Byte', type: 'byte', width: 120, editable: true},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 120, editable: true},
-        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
+        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true, sortable: false, filterable: false},
+        {field: 'byte', headerName: 'Byte', type: 'byte', width: 120, editable: true, sortable: false, filterable: false},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 120, editable: true, sortable: false, filterable: false},
+        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
 ];
 
 const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
 const logItemColumns=[
-        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 120, editable: true},
-        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true}
+        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true, sortable: false, filterable: false},
+        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 120, editable: true, sortable: false, filterable: false},
+        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
 ];
 
 function LogItems({logItems, setLogItems}){
@@ -183,8 +183,9 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
     const handleAdd = async () => {
         try{
             setInProgress('adding');
-
-            const [passed, newDevices] = await api.devicesAdd(name, encroKey);
+            const sanitizedLogItems = logItems.map( item => ({name: item.name, type: item.type, description: item.description}));
+            const sanitizedActions = logItems.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
+            const [passed, newDevices] = await api.devicesAdd(name, encroKey, sanitizedLogItems, sanitizedActions);
             if (passed) {
                 setDevices(newDevices);
                 setOpen(false);
@@ -209,7 +210,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
     }
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth='lg' fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
         <DialogTitle sx={{py:'12px'}}>Add Device</DialogTitle>
             <DialogContent>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
