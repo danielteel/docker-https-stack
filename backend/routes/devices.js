@@ -212,7 +212,7 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
         const deviceExists = await req.knex('devices').select(['name']).where('name', name);
         if (deviceExists.length) return res.status(400).json({error: 'device with name '+name+' already exists'});
 
-        await req.knex('devices').insert({name, encro_key, log_items, actions});
+        await req.knex('devices').insert({name, encro_key, log_items: JSON.stringify(log_items), actions: JSON.stringify(actions)});
 
         res.json(await getAndValidateDevices(req.knex, req.user.role));
     }catch(e){
