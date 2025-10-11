@@ -192,7 +192,6 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
             if (!isHexadecimal(encro_key)) fieldCheck+='encro_key needs to be hexadecimal character. ';
 
             try {
-                console.log(log_items);
                 log_items=JSON.parse(log_items);
                 const badLogItems = isBadLogItems(log_items);
                 if (badLogItems) fieldCheck+=badLogItems+' ';
@@ -200,7 +199,6 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
                 fieldCheck+='log_items is not valid JSON. ';
             }
             try {
-                console.log(actions);
                 actions=JSON.parse(actions);
                 const badActions = isBadActions(actions);
                 if (badActions) fieldCheck+=badActions+' ';
