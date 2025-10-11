@@ -17,7 +17,7 @@ function isBadActions(actions){
     const actionBytes = new Set();
     if (actions===null || actions===undefined) return false;
     if (!Array.isArray(actions)) return 'actions not an array';
-    console.log(actions);
+
     for (const action of actions){
         if (!action) return 'actions has null/undefined entry';
         if (typeof action.name!=='string') return 'actions has entry with name not a string';
@@ -192,6 +192,7 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
             if (!isHexadecimal(encro_key)) fieldCheck+='encro_key needs to be hexadecimal character. ';
 
             try {
+                console.log(log_items);
                 log_items=JSON.parse(log_items);
                 const badLogItems = isBadLogItems(log_items);
                 if (badLogItems) fieldCheck+=badLogItems+' ';
@@ -199,6 +200,7 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
                 fieldCheck+='log_items is not valid JSON. ';
             }
             try {
+                console.log(actions);
                 actions=JSON.parse(actions);
                 const badActions = isBadActions(actions);
                 if (badActions) fieldCheck+=badActions+' ';
