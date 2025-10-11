@@ -17,6 +17,7 @@ function isBadActions(actions){
     const actionBytes = new Set();
     if (actions===null || actions===undefined) return false;
     if (!Array.isArray(actions)) return 'actions not an array';
+    console.log(actions);
     for (const action of actions){
         if (!action) return 'actions has null/undefined entry';
         if (typeof action.name!=='string') return 'actions has entry with name not a string';
@@ -33,7 +34,6 @@ function isBadActions(actions){
         if (!actionTypes.includes(action.type.toLowerCase().trim())) return 'actions has entry with invalid type';
 
         if (typeof action.description!=='string') return 'actions has entry with description not a string';
-        console.log(actions);
     }
     return false;
 }
