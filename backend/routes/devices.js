@@ -24,7 +24,7 @@ function isBadActions(actions){
         if (actionNames.has(action.name.toLowerCase().trim())) return 'actions has entry with duplicate name';
         actionNames.add(action.name.toLowerCase().trim());
 
-        if (typeof action.byte!=='number') return 'actions has entry with byte not a number';
+        if (typeof action.byte!=='number') return 'actions has entry with byte not a number, its actually a '+(typeof action.byte)+' with a value of '+action.byte;
         if (action.byte<0 || action.byte>255) return 'actions has entry with byte not in range 0-255';
         if (actionBytes.has(action.byte)) return 'actions has entry with duplicate byte';
         actionBytes.add(action.byte);
