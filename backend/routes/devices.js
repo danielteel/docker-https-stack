@@ -258,7 +258,7 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
             if (deviceExists[0].device_id!=device_id) return res.status(400).json({error: 'device with name '+name+' already exists'});
         }
 
-        await req.knex('devices').update({name, encro_key, log_items, actions}).where({id: device_id});
+        await req.knex('devices').update({name, encro_key, log_items: JSON.stringify(log_items), actions: JSON.stringify(actions)}).where({id: device_id});
 
         getDeviceServer().disconnectDeviceId(device_id);
 
