@@ -65,8 +65,9 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
     const handleUpdate = async () => {
         try{
             setInProgress('update');
-
-            const [passed, newDevices] = await api.devicesUpdate(editItem?.item?.device_id, name, encroKey, logItems, actions);
+            const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, description: item.description})));
+            const sanitizedActions = JSON.stringify(actions.map( item => ({name: item.name, byte: Number(item.byte), type: item.type, description: item.description})));
+            const [passed, newDevices] = await api.devicesUpdate(editItem?.item?.device_id, name, encroKey, sanitizedLogItems, sanitizedActions);
             if (passed) {
                 setDevices(newDevices);
                 setEditItem({ open: false, item: null });
@@ -91,7 +92,7 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
     }
 
     return (
-        <Dialog open={editItem.open} onClose={handleClose}>
+        <Dialog open={editItem.open} onClose={handleClose} maxWidth='md' fullWidth>
             <DialogTitle sx={{py:'12px'}}>Edit Device</DialogTitle>
             <DialogContent>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
