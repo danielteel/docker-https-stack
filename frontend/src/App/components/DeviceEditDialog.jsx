@@ -8,6 +8,9 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { Alert } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
+import LogItems from './LogItems';
+import Actions from './Actions';
+
 function isHexadecimal(str){
     return /^[a-fA-F0-9]+$/i.test(str);
 }
@@ -24,11 +27,15 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
     const [error, setError] = useState(null);
     const [name, setName] = useState('');
     const [encroKey, setEncroKey] = useState('');
+    const [actions, setActions] = useState([]);
+    const [logItems, setLogItems] = useState([]);
     const [inProgress, setInProgress] = useState(null);
 
     useEffect(() => {
         setName(editItem?.item?.name || '');
         setEncroKey(editItem?.item?.encro_key || '');
+        setActions(editItem?.item?.actions || []);
+        setLogItems(editItem?.item?.log_items || []);
         setError(null);
     }, [editItem]);
 
@@ -59,7 +66,7 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
         try{
             setInProgress('update');
 
-            const [passed, newDevices] = await api.devicesUpdate(editItem?.item?.device_id, name, encroKey);
+            const [passed, newDevices] = await api.devicesUpdate(editItem?.item?.device_id, name, encroKey, logItems, actions);
             if (passed) {
                 setDevices(newDevices);
                 setEditItem({ open: false, item: null });
@@ -89,6 +96,8 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
             <DialogContent>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Name'      value={name}     onChange={e=>setName(e.target.value)}/>
                 <TextField disabled={!!inProgress} fullWidth margin='dense' label='Encro Key' value={encroKey} onChange={e=>setEncroKey(e.target.value)}/>
+                <LogItems logItems={logItems} setLogItems={setLogItems}/>
+                <Actions actions={actions} setActions={setActions}/>
             </DialogContent>
             <DialogActions disableSpacing>
                 <Alert style={error?{width:'100%'}:{display: 'none'}} variant='filled' severity={'error'}>{error}</Alert>

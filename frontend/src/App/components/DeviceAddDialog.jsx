@@ -1,15 +1,15 @@
-import {  useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { Alert, Box, IconButton, List, ListItem, ListItemText, ListSubheader, Stack } from '@mui/material';
+import { Alert } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import DeleteIcon from '@mui/icons-material/Delete';
-import { DataGrid, GridActionsCellItem  } from '@mui/x-data-grid';
+import LogItems from './LogItems';
+import Actions from './Actions';
 
 function isHexadecimal(str){
     return /^[a-fA-F0-9]+$/i.test(str);
@@ -30,132 +30,6 @@ function generateRandomEncroKey() {
 }
 
 
-const actionTypes = ['number', 'time', 'string', 'bool', 'void', 'color'];
-const actionColumns = [
-        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true, sortable: false, filterable: false},
-        {field: 'byte', headerName: 'Byte', type: 'number', width: 120, editable: true, sortable: false, filterable: false},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: actionTypes, width: 120, editable: true, sortable: false, filterable: false},
-        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
-];
-
-const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
-const logItemColumns=[
-        {field: 'name', headerName: 'Name', type: 'string', width: 200, editable: true, sortable: false, filterable: false},
-        {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 120, editable: true, sortable: false, filterable: false},
-        {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
-];
-
-function LogItems({logItems, setLogItems}){
-    const logItemsWithIds = useMemo(() => {
-        return logItems.map((item, index) => ({ id: index, ...item }))
-    }, [logItems]);
-
-    const processRowUpdate = useCallback((newRow) => {
-        setLogItems((prev) => prev.map((row, index) => (index === newRow.id ? {name: newRow.name, type: newRow.type, description: newRow.description} : row)));
-        return newRow;
-    }, [setLogItems]);
-
-    const handleAddRow = useCallback(() => {
-        const newItem = { name: '', type: logItemTypes[0], description: '' };
-        setLogItems((prev) => [...prev, newItem]);
-    }, [setLogItems]);
-    
-    const handleDeleteRow = useCallback( (id) => {
-        setLogItems((prev) => {
-            const filtered = prev.filter((row, index) => index !== id)
-            return filtered.map( item => ({name: item.name, type: item.type, description: item.description}));
-    });
-    }, [setLogItems]);
-
-    const localLogItemColumns = useMemo(() => [...logItemColumns,
-    {
-        field: 'actions',
-        type: 'actions',
-        headerName: '',
-        width: 80,
-        getActions: (params) => [
-        <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={() => handleDeleteRow(params.id)}
-            showInMenu={true}
-        />,
-        ],
-    }], [handleDeleteRow]);
-
-    return (
-        <Stack sx={{width:'100%', height:'100%'}}>
-            <h2>Log Items</h2>
-            <Box sx={{flex: 1, display: 'flex', flexDirection: 'column', minHeight:0}}>
-                <DataGrid rows={logItemsWithIds} columns={localLogItemColumns} processRowUpdate={processRowUpdate} sx={{flex: 1}} disableSelectionOnClick hideFooterPagination/>
-            </Box>
-            <Button variant="contained" onClick={handleAddRow}>
-                + Add Log Item
-            </Button>
-        </Stack>
-    );
-}
-
-
-function Actions({ actions, setActions }) {
-    const actionsWithIds = useMemo(() => actions.map((item, index) => ({ id: index, ...item }))
-    , [actions]);
-
-    const processRowUpdate = useCallback( (newRow) => {
-        setActions((prev) => prev.map((row, index) => index === newRow.id ? {name: newRow.name, byte: newRow.byte, type: newRow.type, description: newRow.description} : row));
-        return newRow;
-    }, [setActions]);
-
-    const handleAddRow = useCallback(() => {
-        const newAction = { name: '', byte: '', type: actionTypes[0], description: '' };
-        setActions((prev) => [...prev, newAction]);
-    }, [setActions]);
-
-    const handleDeleteRow = useCallback( (id) => {
-        setActions((prev) => {
-            const filtered = prev.filter((row, index) => index !== id)
-            return filtered.map( item => ({name: item.name, byte: item.byte, type: item.type, description: item.description}));
-    });
-    }, [setActions]);
-
-    const localActionColumns = useMemo(() => [...actionColumns,
-        {
-            field: 'actions',
-            type: 'actions',
-            headerName: '',
-            width: 80,
-            getActions: (params) => [
-            <GridActionsCellItem
-                icon={<DeleteIcon />}
-                label="Delete"
-                onClick={() => handleDeleteRow(params.id)}
-                showInMenu={true}
-            />,
-            ],
-        },
-    ], [handleDeleteRow]);
-
-
-
-    return (
-        <Stack sx={{ width: '100%', height: '100%' }}>
-            <h2>Actions</h2>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <DataGrid
-                rows={actionsWithIds}
-                columns={localActionColumns}
-                processRowUpdate={processRowUpdate}
-                sx={{ flex: 1 }}
-                disableSelectionOnClick
-                hideFooterPagination
-                />
-            </Box>
-            <Button variant="contained" onClick={handleAddRow}>
-                + Add Action
-            </Button>
-        </Stack>
-    );
-}
 
 export default function DeviceAddDialog({ api, devices, setDevices, open, setOpen }) {
     const [error, setError] = useState(null);
