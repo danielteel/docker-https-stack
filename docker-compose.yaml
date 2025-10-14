@@ -54,7 +54,6 @@ services:
       - VIRTUAL_HOST=${LETSENCRYPT_HOST}
       - API_PORT=${API_PORT}
       - DEVICE_PORT=${DEVICE_PORT}
-      - PLAIN_DEVICE_PORT=${PLAIN_DEVICE_PORT}
       - SUPER_PASSWORD=${SUPER_PASSWORD}
       - SUPER_USERNAME=${SUPER_USERNAME}
       - DOMAIN=${DOMAIN}
@@ -77,7 +76,6 @@ services:
       - postgres
     ports:
       - ${DEVICE_PORT}:${DEVICE_PORT}
-      - ${PLAIN_DEVICE_PORT}:${PLAIN_DEVICE_PORT}
     networks:
       - web
       - database
