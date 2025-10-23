@@ -10,7 +10,7 @@ const devicePort = process.env.DEVICE_PORT || 4004;
 
 const server = http.createServer(app);
 
-const wss = new WebSocketServer({ server, path: '/ws' });
+const wss = new WebSocketServer({ server, path: '/api/ws' });
 wss.on('connection', (ws, req) => {
   console.log('✅ New WebSocket connection from', req.socket.remoteAddress);
   ws.send('Hello from shared WebSocket server!');
