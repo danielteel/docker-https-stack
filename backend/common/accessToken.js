@@ -164,4 +164,34 @@ async function authenticate(minRole, req, res, next){
 }
 
 
-module.exports = {initAccessToken, generateAccessToken, decryptAccessToken, authenticate, getUserFromToken, isHigherRanked, isAtLeastRanked, setAccessCookies};
+async function manualAuthenticate(minRole, cookies){
+    try {
+        if (!ROLES.includes(minRole)){
+            throw Error('unknown min role '+minRole+', expected one of '+ROLES.join(', '));
+        }
+        
+        const decryptedAccessToken = decryptAccessToken(cookies['accessToken']);
+        if (!decryptedAccessToken) return null;
+
+        if (getHash(decryptedAccessToken.hashcess) !== cookies['hashcess']){
+            return null;
+        }
+
+        const user=await getUserFromToken(decryptedAccessToken);
+        if (!user) return null;
+
+        const userRank = ROLES.indexOf(user.role.toLowerCase());
+        const minRank = ROLES.indexOf(minRole.toLowerCase());
+        if (userRank < minRank) return null;
+
+        return user;
+        
+    }catch (e){
+        console.error('ERROR manualAuthenticate', e);
+        return null;
+    }
+}
+
+
+
+module.exports = {initAccessToken, generateAccessToken, decryptAccessToken, authenticate, manualAuthenticate, getUserFromToken, isHigherRanked, isAtLeastRanked, setAccessCookies};
