@@ -31,7 +31,7 @@ wss.on('connection', (ws, req) => {
     parseCookies(req, {}, async () => {
         console.log('Parsed cookies:', req.cookies);
 
-        const user = await manualAuthenticate('user', req.cookies);
+        const user = await manualAuthenticate('member', req.cookies);
         if (!user) {
             console.log('Authentication failed — closing WebSocket');
             return ws.close(1008, 'Authentication failed');
