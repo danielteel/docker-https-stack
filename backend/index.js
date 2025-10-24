@@ -36,7 +36,7 @@ wss.on('connection', (ws, req) => {
   ws.on('upgrade', (req) => {
     console.log('🔄 WebSocket upgrade');
     console.log(req.cookies);
-  }
+  });
   
 });
 
