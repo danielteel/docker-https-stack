@@ -6,7 +6,7 @@ const {DeviceServer} = require('./deviceServer.js');
 
 const cookieParser = require('cookie-parser');
 const parseCookies = cookieParser();
-const {manualAuthenticate} = require('../common/accessToken');
+const {manualAuthenticate} = require('./common/accessToken');
 
 const apiPort = process.env.API_PORT || 4001;
 const devicePort = process.env.DEVICE_PORT || 4004;
