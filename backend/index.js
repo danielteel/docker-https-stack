@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/api/ws' });
 wss.on('connection', (ws, req) => {
   console.log('✅ New WebSocket connection from', req.socket.remoteAddress);
-  console.log(req.cookies);
+  console.log(req.headers);
   const interval = setInterval(() => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.ping(); // Send a ping frame
