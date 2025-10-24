@@ -33,8 +33,9 @@ wss.on('connection', (ws, req) => {
     clearInterval(interval);
     console.log('❌ WebSocket disconnected');
   });
-  ws.on('upgrade', () => {
+  ws.on('upgrade', (req) => {
     console.log('🔄 WebSocket upgrade');
+    console.log(req.cookies);
   }
   
 });
