@@ -11,38 +11,37 @@ const onMessage = (ws, message) => {
 
 const onConnection = (ws, req) => {
     ws.isAlive=true;
-    console.log('New WebSocket connection from', req.socket.remoteAddress);
     ws.on('pong', () => {
         ws.isAlive = true;
         console.log('Pong from client');
+    });
 
-        parseCookies(req, {}, async () => {
-            const user = await manualAuthenticate('member', req.cookies);
-            if (!user) {
-                console.log('Authentication failed — closing WebSocket');
-                return ws.close(1008, 'Authentication failed');
-            }
+    parseCookies(req, {}, async () => {
+        const user = await manualAuthenticate('member', req.cookies);
+        if (!user) {
+            console.log('Authentication failed — closing WebSocket');
+            return ws.close(1008, 'Authentication failed');
+        }
 
-            ws.user = user;
-            console.log('WebSocket authenticated for user:', user);
+        ws.user = user;
+        console.log('WebSocket authenticated for user:', user);
 
-            ws.on('close', () => {
-                clearInterval(ws.interval);
-                console.log('WebSocket disconnected');
-            });
-
-            ws.interval = setInterval(() => {
-                if (!ws.isAlive) {
-                    console.log('Client unresponsive — terminating');
-                    return ws.terminate();
-                }
-                ws.isAlive = false;
-                ws.ping();
-            }, 30000);
-
-            ws.on('message', (msg) => onMessage(ws, msg));
-            ws.send(`✅ Welcome ${user.email}! Auth successful.`);
+        ws.on('close', () => {
+            clearInterval(ws.interval);
+            console.log('WebSocket disconnected');
         });
+
+        ws.interval = setInterval(() => {
+            if (!ws.isAlive) {
+                console.log('Client unresponsive — terminating');
+                return ws.terminate();
+            }
+            ws.isAlive = false;
+            ws.ping();
+        }, 30000);
+
+        ws.on('message', (msg) => onMessage(ws, msg));
+        ws.send(`✅ Welcome ${user.email}! Auth successful.`);
     });
     
 }
