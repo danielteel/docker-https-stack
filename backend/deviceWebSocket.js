@@ -11,7 +11,7 @@ const onMessage = (ws, message) => {
 
 const onConnection = (ws, req) => {
     ws.isAlive=true;
-    
+    console.log('New WebSocket connection from', req.socket.remoteAddress);
     ws.on('pong', () => {
         ws.isAlive = true;
         console.log('Pong from client');
@@ -41,7 +41,6 @@ const onConnection = (ws, req) => {
             }, 30000);
 
             ws.on('message', (msg) => onMessage(ws, msg));
-            ws.message(`📩 From ${user.email}:`, msg.toString());
             ws.send(`✅ Welcome ${user.email}! Auth successful.`);
         });
     });
