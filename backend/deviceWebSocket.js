@@ -3,6 +3,8 @@ const { manualAuthenticate } = require("./common/accessToken");
 const cookieParser = require('cookie-parser');
 const parseCookies = cookieParser();
 
+let wss=null;
+
 const onMessage = (ws, message) => {
 
 }
@@ -38,22 +40,24 @@ const onConnection = (ws, req) => {
             }, 30000);
 
             ws.on('message', (msg) => onMessage(ws, msg));
+
+            ws.send(`✅ Welcome ${user.email}! Auth successful.`);
         });
     });
     
 }
 
 
-function createWebSocketServer(server, path, deviceServer){
-    const wss = new WebSocketServer({server, path});
+function getWebSocketServer(server, path, deviceServer){
+    if (wss) return wss;
 
+    wss = new WebSocketServer({server, path});
     wss.on('connection', onConnection);
-
     return wss;
 }
 
 
-module.exports={createWebSocketServer};
+module.exports={getWebSocketServer};
 
 // const wss = new WebSocketServer({ server, path: '/api/ws' });
 
