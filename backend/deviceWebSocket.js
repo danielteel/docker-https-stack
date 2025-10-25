@@ -24,6 +24,7 @@ const onConnection = (ws, req) => {
             }
 
             ws.user = user;
+            console.log('WebSocket authenticated for user:', user);
 
             ws.on('close', () => {
                 clearInterval(ws.interval);
@@ -40,7 +41,7 @@ const onConnection = (ws, req) => {
             }, 30000);
 
             ws.on('message', (msg) => onMessage(ws, msg));
-
+            ws.message(`📩 From ${user.email}:`, msg.toString());
             ws.send(`✅ Welcome ${user.email}! Auth successful.`);
         });
     });
