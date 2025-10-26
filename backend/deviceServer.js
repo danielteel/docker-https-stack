@@ -55,8 +55,11 @@ class DeviceIO {
         this.payloadWriteIndex=0;
         this.payload=null;
 
+        this.deviceId=null;
+        
         this.actions=null;
         this.values={};
+        this.image=null;
 
         socket.on('end', () => {
             this.disconnect(this.name+' '+this.socket.address+' disconnected.');
@@ -313,6 +316,16 @@ class DeviceServer{
         const foundDevices=[];
         for (const device of this.devices){
             if (device.name===name){
+                foundDevices.push(device);
+            }
+        }
+        return devices;
+    }    
+
+    getDevicesOfId = (id) =>{
+        const foundDevices=[];
+        for (const device of this.devices){
+            if (device.deviceId===id){
                 foundDevices.push(device);
             }
         }
