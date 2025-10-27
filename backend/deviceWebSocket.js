@@ -93,6 +93,7 @@ function getWebSocketServer(server, path, deviceSrv){
 
     deviceServer.subscribeToUpdates((type, deviceId, valueName, valueData) => {
         deviceId=Number(deviceId);
+        console.log('Device update:', {type, deviceId, valueName});
 
         let payload={};
         if (type==='value'){
