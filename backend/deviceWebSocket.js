@@ -93,7 +93,6 @@ function getWebSocketServer(server, path, deviceSrv){
 
     deviceServer.subscribeToUpdates((type, deviceId, valueName, valueData) => {
         deviceId=Number(deviceId);
-        console.log('Device update:', {type, deviceId, valueName});
 
         let payload={};
         if (type==='value'){
@@ -121,7 +120,7 @@ function getWebSocketServer(server, path, deviceSrv){
         }
 
         for (const ws of activeConnections){
-            if (ws.readyState==ws.OPEN && ws.subscriptions.has(deviceId)){
+            if (ws.subscriptions.has(deviceId)){
                 ws.send(stringifiedPayload);
             }
         }
