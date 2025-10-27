@@ -67,7 +67,7 @@ async function getAndValidateDevices(knex, userRole){
     if (devices.length===0) return [];
 
     for (const device of devices){
-        device.connected=getDeviceServer().getDeviceOfId(Number(device.device_id));
+        device.connected=!!(getDeviceServer().getDeviceOfId(Number(device.device_id)));
     }
     return devices;
 }
