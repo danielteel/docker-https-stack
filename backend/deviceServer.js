@@ -118,7 +118,7 @@ class DeviceIO {
 
     sendPacket = (data) => {
         if (!this.socket) return false;
-        
+
         if (typeof data==='string') data=textEncoder.encode(data);
         if (data && data.length>0x0FFFF0){
             console.log(this.name, 'cant send a message bigger than 0x0FFFF0');
@@ -194,14 +194,17 @@ class DeviceIO {
                     }
                     getKnex()('devices').select('encro_key', 'id').where({name: this.name}).then( (val) => {
                         if (val && val[0] && val[0].encro_key){
-                            this.key=val[0].encro_key;
-                            this.deviceId=val[0].id;
-                            
-                            const oldDeviceFound = this.deviceServer?.getDeviceOfId(this.deviceId);
+
+                            const oldDeviceFound = this.deviceServer?.getDeviceOfId(val[0].id);
                             if (oldDeviceFound){
                                 console.log('Disconnecting old device connection for', this.name);
                                 oldDeviceFound.disconnect('New device connection established for "'+this.name+'"');
                             }
+
+                            this.key=val[0].encro_key;
+                            this.deviceId=val[0].id;
+                            
+
 
                             this.packetState=PACKETSTATE.LEN1;
                             this.unpauseIncomingData();
