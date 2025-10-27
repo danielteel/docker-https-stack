@@ -91,7 +91,7 @@ function getWebSocketServer(server, path, deviceSrv){
 
     deviceServer=deviceSrv;
 
-    deviceServer.registerUpdateCallback((type, deviceId, valueName, valueData) => {
+    deviceServer.subscribeToUpdates((type, deviceId, valueName, valueData) => {
         deviceId=Number(deviceId);
 
         let payload={};
