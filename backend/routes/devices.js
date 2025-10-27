@@ -5,8 +5,6 @@ const {getHash, verifyFields, generateVerificationCode, isLegalPassword, isHexad
 const fetch = require('node-fetch');
 const {getDeviceServer} = require('../deviceServer');
 
-const {stackVertically} = require('../common/images');
-
 
 const router = express.Router();
 module.exports = router;
@@ -58,7 +56,7 @@ function isBadLogItems(logItems){
     return false;
 }
 
-async function getAndValidateDevices(knex, userRole, wantDirectObject=false){
+async function getAndValidateDevices(knex, userRole){
     let devices;
     const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
     if (isAtLeastAdmin){
@@ -68,26 +66,13 @@ async function getAndValidateDevices(knex, userRole, wantDirectObject=false){
     }
     if (devices.length===0) return [];
 
-
-    const connectedDevices=getDeviceServer().getDevices();
-
     for (const device of devices){
-        device.connected=[];
-
-        for (const connectedDevice of connectedDevices){
-            if (connectedDevice.name===device.name){
-                device.connected.push(connectedDevice);
-            }
-        }
-        if (!wantDirectObject){
-            device.connected=device.connected.length;
-        }
+        device.connected=getDeviceServer().getDeviceOfId(Number(device.device_id));
     }
-
     return devices;
 }
 
-async function getADevice(knex, userRole, deviceId, wantDirectObject=false){
+async function getADevice(knex, userRole, deviceId){
     let device;
     const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
     if (isAtLeastAdmin){
@@ -97,17 +82,8 @@ async function getADevice(knex, userRole, deviceId, wantDirectObject=false){
     }
     if (!device) return null;
     
-    device.connected=[];
-    
-    for (const connectedDevice of getDeviceServer().getDevices()){
-        if (connectedDevice.name===device.name){
-            device.connected.push(connectedDevice);
-        }
-    }
+    device.connected=getDeviceServer().getDeviceOfId(Number(deviceId));
 
-    if (!wantDirectObject){
-        device.connected=device.connected.length;
-    }
     return device;
 }
 
@@ -124,24 +100,15 @@ router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], a
     try {
         const device_id = Number(req.params.device_id);
 
-        const device=await getADevice(req.knex, req.user.role, device_id, true);
+        const device=await getADevice(req.knex, req.user.role, device_id);
 
-        if (device?.connected?.length===1){
-            if (device.connected[0].image){
+        if (device?.connected){
+            if (device.connected.image){
                 res.writeHead(200, { 'content-type': 'image/jpeg' });
-                return res.end(device.connected[0].image, 'binary');
+                return res.end(device.connected.image, 'binary');
             }else{
                 return res.status(400).json({error: 'device hasnt sent an image yet'});
             }
-        }else if (device?.connected?.length>1){
-            //More than one device connected with this id
-            //stack images vertically if we got more than one image
-            const buffers = [];
-            for (const connectedDevice of device.connected){
-                if (connectedDevice.image) buffers.push(connectedDevice.image);
-            }
-            res.writeHead(200, { 'content-type': 'image/jpeg' });
-            return res.end(await stackVertically(buffers), 'binary');
         }
 
         return res.status(400).json({error: 'invalid device id or its not connected'});
@@ -303,15 +270,10 @@ router.post('/action', [needKnex, authenticate.bind(null, 'member')], async (req
 
         const device = await getADevice(req.knex, req.user.role, device_id, true);
         if (device?.connected){
-            let didNotFail=true;
-            for (const connectedDevice of device.connected){
-                didNotFail&&=connectedDevice.sendAction(action, data);
-            }
-            if (didNotFail){
+            if (device.connected.sendAction(action, data)){
                 return res.status(200).end();
             }
         }
-    
         return res.status(400).json({error: 'failed to send action, either device not connected, or invalid action command'});
     }catch(e){
         console.error('ERROR POST /devices/action', req.body, e);

@@ -149,14 +149,7 @@ class DeviceIO {
             if (data){
                 if (data[0]===0xFF && data[1]===0xD8){
                     this.image=data;
-                }else if (data[0]===0xFF && data[1]===0x01){
-                    //Device sent interface information
-                    this.actions=[];
-                    const actions=textDecoder.decode(data).slice(2).split(',');
-                    for (const action of actions){
-                        const [title, type, commandByte] = action.split(':');
-                        this.actions.push({title, type, commandByte});
-                    }
+                    this.deviceServer.imageUpdate(this.deviceId, this.image);
                 }else{
                     const [dataName, dataVal]=textDecoder.decode(data).split('=');
 
@@ -168,6 +161,7 @@ class DeviceIO {
                         });
                     }else{
                         this.values[dataName]=dataVal;
+                        this.deviceServer.valueUpdate(this.deviceId, dataName, dataVal);
                     }
                 }
             }
@@ -200,6 +194,12 @@ class DeviceIO {
                         if (val && val[0] && val[0].encro_key){
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
+                            
+                            const oldDeviceFound = this.deviceServer?.getDeviceOfId(this.deviceId);
+                            if (oldDeviceFound){
+                                console.log('Disconnecting old device connection for', this.name);
+                                oldDeviceFound.disconnect('New device connection established for "'+this.name+'"');
+                            }
 
                             this.packetState=PACKETSTATE.LEN1;
                             this.unpauseIncomingData();
@@ -276,6 +276,8 @@ class DeviceServer{
         this.server=new (require('net')).Server();
 
         this.devices=[];
+        
+        this.updateCallbacks=new Set();
 
         this.server.on('connection', (socket) => {
             const newDevice=new DeviceIO(socket, this, this.constructor.socketTimeoutTime);
@@ -312,24 +314,59 @@ class DeviceServer{
         return this.devices;
     }
 
-    getDevicesOfName = (name) =>{
-        const foundDevices=[];
+    getDeviceOfName = (name) =>{
         for (const device of this.devices){
             if (device.name===name){
-                foundDevices.push(device);
+                return device;
             }
         }
-        return devices;
+        return null;
     }    
 
-    getDevicesOfId = (id) =>{
-        const foundDevices=[];
+    getDeviceOfId = (id) =>{
+        id=Number(id);
         for (const device of this.devices){
             if (device.deviceId===id){
-                foundDevices.push(device);
+                return device;
             }
         }
-        return devices;
+        return null;
+    }
+
+    getDeviceData = (deviceId) => {
+        deviceId=Number(deviceId);
+        const device = this.getDeviceOfId(deviceId);
+        if (!device) return null;
+
+        return {values: device.values, image: Buffer.from(device.image).toString('base64')};
+    }
+
+    subscribeToUpdates = (callback) => {
+        this.updateCallbacks.add(callback);
+    }
+
+    unsubscribeFromUpdates = (callback) => {
+        this.updateCallbacks.delete(callback);
+    }
+
+    valueUpdate = (deviceId, valueName, valueData) => {
+        for (const callback of this.updateCallbacks){
+            if (typeof callback==='function'){
+                callback('value', deviceId, valueName, valueData);
+            }else{
+                this.updateCallbacks.delete(callback);
+            }
+        }
+    }
+
+    imageUpdate = (deviceId, imageData) => {
+        for (const callback of this.updateCallbacks){
+            if (typeof callback==='function'){
+                callback('image', deviceId, null, imageData);
+            }else{
+                this.updateCallbacks.delete(callback);
+            }
+        }
     }
 }
 

@@ -19,7 +19,14 @@ const onMessage = (ws, rawMessage) => {
     if (msg.type === "subscribe" && Number.isInteger(msg.deviceId)) {
         ws.subscriptions.add(msg.deviceId);
         console.log(ws.user.email, "subscribed to", msg.deviceId);
-        //TODO send current device data
+
+        deviceServer.getDeviceData(msg.deviceId).then( data => {
+            ws.send(JSON.stringify({
+                type: "snapshot",
+                deviceId: msg.deviceId,
+                data: data
+            }));
+        });
         return;
     }
 
@@ -76,6 +83,27 @@ function getWebSocketServer(server, path, deviceSrv){
     if (wss) return wss;
 
     deviceServer=deviceSrv;
+
+    deviceServer.registerUpdateCallback((type, deviceId, valueName, valueData) => {
+        for (const ws of activeConnections){
+            if (ws.subscriptions.has(deviceId)){
+                if (type==='value'){
+                    ws.send(JSON.stringify({
+                        type: 'value',
+                        deviceId: deviceId,
+                        valueName: valueName,
+                        valueData: valueData
+                    }));
+                }else if (type==='image'){
+                    ws.send(JSON.stringify({
+                        type: 'image',
+                        deviceId: deviceId,
+                        imageData: valueData.toString('base64')
+                    }));
+                }
+            }
+        }
+    });
 
     wss = new WebSocketServer({server, path});
     wss.on('connection', onConnection);
