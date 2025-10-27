@@ -117,6 +117,8 @@ class DeviceIO {
     }
 
     sendPacket = (data) => {
+        if (!this.socket) return false;
+        
         if (typeof data==='string') data=textEncoder.encode(data);
         if (data && data.length>0x0FFFF0){
             console.log(this.name, 'cant send a message bigger than 0x0FFFF0');
@@ -362,7 +364,7 @@ class DeviceServer{
     imageUpdate = (deviceId, imageData) => {
         for (const callback of this.updateCallbacks){
             if (typeof callback==='function'){
-                callback('image', deviceId, null, imageData);
+                callback('image', deviceId, null, Buffer.from(imageData).toString('base64'));
             }else{
                 this.updateCallbacks.delete(callback);
             }

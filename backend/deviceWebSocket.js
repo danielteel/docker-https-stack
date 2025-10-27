@@ -20,13 +20,19 @@ const onMessage = (ws, rawMessage) => {
         ws.subscriptions.add(msg.deviceId);
         console.log(ws.user.email, "subscribed to", msg.deviceId);
 
-        deviceServer.getDeviceData(msg.deviceId).then( data => {
+        const data=deviceServer.getDeviceData(msg.deviceId)
+        if (!data) return;
+
+        try {
             ws.send(JSON.stringify({
                 type: "snapshot",
                 deviceId: msg.deviceId,
-                data: data
+                values: data.values,
+                image: data.image
             }));
-        });
+        }catch(e){
+            console.error("Error sending snapshot:", e);
+        }
         return;
     }
 
@@ -41,6 +47,7 @@ const onMessage = (ws, rawMessage) => {
 
 const onConnection = (ws, req) => {
     ws.isAlive=true;
+    ws.subscriptions=new Set();
     ws.on('pong', () => {
         ws.isAlive = true;
     });
@@ -85,22 +92,36 @@ function getWebSocketServer(server, path, deviceSrv){
     deviceServer=deviceSrv;
 
     deviceServer.registerUpdateCallback((type, deviceId, valueName, valueData) => {
+        deviceId=Number(deviceId);
+
+        let payload={};
+        if (type==='value'){
+            payload={
+                type: 'value',
+                deviceId: deviceId,
+                valueName: valueName,
+                valueData: valueData
+            };
+        }
+        if (type==='image'){
+            payload={
+                type: 'image',
+                deviceId: deviceId,
+                imageData: valueData
+            };
+        }
+
+        let stringifiedPayload;
+        try{
+            stringifiedPayload=JSON.stringify(payload);
+        }catch(e){
+            console.error("On update callback error stringifying payload:", e);
+            return;
+        }
+
         for (const ws of activeConnections){
-            if (ws.subscriptions.has(deviceId)){
-                if (type==='value'){
-                    ws.send(JSON.stringify({
-                        type: 'value',
-                        deviceId: deviceId,
-                        valueName: valueName,
-                        valueData: valueData
-                    }));
-                }else if (type==='image'){
-                    ws.send(JSON.stringify({
-                        type: 'image',
-                        deviceId: deviceId,
-                        imageData: valueData.toString('base64')
-                    }));
-                }
+            if (ws.readyState==ws.OPEN && ws.subscriptions.has(deviceId)){
+                ws.send(stringifiedPayload);
             }
         }
     });
