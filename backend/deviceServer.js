@@ -152,6 +152,7 @@ class DeviceIO {
                 if (data[0]===0xFF && data[1]===0xD8){
                     this.image=data;
                     this.deviceServer.imageUpdate(this.deviceId, this.image);
+                }else if (data[0]===0xFF){
                 }else{
                     const [dataName, dataVal]=textDecoder.decode(data).split('=');
 
