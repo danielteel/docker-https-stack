@@ -343,7 +343,8 @@ class DeviceServer{
         deviceId=Number(deviceId);
         const device = this.getDeviceOfId(deviceId);
         if (!device) return null;
-
+        if (device.image===null) return {values: device.values, image: null};
+        
         return {values: device.values, image: Buffer.from(device.image).toString('base64')};
     }
 
