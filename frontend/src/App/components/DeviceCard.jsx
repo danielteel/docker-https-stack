@@ -13,11 +13,68 @@ import {
     Chip
 } from "@mui/material";
 
+import Tooltip from "@mui/material/Tooltip";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
 import { useAppContext } from '../../contexts/AppContext';
+
+function formatValue(logItems, name, value){
+    const item = logItems.find( item => item.name === name);
+    if (!item) return String(value);
+
+    switch(item.type){
+        case 'degree':
+            return `${value}°`;
+        case 'percent':
+            return `${value}%`;
+        case 'time':
+            {
+                const date = new Date(value);
+                return date.toLocaleString();
+            }
+        case 'number':
+            return Number(value).toString();
+        case 'bool':
+            return value ? 'True' : 'False';
+        case 'string':
+            return String(value);
+        default:
+            return String(value);
+    }
+}
+
+function ValueCell({ logItems, key, value }) {
+    return <TableCell>{formatValue(logItems, key, value)}</TableCell>
+}
+
+function getDescription(logItems, name){
+    const item = logItems.find( item => item.name === name);
+    if (!item) return null;
+    return item.description || null;
+    
+}
+
+function KeyCell({ logItems, key }) {
+    const description = getDescription(logItems, key);
+
+    return (
+        <TableCell sx={{ fontWeight: 600 }}>
+            {key}
+            {description && (
+                <Tooltip title={description} placement="right">
+                    <InfoOutlinedIcon
+                        fontSize="small"
+                        sx={{ ml: 0.5, opacity: 0.7, cursor: "pointer" }}
+                    />
+                </Tooltip>
+            )}
+        </TableCell>
+    );
+}
 
 export default function DeviceCard({ deviceId }) {
     const { api } = useAppContext();
-    const [deviceName, setDeviceName] = useState("");
+    const [deviceInfo, setDeviceInfo] = useState(null);
     const [imgSrc, setImgSrc] = useState(null);
     const [values, setValues] = useState({});
     const [status, setStatus] = useState("connecting"); // connecting | live | disconnected
@@ -25,13 +82,13 @@ export default function DeviceCard({ deviceId }) {
 
     // Fetch device info including device name
     useEffect(() => {
+        setDeviceInfo(null);
         if (!deviceId) return;
-        setDeviceName("");
 
         async function loadDevice() {
             const [ok, device] = await api.devicesGet(deviceId);
             if (ok && device) {
-                setDeviceName(device.name || `Device ${deviceId}`);
+                setDeviceInfo(device);
             }
         }
         loadDevice();
@@ -131,6 +188,8 @@ export default function DeviceCard({ deviceId }) {
         disconnected: "error"
     }[status];
 
+    const logItems = deviceInfo?.log_items || [];
+
     return (
         <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
             <Box sx={{ p: 1, position: "relative" }}>
@@ -141,8 +200,8 @@ export default function DeviceCard({ deviceId }) {
                     sx={{ position: "absolute", right: 8, top: 8 }}
                 />
                 <Typography variant="h6">
-                    {deviceName && status !== "disconnected"
-                        ? deviceName
+                    {deviceInfo?.name && status !== "disconnected"
+                        ? deviceInfo?.name
                         : `Device ${deviceId}`}
                 </Typography>
             </Box>
@@ -151,7 +210,7 @@ export default function DeviceCard({ deviceId }) {
                 <CardMedia
                     component="img"
                     image={imgSrc}
-                    alt={deviceName || `Device ${deviceId}`}
+                    alt={deviceInfo?.name || `Device ${deviceId}`}
                     sx={{
                         height: 300,
                         objectFit: "contain",
@@ -182,8 +241,8 @@ export default function DeviceCard({ deviceId }) {
                         <TableBody>
                             {Object.entries(values).map(([key, val]) => (
                                 <TableRow key={key}>
-                                    <TableCell sx={{ fontWeight: 600 }}>{key}</TableCell>
-                                    <TableCell>{String(val)}</TableCell>
+                                    <KeyCell logItems={logItems} key={key} />
+                                    <ValueCell logItems={logItems} key={key} value={val} />
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -193,6 +252,8 @@ export default function DeviceCard({ deviceId }) {
                         Waiting for values...
                     </Typography>
                 )}
+                
+                <Button href={'/devicelog/'+deviceId}>Device Log</Button>
             </CardContent>
         </Card>
     );
