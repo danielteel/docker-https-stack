@@ -2,6 +2,20 @@ import equal from 'fast-deep-equal';
 
 let lastDevices=[];
 
+export async function devicesGet(id){
+    try {
+        const response = await fetch('/api/devices/get/'+id, {credentials: 'include'});
+        const device = await response.json();
+        if (response.status>=200 && response.status<=299){
+            return [true, device, response.status];
+        }else{
+            return [false, device, response.status];
+        }
+    }catch(e){
+        return [false, 'failed', 400];
+    }
+}
+
 export async function devicesList(){
     try {
         const response = await fetch('/api/devices/list', {credentials: 'include'});

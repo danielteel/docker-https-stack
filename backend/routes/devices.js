@@ -96,6 +96,26 @@ router.get('/list', [needKnex, authenticate.bind(null, 'member')], async (req, r
     }
 });
 
+router.get('/get/:device_id', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
+    try {
+        const device_id = Number(req.params.device_id);
+        if (!Number.isInteger(device_id)) return res.status(400).json({error: 'invalid device id'});
+
+        const device=await getADevice(req.knex, req.user.role, device_id);
+
+        if (device){
+            device.connected=!!device.connected;
+            return res.json(device);
+        }else{
+            return res.status(400).json({error: 'invalid device id'});
+        }
+    }catch(e){
+        console.error('ERROR GET /devices/get', req.body, e);
+        return res.status(400).json({error: 'error'});
+    }
+});
+
+
 router.get('/image/:device_id', [needKnex, authenticate.bind(null, 'member')], async (req, res) => {
     try {
         const device_id = Number(req.params.device_id);

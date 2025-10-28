@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { userLogin, userMe, userLogout, userLogoutEverywhere, userChangePassword, userForgotStart, userForgotEnd, userChangeEmailEnd, userChangeEmailStart, userChangeEmailStatus, userCreate, userVerifyEmail } from '../api/user';
 import { manageUsers, manageUserRole, manageUserEmail } from '../api/manage';
 
-import { devicesList, devicesImage, devicesAdd, devicesUpdate, devicesDelete, devicesAction, devicesLog } from '../api/devices';
+import { devicesGet, devicesList, devicesImage, devicesAdd, devicesUpdate, devicesDelete, devicesAction, devicesLog } from '../api/devices';
 
 
 
@@ -45,6 +45,7 @@ function makeApiObject(setUserFn) {
         manageUserRole: async (userId, newRole) => checkForLogout(...await manageUserRole(userId, newRole)),
         manageUserEmail: async (userId, newEmail) => checkForLogout(...await manageUserEmail(userId, newEmail)),
 
+        devicesGet: async (id) => checkForLogout(...await devicesGet(id)),
         devicesList: async () => checkForLogout(...await devicesList()),
         devicesImage: async (id) => checkForLogout(...await devicesImage(id)),
         devicesAdd: async (name, encroKey, logItems, actions) => checkForLogout(...await devicesAdd(name, encroKey, logItems, actions)),
