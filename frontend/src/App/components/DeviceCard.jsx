@@ -120,13 +120,16 @@ export default function DeviceCard({ deviceId }) {
 
             ws.onopen = () => {
                 retryDelay = 1000;
-                setStatus("live");
-                ws.send(JSON.stringify({ type: "subscribe", deviceId }));
+                setStatus("authenticating");
             };
 
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
+                    if (msg.type === "connected") {
+                        setStatus("live");
+                        ws.send(JSON.stringify({ type: "subscribe", deviceId }));
+                    }
                     if (msg.deviceId !== deviceId) return;
 
                     if (msg.type === "image" && msg.imageData) {
@@ -185,12 +188,14 @@ export default function DeviceCard({ deviceId }) {
 
     const statusLabel = {
         connecting: "Connecting",
+        authenticating: "Authenticating",
         live: "Live",
         disconnected: "Disconnected"
     }[status];
 
     const statusColor = {
         connecting: "warning",
+        authenticating: "info",
         live: "success",
         disconnected: "error"
     }[status];

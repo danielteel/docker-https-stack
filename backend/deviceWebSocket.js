@@ -81,6 +81,8 @@ const onConnection = (ws, req) => {
         }, 30000);
 
         ws.on('message', (msg) => onMessage(ws, msg));
+
+        ws.send(JSON.stringify({ type: 'connected' }));
     });
     
 }
