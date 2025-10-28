@@ -158,11 +158,13 @@ export default function DeviceCard({ deviceId }) {
                 setStatus("connecting");
                 retryDelay = Math.min(maxDelay, retryDelay * 1.5);
                 console.warn(`Reconnecting in ${retryDelay}ms`);
+                if (timeoutId) clearTimeout(timeoutId);
                 timeoutId = setTimeout(connectWS, retryDelay);
             };
 
             ws.onerror = () => {
-                setStatus("disconnected");
+                setStatus("error/disconnected");
+                scheduleReconnect();
             };
 
             ws.onclose = () => {
