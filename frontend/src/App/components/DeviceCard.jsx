@@ -44,8 +44,8 @@ function formatValue(logItems, name, value){
     }
 }
 
-function ValueCell({ logItems, key, value }) {
-    return <TableCell>{formatValue(logItems, key, value)}</TableCell>
+function ValueCell({ logItems, name, value }) {
+    return <TableCell>{formatValue(logItems, name, value)}</TableCell>
 }
 
 function getDescription(logItems, name){
@@ -55,12 +55,12 @@ function getDescription(logItems, name){
     
 }
 
-function KeyCell({ logItems, key }) {
-    const description = getDescription(logItems, key);
+function KeyCell({ logItems, name }) {
+    const description = getDescription(logItems, name);
 
     return (
         <TableCell sx={{ fontWeight: 600 }}>
-            {key}
+            {name}
             {description && (
                 <Tooltip title={description} placement="right">
                     <InfoOutlinedIcon
@@ -242,8 +242,8 @@ export default function DeviceCard({ deviceId }) {
                         <TableBody>
                             {Object.entries(values).map(([key, val]) => (
                                 <TableRow key={key}>
-                                    <KeyCell logItems={logItems} key={key} />
-                                    <ValueCell logItems={logItems} key={key} value={val} />
+                                    <KeyCell logItems={logItems} name={key} />
+                                    <ValueCell logItems={logItems} name={key} value={val} />
                                 </TableRow>
                             ))}
                         </TableBody>
