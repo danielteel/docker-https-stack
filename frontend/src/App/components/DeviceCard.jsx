@@ -103,11 +103,14 @@ export default function DeviceCard({ deviceId }) {
         const maxDelay = 15000;
         let active = true;
 
+        let timeoutId = null;
+
         setImgSrc(null);
         setValues({});
         setStatus("connecting");
 
         const connectWS = () => {
+            timeoutId = null;
             if (!active) return;
 
             const url = `${window.location.origin.replace("http", "ws")}/api/ws`;
@@ -155,12 +158,11 @@ export default function DeviceCard({ deviceId }) {
                 setStatus("connecting");
                 retryDelay = Math.min(maxDelay, retryDelay * 1.5);
                 console.warn(`Reconnecting in ${retryDelay}ms`);
-                setTimeout(connectWS, retryDelay);
+                timeoutId = setTimeout(connectWS, retryDelay);
             };
 
             ws.onerror = () => {
                 setStatus("disconnected");
-                scheduleReconnect();
             };
 
             ws.onclose = () => {
@@ -172,6 +174,8 @@ export default function DeviceCard({ deviceId }) {
         connectWS();
 
         return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = null;
             active = false;
             wsRef.current?.close();
         };
