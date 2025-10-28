@@ -62,7 +62,7 @@ function KeyCell({ logItems, name }) {
         <TableCell sx={{ fontWeight: 600 }}>
             {name}
             {description && (
-                <Tooltip title={description} placement="right">
+                <Tooltip title={description} placement="right" enterTouchDelay={0} leaveTouchDelay={3000}>
                     <InfoOutlinedIcon
                         fontSize="small"
                         sx={{ ml: 0.5, opacity: 0.7, cursor: "pointer" }}
