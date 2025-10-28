@@ -226,7 +226,9 @@ export default function DeviceCard({ deviceId }) {
                     sx={{
                         height: 300,
                         objectFit: "contain",
-                        bgcolor: "black"
+                        bgcolor: "black",
+                        opacity: status === "live" ? 1 : 0.4,
+                        transition: "opacity 0.3s ease"
                     }}
                 />
             ) : (
@@ -249,7 +251,13 @@ export default function DeviceCard({ deviceId }) {
                 </Typography>
 
                 {Object.keys(values).length > 0 ? (
-                    <Table size="small">
+                    <Table
+                        size="small"
+                        sx={{
+                            opacity: status === "live" ? 1 : 0.4,
+                            transition: "opacity 0.3s ease"
+                        }}
+                    >
                         <TableBody>
                             {Object.entries(values).map(([key, val]) => (
                                 <TableRow key={key}>
