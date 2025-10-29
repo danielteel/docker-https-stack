@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-import { Card } from '@/components/ui/card';
+
+import {
+    Box,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Chip,
+    Grid,
+    Typography,
+    CircularProgress,
+    Card
+} from '@mui/material';
+
 import DeviceCard from './DeviceCard';
 
 export default function Devices() {
