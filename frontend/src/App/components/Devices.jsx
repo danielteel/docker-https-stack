@@ -6,7 +6,6 @@ import {
   CardActionArea,
   CardContent,
   Typography,
-  Chip,
   Grid,
   Stack
 } from '@mui/material';
@@ -21,14 +20,26 @@ export default function Devices() {
 
   useEffect(() => {
     let cancel = false;
+    let timeoutId = null;
 
-    async function load() {
+    async function pollDevices() {
+      if (cancel) return;
+
       const [ok, data] = await api.devicesList();
-      if (!cancel && ok) setDevices(data);
+      if (!cancel && ok) {
+        setDevices(data);
+      }
+
+      // Schedule next check only after the request completes
+      timeoutId = setTimeout(pollDevices, 5000);
     }
 
-    load();
-    return () => (cancel = true);
+    pollDevices();
+
+    return () => {
+      cancel = true;
+      clearTimeout(timeoutId);
+    };
   }, [api]);
 
   const toggleDevice = (deviceId) => {
@@ -45,6 +56,7 @@ export default function Devices() {
         Devices
       </Typography>
 
+      {/* Device Selector Grid */}
       <Grid container spacing={2}>
         {devices.map(device => {
           const online = device.connected;
@@ -54,25 +66,29 @@ export default function Devices() {
             <Grid item xs={12} sm={6} md={4} lg={3} key={device.device_id}>
               <Card
                 sx={{
+                  height: 120,
                   borderRadius: 3,
-                  maxWidth: 300,
-                  mx: "auto",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
                   boxShadow: selected ? 6 : 2,
                   transition: "all 0.2s",
                   bgcolor: selected ? "primary.dark" : "background.paper",
                   cursor: online ? "pointer" : "default",
-                  "&:hover": online
-                    ? { boxShadow: 8, transform: "scale(1.02)" }
-                    : {}
+                  "&:hover": online ? {
+                    boxShadow: 8,
+                    transform: "scale(1.03)"
+                  } : {}
                 }}
                 onClick={() => online && toggleDevice(device.device_id)}
               >
-                <CardActionArea disabled={!online}>
-                  <CardContent>
+                <CardActionArea disabled={!online} sx={{ height: "100%" }}>
+                  <CardContent sx={{ textAlign: "center" }}>
                     <Typography variant="h6" sx={{ mb: 1 }}>
                       {device.name}
                     </Typography>
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                    <Stack direction="row" justifyContent="center" spacing={1}>
                       {online ? (
                         <>
                           <CheckCircleIcon fontSize="small" color="success" />
@@ -97,18 +113,20 @@ export default function Devices() {
         })}
       </Grid>
 
-      {/* Show selected device streams */}
+      {/* Live Streams */}
       {selectedDevices.length > 0 && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Streams
+            Live Streams
           </Typography>
 
-          <Stack spacing={3}>
+          <Grid container spacing={3}>
             {selectedDevices.map(id => (
-              <DeviceCard key={id} deviceId={id} />
+              <Grid item xs={12} sm={12} md={6} lg={4} key={id}>
+                <DeviceCard deviceId={id} />
+              </Grid>
             ))}
-          </Stack>
+          </Grid>
         </Box>
       )}
     </Box>
