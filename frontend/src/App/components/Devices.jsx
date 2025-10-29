@@ -56,7 +56,7 @@ export default function Devices() {
         Devices
       </Typography>
 
-      {/* Device Selector Grid */}
+      {/* DEVICES SELECTION GRID */}
       <Grid container spacing={2}>
         {devices.map(device => {
           const online = device.connected;
@@ -113,7 +113,7 @@ export default function Devices() {
         })}
       </Grid>
 
-      {/* Live Streams */}
+      {/* ACTIVE STREAM VIEW */}
       {selectedDevices.length > 0 && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
