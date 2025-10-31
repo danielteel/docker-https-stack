@@ -18,6 +18,7 @@ import {
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 import { useAppContext } from '../../contexts/AppContext';
+import DeviceActions from "./DeviceActions";
 
 function formatValue(logItems, name, value){
     const item = logItems.find( item => item.name === name);
@@ -201,6 +202,7 @@ export default function DeviceCard({ deviceId }) {
     }[status];
 
     const logItems = deviceInfo?.log_items || [];
+    const actions = deviceInfo?.actions || [];
 
     return (
         <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
@@ -272,7 +274,7 @@ export default function DeviceCard({ deviceId }) {
                         Waiting for values...
                     </Typography>
                 )}
-                
+                <DeviceActions actions={actions}/>
                 <Button href={'/devicelog/'+deviceId}>Device Log</Button>
             </CardContent>
         </Card>
