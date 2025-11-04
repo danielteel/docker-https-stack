@@ -56,6 +56,19 @@ function isBadLogItems(logItems){
     return false;
 }
 
+function anyDuplicateNames(logItems, actions){
+    const names = new Set();
+    for (const logItem of logItems){
+        names.add(logItem.name.toLowerCase().trim());
+    }
+    for (const action of actions){
+        const name = action.name.toLowerCase().trim();
+        if (names.has(name)) return 'duplicate name between log_items and actions: '+name;
+        names.add(name);
+    }
+    return false;
+}
+
 async function getAndValidateDevices(knex, userRole){
     let devices;
     const isAtLeastAdmin = isAtLeastRanked(userRole, 'admin');
@@ -192,7 +205,9 @@ router.post('/add', [needKnex, authenticate.bind(null, 'admin')], async (req, re
             }catch(e){
                 fieldCheck+='actions is not valid JSON. ';
             }
-
+            
+            const duplicates = anyDuplicateNames(log_items, actions);
+            if (duplicates) fieldCheck+=duplicates+' ';
         }
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
@@ -237,6 +252,9 @@ router.post('/update', [needKnex, authenticate.bind(null, 'admin')], async (req,
             }catch(e){
                 fieldCheck+='actions is not valid JSON. ';
             }
+            
+            const duplicates = anyDuplicateNames(log_items, actions);
+            if (duplicates) fieldCheck+=duplicates+' ';
         }
         if (fieldCheck) return res.status(400).json({error: 'failed field check: '+fieldCheck});
 
