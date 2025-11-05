@@ -250,12 +250,14 @@ class DeviceIO {
                             this.deviceId=val[0].id;
                             try{
                                 this.logItems=JSON.parse(val[0].log_items);
-                            }catch{
+                            }catch(e){
+                                console.error("Failed to parse log items for device '"+this.name+"':", e);
                                 this.logItems=[];
                             }
                             try {
                                 this.actions=JSON.parse(val[0].actions);
-                            }catch{
+                            }catch(e){
+                                console.error("Failed to parse actions for device '"+this.name+"':", e);
                                 this.actions=[];
                             }
                             
