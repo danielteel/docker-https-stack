@@ -79,6 +79,7 @@ export default function DeviceCard({ deviceId }) {
     const [deviceInfo, setDeviceInfo] = useState(null);
     const [imgSrc, setImgSrc] = useState(null);
     const [values, setValues] = useState({});
+    const [deviceConnected, setDeviceConnected] = useState(false);
     const [status, setStatus] = useState("connecting"); // connecting | live | disconnected
     const wsRef = useRef(null);
 
@@ -127,10 +128,11 @@ export default function DeviceCard({ deviceId }) {
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
-                    if (msg.type === "connected") {
+                    if (msg.type === "ready") {
                         setStatus("live");
                         ws.send(JSON.stringify({ type: "subscribe", deviceId }));
                     }
+
                     if (msg.deviceId !== deviceId) return;
 
                     if (msg.type === "image" && msg.imageData) {
@@ -147,10 +149,23 @@ export default function DeviceCard({ deviceId }) {
                     if (msg.type === "snapshot") {
                         if (msg.image) {
                             setImgSrc(`data:image/jpeg;base64,${msg.image}`);
+                        }else{
+                            setImgSrc(null);
                         }
                         if (msg.values) {
                             setValues(msg.values);
+                        }else{
+                            setValues({});
                         }
+                        setDeviceConnected(Boolean(msg.connected));
+                    }
+
+                    if (msg.type === "disconnected") {
+                        setDeviceConnected(false);
+                    }
+
+                    if (msg.type === "connected") {
+                        setDeviceConnected(true);
                     }
                 } catch (e) {
                     console.error("WS parse error", e);
@@ -248,6 +263,7 @@ export default function DeviceCard({ deviceId }) {
             )}
 
             <CardContent>
+                {deviceConnected ? "Device connected" : "Device disconnected"}
                 <Typography variant="subtitle1" gutterBottom>
                     Live Values
                 </Typography>

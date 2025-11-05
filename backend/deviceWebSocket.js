@@ -90,7 +90,7 @@ const onConnection = (ws, req) => {
 
         ws.on('message', (msg) => onMessage(ws, msg));
 
-        ws.send(JSON.stringify({ type: 'connected' }));
+        ws.send(JSON.stringify({ type: 'ready' }));
     });
     
 }
@@ -105,7 +105,7 @@ function getWebSocketServer(server, path, deviceSrv){
         deviceId=Number(deviceId);
 
         let payload={};
-        
+
         if (type==='value'){
             payload={
                 type: 'value',
