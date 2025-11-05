@@ -248,18 +248,24 @@ class DeviceIO {
                             
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
-                            console.log(val[0]);
-                            try{
-                                this.logItems=JSON.parse(val[0].log_items);
-                            }catch(e){
-                                console.error("Failed to parse log items for device '"+this.name+"':", e);
-                                this.logItems=[];
+                            this.logItems=val[0].log_items;
+                            this.actions=val[0].actions;
+
+                            if (typeof this.logItems==='string'){
+                                try{
+                                    this.logItems=JSON.parse(this.logItems);
+                                }catch(e){
+                                    console.error("Failed to parse log items for device '"+this.name+"':", e);
+                                    this.logItems=[];
+                                }
                             }
-                            try {
-                                this.actions=JSON.parse(val[0].actions);
-                            }catch(e){
-                                console.error("Failed to parse actions for device '"+this.name+"':", e);
-                                this.actions=[];
+                            if (typeof this.actions==='string'){
+                                try {
+                                    this.actions=JSON.parse(this.actions);
+                                }catch(e){
+                                    console.error("Failed to parse actions for device '"+this.name+"':", e);
+                                    this.actions=[];
+                                }
                             }
                             
                             this.deviceServer.deviceAuthenticated(this);
