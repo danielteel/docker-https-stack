@@ -199,6 +199,7 @@ export default function DeviceCard({ deviceId }) {
             timeoutId = null;
             active = false;
             wsRef.current?.close();
+            setDeviceConnected(false);
         };
     }, [deviceId]);
 
@@ -216,18 +217,19 @@ export default function DeviceCard({ deviceId }) {
         disconnected: "error"
     }[status];
 
+    const deviceColor = deviceConnected ? "success" : "error";
+    const deviceLabel = deviceConnected ? "Device Connected" : "Device Disconnected";
+
     const logItems = deviceInfo?.log_items || [];
     const actions = deviceInfo?.actions || [];
 
     return (
         <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
             <Box sx={{ p: 1, position: "relative" }}>
-                <Chip
-                    label={statusLabel}
-                    color={statusColor}
-                    size="small"
-                    sx={{ position: "absolute", right: 8, top: 8 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ position: "absolute", right: 8, top: 8 }}>
+                    <Chip label={statusLabel} color={statusColor} size="small" />
+                    <Chip label={deviceLabel} color={deviceColor} size="small" />
+                </Stack>
                 <Typography variant="h6">
                     {deviceInfo?.name && status !== "disconnected"
                         ? deviceInfo?.name
