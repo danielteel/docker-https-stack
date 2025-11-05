@@ -21,15 +21,23 @@ const onMessage = (ws, rawMessage) => {
         console.log(ws.user.email, "subscribed to", msg.deviceId);
 
         const data=deviceServer.getDeviceData(msg.deviceId)
-        if (!data) return;
-
         try {
-            ws.send(JSON.stringify({
-                type: "snapshot",
-                deviceId: msg.deviceId,
-                values: data.values,
-                image: data.image
-            }));
+            if (!data){
+                ws.send(JSON.stringify({
+                    type: "snapshot",
+                    deviceId: msg.deviceId,
+                    connected: false
+                }));
+
+            }else{
+                ws.send(JSON.stringify({
+                    type: "snapshot",
+                    deviceId: msg.deviceId,
+                    values: data.values,
+                    image: data.image,
+                    connected: true
+                }));
+            }
         }catch(e){
             console.error("Error sending snapshot:", e);
         }
@@ -97,6 +105,7 @@ function getWebSocketServer(server, path, deviceSrv){
         deviceId=Number(deviceId);
 
         let payload={};
+        
         if (type==='value'){
             payload={
                 type: 'value',
@@ -104,13 +113,25 @@ function getWebSocketServer(server, path, deviceSrv){
                 valueName: valueName,
                 valueData: valueData
             };
-        }
-        if (type==='image'){
+        }else if (type==='image'){
             payload={
                 type: 'image',
                 deviceId: deviceId,
                 imageData: valueData
             };
+        }else if (type==='connected'){
+            payload={
+                type: 'connected',
+                deviceId: deviceId
+            };
+        }else if (type==='disconnected'){
+            payload={
+                type: 'disconnected',
+                deviceId: deviceId
+            };
+        }else{
+            console.error("Unknown update type:", type);
+            return;
         }
 
         let stringifiedPayload;

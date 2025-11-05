@@ -238,13 +238,12 @@ class DeviceIO {
                     }
                     getKnex()('devices').select('encro_key', 'id', 'log_items', 'actions').where({name: this.name}).then( (val) => {
                         if (val && val[0] && val[0].encro_key){
-
                             const oldDeviceFound = this.deviceServer?.getDeviceOfId(val[0].id);
                             if (oldDeviceFound){
                                 console.log('Disconnecting old device connection for', this.name);
                                 oldDeviceFound.disconnect('New device connection established for "'+this.name+'"');
                             }
-
+                            
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
                             try{
@@ -257,7 +256,8 @@ class DeviceIO {
                             }catch{
                                 this.actions=[];
                             }
-
+                            
+                            this.deviceServer.deviceAuthenticated(this);
 
                             this.packetState=PACKETSTATE.LEN1;
                             this.unpauseIncomingData();
@@ -347,11 +347,29 @@ class DeviceServer{
         });
     }
 
+    deviceAuthenticated = (device) => {
+        for (const callback of this.updateCallbacks) {
+            if (typeof callback === 'function') {
+                callback('connected', device.deviceId);
+            } else {
+                this.updateCallbacks.delete(callback);
+            }
+        }
+    }
+
     removeDevice = (device) => {
         try {
             if (device.socket) device.socket.destroy();
         }catch{}
         this.devices=this.devices.filter(v => !(v===device));
+
+        for (const callback of this.updateCallbacks) {
+            if (typeof callback === 'function') {
+                callback('disconnected', device.deviceId);
+            } else {
+                this.updateCallbacks.delete(callback);
+            }
+        }
     }
 
     disconnectDeviceId = (deviceId) => {
