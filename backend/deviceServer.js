@@ -57,7 +57,8 @@ class DeviceIO {
 
         this.deviceId=null;
         
-        this.actions=null;
+        this.actions=[];
+        this.logItems=[];
         this.values={};
         this.image=null;
 
@@ -72,18 +73,43 @@ class DeviceIO {
         });
     }
 
-    sendAction = (actionTitle, data) => {
+    sendActionByByte = (byte, a, b, c) => {
         if (!Array.isArray(this.actions)) return false;
         for (const action of this.actions){
-            if (action.title.toLowerCase().trim()===actionTitle.toLowerCase().trim()){
+            if (Number(action.byte)===Number(byte)){
                 switch (action.type.toLowerCase().trim()){
+                    case 'number':
+                        const numberBuff=new Uint8Array([Number(action.byte), 0, 0, 0, 0]);
+                        (new DataView(numberBuff.buffer)).setInt32(1, Number(a), true);
+                        return this.sendPacket(numberBuff);
+
+                    case 'time':
+                        return this.sendPacket(new Uint8Array([Number(action.byte), Number(a), Number(b)]));
+
+                    case 'string':
+                        return this.sendPacket(new Uint8Array([Number(action.byte), ...textEncoder.encode(String(a))]));
+
+                    case 'bool':
+                        return this.sendPacket(new Uint8Array([Number(action.byte), a ? 1 : 0]));
+
+                    case 'color':
+                        return this.sendPacket(new Uint8Array([Number(action.byte), Number(a), Number(b), Number(c)]));
+
                     case 'void':
-                        this.sendPacket(new Uint8Array([action.commandByte]));
-                        return true;
-                    case 'byte':
-                        this.sendPacket(new Uint8Array([action.commandByte, data]));
-                        return true;
+                        return this.sendPacket(new Uint8Array([Number(action.byte)]));
+                    default:
+                        return false;
                 }
+            }
+        }
+        return false;
+    }
+
+    sendActionByTitle = (title, a, b, c) => {
+        if (!Array.isArray(this.actions)) return false;
+        for (const action of this.actions){
+            if (String(action.title).toLowerCase().trim()===String(title).toLowerCase().trim()){
+                return this.sendActionByByte(action.byte, a, b, c);
             }
         }
         return false;
@@ -136,6 +162,27 @@ class DeviceIO {
         return true;
     }
 
+    log = () => {
+        const data={};
+        for (const item of this.logItems){
+            if (this.values[item.name]!==undefined) data[item.name]=this.values[item.name];
+        }
+
+        let jsonData='{}';
+        try {
+            jsonData=JSON.stringify(data);
+        }catch{
+            console.log("Failed to stringify log data", data);
+        }
+
+        getKnex()('device_logs').insert({device_id: this.deviceId, data: jsonData}).then( (val) => {
+            console.log("Device Log: ", this.name, new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  data);
+        }).catch((e)=>{
+            console.log("Failed to store into logs", {device_id: this.deviceId, data: data});
+        });
+    }
+
+
     onFullPacket = (handshake, data) => {
         if (this.netStatus===NETSTATUS.OPENED){
             this.clientHandshake[0]=handshake;
@@ -157,11 +204,7 @@ class DeviceIO {
                     const [dataName, dataVal]=textDecoder.decode(data).split('=');
 
                     if (dataName.toLowerCase().trim()==='log'){
-                        getKnex()('device_logs').insert({device_id: this.deviceId, data: JSON.stringify(this.values)}).then( (val) => {
-                            console.log("Device Log: ", new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  this.values);
-                        }).catch((e)=>{
-                            console.log("Failed to store into logs", {device_id: this.deviceId, data: this.values});
-                        });
+                        this.log();
                     }else{
                         this.values[dataName]=dataVal;
                         this.deviceServer.valueUpdate(this.deviceId, dataName, dataVal);
@@ -193,7 +236,7 @@ class DeviceIO {
                     if (i+1<buffer.length){
                         this.buffersWhilePaused.push(buffer.subarray(i+1));
                     }
-                    getKnex()('devices').select('encro_key', 'id').where({name: this.name}).then( (val) => {
+                    getKnex()('devices').select('encro_key', 'id', 'log_items', 'actions').where({name: this.name}).then( (val) => {
                         if (val && val[0] && val[0].encro_key){
 
                             const oldDeviceFound = this.deviceServer?.getDeviceOfId(val[0].id);
@@ -204,7 +247,16 @@ class DeviceIO {
 
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
-                            
+                            try{
+                                this.logItems=val[0].log_items ? JSON.parse(val[0].log_items) : [];
+                            }catch{
+                                this.logItems=[];
+                            }
+                            try {
+                                this.actions=val[0].actions ? JSON.parse(val[0].actions) : [];
+                            }catch{
+                                this.actions=[];
+                            }
 
 
                             this.packetState=PACKETSTATE.LEN1;
