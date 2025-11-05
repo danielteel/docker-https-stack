@@ -175,8 +175,6 @@ class DeviceIO {
             console.log("Failed to stringify log data", data);
         }
 
-        console.log(this.logItems);
-
         getKnex()('device_logs').insert({device_id: this.deviceId, data: jsonData}).then( (val) => {
             console.log("Device Log: ", this.name, new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  data);
         }).catch((e)=>{
@@ -244,6 +242,8 @@ class DeviceIO {
                             if (oldDeviceFound){
                                 console.log('Disconnecting old device connection for', this.name);
                                 oldDeviceFound.disconnect('New device connection established for "'+this.name+'"');
+                            }else{
+                                console.log(this.name, 'connected.');
                             }
                             
                             this.key=val[0].encro_key;
