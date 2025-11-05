@@ -175,6 +175,8 @@ class DeviceIO {
             console.log("Failed to stringify log data", data);
         }
 
+        console.log(this.logItems);
+
         getKnex()('device_logs').insert({device_id: this.deviceId, data: jsonData}).then( (val) => {
             console.log("Device Log: ", this.name, new Date().toLocaleTimeString('en-US', { timeZone: 'America/Denver' }),  data);
         }).catch((e)=>{
@@ -247,12 +249,12 @@ class DeviceIO {
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
                             try{
-                                this.logItems=val[0].log_items ? JSON.parse(val[0].log_items) : [];
+                                this.logItems=JSON.parse(val[0].log_items);
                             }catch{
                                 this.logItems=[];
                             }
                             try {
-                                this.actions=val[0].actions ? JSON.parse(val[0].actions) : [];
+                                this.actions=JSON.parse(val[0].actions);
                             }catch{
                                 this.actions=[];
                             }
