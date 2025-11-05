@@ -248,6 +248,7 @@ class DeviceIO {
                             
                             this.key=val[0].encro_key;
                             this.deviceId=val[0].id;
+                            console.log(val[0]);
                             try{
                                 this.logItems=JSON.parse(val[0].log_items);
                             }catch(e){
