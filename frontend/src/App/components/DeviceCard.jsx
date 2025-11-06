@@ -205,10 +205,10 @@ export default function DeviceCard({ deviceId }) {
     }, [deviceId]);
 
     const statusLabel = {
-        connecting: "Connecting",
-        authenticating: "Authenticating",
-        live: "Live",
-        disconnected: "Disconnected"
+        connecting: "WS Connecting",
+        authenticating: "WS Authenticating",
+        live: "WS Live",
+        disconnected: "WS Disconnected"
     }[status];
 
     const statusColor = {
@@ -219,7 +219,7 @@ export default function DeviceCard({ deviceId }) {
     }[status];
 
     const deviceColor = deviceConnected ? "success" : "error";
-    const deviceLabel = deviceConnected ? "Device Connected" : "Device Disconnected";
+    const deviceLabel = deviceConnected ? "Dev Live" : "Dev Disconnected";
 
     const logItems = deviceInfo?.log_items || [];
     const actions = deviceInfo?.actions || [];
@@ -247,35 +247,22 @@ export default function DeviceCard({ deviceId }) {
                         height: 300,
                         objectFit: "contain",
                         bgcolor: "black",
-                        opacity: status === "live" ? 1 : 0.4,
+                        opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
                         transition: "opacity 0.3s ease"
                     }}
                 />
-            ) : (
-                <Box
-                    sx={{
-                        height: 300,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        bgcolor: "black"
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
-            )}
+            ) : null}
 
             <CardContent>
-                {deviceConnected ? "Device connected" : "Device disconnected"}
                 <Typography variant="subtitle1" gutterBottom>
-                    Live Values
+                    Current Values
                 </Typography>
 
                 {Object.keys(values).length > 0 ? (
                     <Table
                         size="small"
                         sx={{
-                            opacity: status === "live" ? 1 : 0.4,
+                            opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
                             transition: "opacity 0.3s ease"
                         }}
                     >
@@ -293,6 +280,9 @@ export default function DeviceCard({ deviceId }) {
                         Waiting for values...
                     </Typography>
                 )}
+                <Typography variant="subtitle1" gutterBottom>
+                    Actions
+                </Typography>
                 <DeviceActions actions={actions}/>
                 <Button href={'/devicelog/'+deviceId}>Device Log</Button>
             </CardContent>
