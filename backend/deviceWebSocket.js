@@ -20,7 +20,7 @@ const onMessage = (ws, rawMessage) => {
         ws.subscriptions.add(msg.deviceId);
         console.log(ws.user.email, "subscribed to", msg.deviceId);
 
-        const data=deviceServer.getDeviceData(msg.deviceId)
+        const data=deviceServer.getDeviceData(msg.deviceId);
         try {
             if (!data){
                 ws.send(JSON.stringify({
