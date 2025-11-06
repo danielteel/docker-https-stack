@@ -253,19 +253,16 @@ export default function DeviceCard({ deviceId }) {
                 />
             ) : null}
 
-            <CardContent>
+            <CardContent sx={{
+                opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
+                transition: "opacity 0.3s ease"
+            }}>
                 <Typography variant="subtitle1" gutterBottom>
                     Current Values
                 </Typography>
 
                 {Object.keys(values).length > 0 ? (
-                    <Table
-                        size="small"
-                        sx={{
-                            opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
-                            transition: "opacity 0.3s ease"
-                        }}
-                    >
+                    <Table size="small">
                         <TableBody>
                             {Object.entries(values).map(([key, val]) => (
                                 <TableRow key={key}>
