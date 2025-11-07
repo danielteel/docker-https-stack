@@ -429,6 +429,12 @@ class DeviceServer{
         return {values: device.values, image: Buffer.from(device.image).toString('base64')};
     }
 
+    sendActionToDevice = (deviceId, actionByte, a, b, c) => {
+        const device = this.getDeviceOfId(deviceId);
+        if (!device) return false;
+        return device.sendActionByByte(actionByte, a, b, c);
+    }
+
     subscribeToUpdates = (callback) => {
         this.updateCallbacks.add(callback);
     }

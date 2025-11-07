@@ -41,16 +41,15 @@ const onMessage = (ws, rawMessage) => {
         }catch(e){
             console.error("Error sending snapshot:", e);
         }
-        return;
-    }
-
-    if (msg.type === "unsubscribe" && Number.isInteger(msg.deviceId)) {
+    }else if (msg.type === "unsubscribe" && Number.isInteger(msg.deviceId)) {
         ws.subscriptions.delete(msg.deviceId);
         console.log(ws.user.email, "unsubscribed from", msg.deviceId);
-        return;
+    }else if (msg.type === 'action' && Number.isInteger(msg.deviceId) && Number.isInteger(msg.actionByte)){
+        deviceServer.sendActionToDevice(msg.deviceId, msg.actionByte, msg.a, msg.b, msg.c);
+        console.log(ws.user.email, "sent action", msg);
+    }else{
+        console.log("Unknown message", msg);
     }
-
-    console.log("Unknown message type", msg);
 };
 
 const onConnection = (ws, req) => {

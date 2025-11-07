@@ -4,76 +4,16 @@ import {
     CardMedia,
     CardContent,
     Typography,
-    Table,
-    TableBody,
-    TableCell,
-    TableRow,
-    CircularProgress,
     Box,
     Chip,
     Button,
-    Tooltip,
     Stack
 } from "@mui/material";
 
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 import { useAppContext } from '../../contexts/AppContext';
 import DeviceActions from "./DeviceActions";
-
-function formatValue(logItems, name, value){
-    const item = logItems.find( item => item.name === name);
-    if (!item) return String(value);
-
-    switch(item.type){
-        case 'degree':
-            return `${value}°`;
-        case 'percent':
-            return `${value}%`;
-        case 'time':
-            {
-                const date = new Date(value);
-                return date.toLocaleString();
-            }
-        case 'number':
-            return Number(value).toString();
-        case 'bool':
-            return value ? 'True' : 'False';
-        case 'string':
-            return String(value);
-        default:
-            return String(value);
-    }
-}
-
-function ValueCell({ logItems, name, value }) {
-    return <TableCell>{formatValue(logItems, name, value)}</TableCell>
-}
-
-function getDescription(logItems, name){
-    const item = logItems.find( item => item.name === name);
-    if (!item) return null;
-    return item.description || null;
-    
-}
-
-function KeyCell({ logItems, name }) {
-    const description = getDescription(logItems, name);
-
-    return (
-        <TableCell sx={{ fontWeight: 600 }}>
-            {name}
-            {description && (
-                <Tooltip title={description} placement="right" enterTouchDelay={0} leaveTouchDelay={3000}>
-                    <InfoOutlinedIcon
-                        fontSize="small"
-                        sx={{ ml: 0.5, opacity: 0.7, cursor: "pointer" }}
-                    />
-                </Tooltip>
-            )}
-        </TableCell>
-    );
-}
+import DeviceValues from "./DeviceValues";
 
 export default function DeviceCard({ deviceId }) {
     const { api } = useAppContext();
@@ -221,8 +161,6 @@ export default function DeviceCard({ deviceId }) {
     const deviceColor = deviceConnected ? "success" : "error";
     const deviceLabel = deviceConnected ? "Dev Live" : "Dev Disconnected";
 
-    const logItems = deviceInfo?.log_items || [];
-    const actions = deviceInfo?.actions || [];
 
     return (
         <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
@@ -257,30 +195,12 @@ export default function DeviceCard({ deviceId }) {
                 opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
                 transition: "opacity 0.3s ease"
             }}>
-                <Typography variant="subtitle1" gutterBottom>
-                    Current Values
-                </Typography>
+                
+                <DeviceValues values={values} logItems={deviceInfo?.log_items}/>
 
-                {Object.keys(values).length > 0 ? (
-                    <Table size="small">
-                        <TableBody>
-                            {Object.entries(values).map(([key, val]) => (
-                                <TableRow key={key}>
-                                    <KeyCell logItems={logItems} name={key} />
-                                    <ValueCell logItems={logItems} name={key} value={val} />
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) : (
-                    <Typography variant="body2" color="text.secondary">
-                        Waiting for values...
-                    </Typography>
-                )}
-                <Typography variant="subtitle1" gutterBottom>
-                    Actions
-                </Typography>
-                <DeviceActions actions={actions}/>
+                
+                <DeviceActions actions={deviceInfo?.actions} values={values} webSocket={wsRef}/>
+
                 <Button href={'/devicelog/'+deviceId}>Device Log</Button>
             </CardContent>
         </Card>
