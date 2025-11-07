@@ -199,7 +199,7 @@ export default function DeviceCard({ deviceId }) {
                 <DeviceValues values={values} logItems={deviceInfo?.log_items}/>
 
                 
-                <DeviceActions actions={deviceInfo?.actions} values={values} webSocket={wsRef}/>
+                <DeviceActions deviceId={deviceId} actions={deviceInfo?.actions} values={values} webSocket={wsRef}/>
 
                 <Button href={'/devicelog/'+deviceId}>Device Log</Button>
             </CardContent>

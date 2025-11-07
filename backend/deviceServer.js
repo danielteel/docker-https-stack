@@ -84,7 +84,7 @@ class DeviceIO {
                         return this.sendPacket(numberBuff);
 
                     case 'time':
-                        return this.sendPacket(new Uint8Array([Number(action.byte), Number(a), Number(b)]));
+                        return this.sendPacket(new Uint8Array([Number(action.byte), Number(a), Number(b), Number(c)]));
 
                     case 'string':
                         return this.sendPacket(new Uint8Array([Number(action.byte), ...textEncoder.encode(String(a))]));

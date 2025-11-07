@@ -1,105 +1,241 @@
-import { act, useEffect, useState } from 'react';
-import { MuiColorInput } from 'mui-color-input';
+import { useEffect, useState } from "react";
+import { MuiColorInput } from "mui-color-input";
 import {
     Typography,
-    TextField
+    TextField,
+    Button,
+    Switch,
+    Stack,
+    Box,
+    Paper,
 } from "@mui/material";
 
-
 function rgbToHex(r, g, b) {
-  return "#"+[r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+    return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-function ActionValue({action, values}){
-    if (!action || !values) return null;
-    if (values[action.name]===undefined) return 'UNK VAL';
+function buildActionPacket(value, deviceId, action) {
     switch (action.type){
         case 'number':
-            return values[action.name];
-        case 'time':
-            return values[action.name];
-        case 'string':
-            return values[action.name];
-        case 'bool':
-            return values[action.name] ? 'True' : 'False';
-        case 'color':{
-            if (typeof values[action.name] !== 'string') return 'wrong format';
-            const [r, g, b] = values[action.name].split(',').map(Number);
-            return <div style={{backgroundColor: `rgb(${r}, ${g}, ${b})`, width: '24px', height: '24px', borderRadius: '4px'}}>{rgbToHex(r, g, b)}</div>;
+            return [{ type: 'action', deviceId, actionByte: action.byte, a: Number(value)}, Number(value)];
+        case 'time':{
+            let [h, m, s] = (value?.split(":").map((n) => Number(n) || 0) || []);
+            if (s > 59) {
+                m += Math.floor(s / 60);
+                s = s % 60;
+            }
+            if (m > 59) {
+                h += Math.floor(m / 60);
+                m = m % 60;
+            }
+            return [{ type: 'action', deviceId, actionByte: action.byte, a: h, b: m, c: s}, String(h).padStart(2, '0')+":"+String(m).padStart(2, '0')+":"+String(s).padStart(2, '0')];
         }
+        case 'string':
+            return [{ type: 'action', deviceId, actionByte: action.byte, a: String(value)}, String(value)];
+        case 'bool':
+            return [{ type: 'action', deviceId, actionByte: action.byte, a: Number(value)}, Number(value)];
+        case 'void':
+            return [{ type: 'action', deviceId, actionByte: action.byte}, null];
+        case 'color':{
+            const hex = value.replace("#", "");
+            const r = parseInt(hex.substring(0, 2) || "0", 16);
+            const g = parseInt(hex.substring(2, 4) || "0", 16);
+            const b = parseInt(hex.substring(4, 6) || "0", 16);
+            return [{ type: 'action', deviceId, actionByte: action.byte, a: r, b: g, c: b}, rgbToHex(r, g, b)];
+        }
+    }
+
+}
+function ActionValue({ action, values }) {
+    if (!action || !values) return null;
+    const val = values[action.name];
+    if (val === undefined) return <em>UNK VAL</em>;
+
+    switch (action.type) {
+        case "number":
+        case "time":
+        case "string":
+            return <Typography variant="body2">{val}</Typography>;
+
+        case "bool":
+            return <Typography variant="body2">{val ? "True" : "False"}</Typography>;
+
+        case "color": {
+            if (typeof val !== "string") return <em>wrong format</em>;
+            const [r, g, b] = val.split(",").map(Number);
+            const hex = rgbToHex(r, g, b);
+            return (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box
+                        sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 1,
+                            bgcolor: `rgb(${r}, ${g}, ${b})`,
+                            border: "1px solid #ccc",
+                        }}
+                    />
+                    <Typography variant="body2">{hex}</Typography>
+                </Stack>
+            );
+        }
+
         default:
-            return 'UNK TYPE';
+            return <em>UNK TYPE</em>;
     }
 }
 
-function NumberInput({label, value, onChange}){
-    return <TextField
-      label={label}
-      type="number"
-      value={value}
-      onChange={(e)=> onChange(e.target.value)}
-      variant="outlined"
-      size="small"
-      slotProps={{htmlInput: { min: -2147483648, max: 2147483647 }}}
-    />
-}
-
-export default function DeviceActions({actions, values, webSocket}){
+export default function DeviceActions({ deviceId, actions = [], values = {}, webSocket }) {
     const [userValues, setUserValues] = useState({});
-    
+
+    // initialize default user values based on action type
     useEffect(() => {
-        if (!actions || !Array.isArray(actions)) return;
+        if (!Array.isArray(actions)) return;
 
-        const vals={};
+        const defaults = Object.fromEntries(
+            actions.map((a) => {
+                switch (a.type) {
+                    case "number":
+                        return [a.name, 0];
+                    case "time":
+                        return [a.name, "00:00:00"];
+                    case "string":
+                        return [a.name, ""];
+                    case "bool":
+                        return [a.name, false];
+                    case "color":
+                        return [a.name, "#ffffff"];
+                    default:
+                        return [a.name, ""];
+                }
+            })
+        );
 
-        for (const action of actions){
-            switch(action.type){
-                case 'number':
-                    vals[action.name]=0;
-                    break;
-                case 'time':
-                    vals[action.name]='00:00:00';
-                    break;
-                case 'string':
-                    vals[action.name]='';
-                    break;
-                case 'bool':
-                    vals[action.name]=false;
-                    break;
-                case 'color':
-                    vals[action.name]='#ffffff';
-                    break;
-                default:
-            }
-        }
-
-        setUserValues(vals);
+        setUserValues(defaults);
     }, [actions]);
 
-    console.log(values);
+    const handleChange = (name, newVal) => {
+        setUserValues((prev) => ({ ...prev, [name]: newVal }));
+    };
 
-    const actionsElements = actions?.map(action => {
-        switch (action?.type){
-            case 'number':
-                return <div>{action.name} - number - current <ActionValue action={action} values={values}/><NumberInput label={action.name} value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
-            case 'time':
-                return <div>{action.name} - time - current <ActionValue action={action} values={values}/></div>;
-            case 'string':
-                return <div>{action.name} - string - current <ActionValue action={action} values={values}/></div>;
-            case 'bool':
-                return <div>{action.name} - bool - current <ActionValue action={action} values={values}/></div>;
-            case 'void':
-                return <div>{action.name} - void</div>;
-            case 'color':
-                return <div>{action.name} - color - current <ActionValue action={action} values={values}/><MuiColorInput format="hex" value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
+    const sendAction = (action) => {
+        if (!webSocket?.current || webSocket.current.readyState !== WebSocket.OPEN) {
+            console.warn("WebSocket not ready");
+            return;
         }
-        return null;
-    })
 
-    return <div>
-        <Typography variant="subtitle1" gutterBottom>
-            Actions
-        </Typography>
-        {actionsElements}
-    </div>
+        const [msg, formattedValue] = buildActionPacket(userValues[action.name], deviceId, action);
+
+        setUserValues((prev) => ({
+            ...prev,
+            [action.name]: formattedValue,
+        }));
+
+        webSocket.current.send(JSON.stringify(msg));
+    };
+
+    return (
+        <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+                Actions
+            </Typography>
+
+            <Stack spacing={1}>
+                {actions.map((action) => {
+                    const { name, type } = action;
+
+                    let inputField = null;
+                    switch (type) {
+                        case "number":
+                            inputField = (
+                                <TextField
+                                    label={name}
+                                    value={userValues[name]}
+                                    onChange={(e) => handleChange(name, e.target.value)}
+                                    size="small"
+                                    type="number"
+                                    slotProps={{
+                                        htmlInput: { min: -2147483648, max: 2147483647 },
+                                    }}
+                                />
+                            );
+                            break;
+
+                        case "string":
+                            inputField = (
+                                <TextField
+                                    label={name}
+                                    value={userValues[name]}
+                                    onChange={(e) => handleChange(name, e.target.value)}
+                                    size="small"
+                                />
+                            );
+                            break;
+
+                        case "bool":
+                            inputField = (
+                                <Switch
+                                    checked={Boolean(userValues[name])}
+                                    onChange={(e) => handleChange(name, e.target.checked)}
+                                />
+                            );
+                            break;
+
+                        case "color":
+                            inputField = (
+                                <MuiColorInput
+                                    format="hex"
+                                    value={userValues[name]}
+                                    onChange={(val) => handleChange(name, val)}
+                                    size="small"
+                                />
+                            );
+                            break;
+
+                        default:
+                            inputField = (
+                                <Typography variant="body2" color="text.secondary">
+                                    Unsupported type
+                                </Typography>
+                            );
+                    }
+
+                    return (
+                        <Paper
+                            key={name}
+                            variant="outlined"
+                            sx={{
+                                p: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            <Typography sx={{ minWidth: 100 }} fontWeight={500}>
+                                {name}
+                            </Typography>
+
+                            <Box sx={{ flexGrow: 1, display: "flex", gap: 2, alignItems: "center" }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Current:
+                                </Typography>
+                                <ActionValue action={action} values={values} />
+                            </Box>
+
+                            {inputField}
+
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => sendAction(action)}
+                            >
+                                Send
+                            </Button>
+                        </Paper>
+                    );
+                })}
+            </Stack>
+        </Box>
+    );
 }
