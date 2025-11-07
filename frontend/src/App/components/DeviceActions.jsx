@@ -23,7 +23,7 @@ function ActionValue({action, values}){
         case 'bool':
             return values[action.name] ? 'True' : 'False';
         case 'color':{
-            if (!values[action.name]) return null;
+            if (typeof values[action.name] !== 'string') return null;
             const [r, g, b] = values[action.name].split(',').map(Number);
             return <div style={{backgroundColor: `rgb(${r}, ${g}, ${b})`, width: '24px', height: '24px', borderRadius: '4px'}}>{rgbToHex(r, g, b)}</div>;
         }
