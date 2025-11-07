@@ -76,6 +76,7 @@ export default function DeviceActions({actions, values, webSocket}){
         setUserValues(vals);
     }, [actions]);
 
+    console.log(values);
 
     const actionsElements = actions?.map(action => {
         switch (action?.type){
