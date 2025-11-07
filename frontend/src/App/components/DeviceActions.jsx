@@ -161,6 +161,17 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                             );
                             break;
 
+                        case "time":
+                            inputField = (
+                                <TextField
+                                    label={name}
+                                    value={userValues[name]}
+                                    onChange={(e) => handleChange(name, e.target.value)}
+                                    size="small"
+                                />
+                            );
+                            break;
+
                         case "string":
                             inputField = (
                                 <TextField
