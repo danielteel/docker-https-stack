@@ -7,45 +7,36 @@ import {
     Box,
     Chip,
     Button,
-    Stack
+    Stack,
+    Collapse,
+    IconButton
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
-
-import { useAppContext } from '../../contexts/AppContext';
 import DeviceActions from "./DeviceActions";
 import DeviceValues from "./DeviceValues";
 
-export default function DeviceCard({ deviceId }) {
-    const { api } = useAppContext();
-    const [deviceInfo, setDeviceInfo] = useState(null);
+export default function DeviceCard({ device }) {
     const [imgSrc, setImgSrc] = useState(null);
     const [values, setValues] = useState({});
-    const [deviceConnected, setDeviceConnected] = useState(false);
+    const [deviceConnected, setDeviceConnected] = useState(device?.connected || false);
     const [status, setStatus] = useState("connecting"); // connecting | live | disconnected
     const wsRef = useRef(null);
 
-    // Fetch device info including device name
-    useEffect(() => {
-        setDeviceInfo(null);
-        if (!deviceId) return;
+    // Expand/collapse states
+    const [showValues, setShowValues] = useState(true);   // expanded by default
+    const [showActions, setShowActions] = useState(false); // collapsed by default
 
-        async function loadDevice() {
-            const [ok, device] = await api.devicesGet(deviceId);
-            if (ok && device) {
-                setDeviceInfo(device);
-            }
-        }
-        loadDevice();
-    }, [deviceId, api]);
+    const deviceId = device?.device_id;
 
     // WebSocket subscription effect
     useEffect(() => {
         if (!deviceId) return;
 
-        let retryDelay = 1000; // Starts at 1 second, will grow
+        let retryDelay = 1000;
         const maxDelay = 5000;
         let active = true;
-
         let timeoutId = null;
 
         setImgSrc(null);
@@ -57,7 +48,6 @@ export default function DeviceCard({ deviceId }) {
             if (!active) return;
 
             const url = `${window.location.origin.replace("http", "ws")}/api/ws`;
-
             const ws = new WebSocket(url);
             wsRef.current = ws;
 
@@ -69,6 +59,7 @@ export default function DeviceCard({ deviceId }) {
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
+
                     if (msg.type === "ready") {
                         setStatus("live");
                         ws.send(JSON.stringify({ type: "subscribe", deviceId }));
@@ -88,26 +79,13 @@ export default function DeviceCard({ deviceId }) {
                     }
 
                     if (msg.type === "snapshot") {
-                        if (msg.image) {
-                            setImgSrc(`data:image/jpeg;base64,${msg.image}`);
-                        }else{
-                            setImgSrc(null);
-                        }
-                        if (msg.values) {
-                            setValues(msg.values);
-                        }else{
-                            setValues({});
-                        }
+                        setImgSrc(msg.image ? `data:image/jpeg;base64,${msg.image}` : null);
+                        setValues(msg.values || {});
                         setDeviceConnected(Boolean(msg.connected));
                     }
 
-                    if (msg.type === "disconnected") {
-                        setDeviceConnected(false);
-                    }
-
-                    if (msg.type === "connected") {
-                        setDeviceConnected(true);
-                    }
+                    if (msg.type === "disconnected") setDeviceConnected(false);
+                    if (msg.type === "connected") setDeviceConnected(true);
                 } catch (e) {
                     console.error("WS parse error", e);
                 }
@@ -146,6 +124,7 @@ export default function DeviceCard({ deviceId }) {
         };
     }, [deviceId]);
 
+    // --- Derived labels/colors ---
     const statusLabel = {
         connecting: "WS Connecting",
         authenticating: "WS Authenticating",
@@ -163,7 +142,6 @@ export default function DeviceCard({ deviceId }) {
     const deviceColor = deviceConnected ? "success" : "error";
     const deviceLabel = deviceConnected ? "Dev Live" : "Dev Disconnected";
 
-
     return (
         <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
             <Box sx={{ p: 1, position: "relative" }}>
@@ -172,17 +150,15 @@ export default function DeviceCard({ deviceId }) {
                     <Chip label={deviceLabel} color={deviceColor} size="small" />
                 </Stack>
                 <Typography variant="h6">
-                    {deviceInfo?.name && status !== "disconnected"
-                        ? deviceInfo?.name
-                        : `Device ${deviceId}`}
+                    {device?.name || `Device ${deviceId}`}
                 </Typography>
             </Box>
 
-            {imgSrc ? (
+            {imgSrc && (
                 <CardMedia
                     component="img"
                     image={imgSrc}
-                    alt={deviceInfo?.name || `Device ${deviceId}`}
+                    alt={device?.name || `Device ${deviceId}`}
                     sx={{
                         height: 300,
                         objectFit: "contain",
@@ -191,18 +167,53 @@ export default function DeviceCard({ deviceId }) {
                         transition: "opacity 0.3s ease"
                     }}
                 />
-            ) : null}
+            )}
 
-            <CardContent sx={{
-                opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
-                transition: "opacity 0.3s ease"
-            }}>
-                
-                <DeviceValues values={values} actions={deviceInfo?.actions} logItems={deviceInfo?.log_items}/>
+            <CardContent
+                sx={{
+                    opacity: (status === "live" && deviceConnected) ? 1 : 0.4,
+                    transition: "opacity 0.3s ease"
+                }}
+            >
+                {/* --- VALUES (expanded by default) --- */}
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        Values
+                    </Typography>
+                    <IconButton size="small" onClick={() => setShowValues(v => !v)}>
+                        {showValues ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                </Stack>
 
-                <DeviceActions deviceId={deviceId} actions={deviceInfo?.actions} values={values} webSocket={wsRef}/>
+                <Collapse in={showValues} timeout="auto" unmountOnExit>
+                    <DeviceValues
+                        values={values}
+                        actions={device?.actions}
+                        logItems={device?.log_items}
+                    />
+                </Collapse>
 
-                <Button href={'/devicelog/'+deviceId}>Device Log</Button>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        Actions
+                    </Typography>
+                    <IconButton size="small" onClick={() => setShowActions(a => !a)}>
+                        {showActions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                </Stack>
+
+                <Collapse in={showActions} timeout="auto" unmountOnExit>
+                    <DeviceActions
+                        deviceId={deviceId}
+                        actions={device?.actions}
+                        values={values}
+                        webSocket={wsRef}
+                    />
+                </Collapse>
+
+                <Button href={`/devicelog/${deviceId}`} sx={{ mt: 2 }}>
+                    Device Log
+                </Button>
             </CardContent>
         </Card>
     );

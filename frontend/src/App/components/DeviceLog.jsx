@@ -13,26 +13,9 @@ import { Button, ButtonGroup, Container, Grid, Stack } from '@mui/material';
 export default function DeviceLog({ deviceId }) {
     const { api } = useAppContext();
     const [log, setLog] = useState(null);
-    const [startDate, _setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
-    const [endDate, _setEndDate] = useState(dayjs(new Date()));
+    const [startDate, setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
+    const [endDate, setEndDate] = useState(dayjs(new Date()));
 
-    const setStartDate = (newValue) => {
-        if (newValue>endDate){
-            _setEndDate(newValue);
-            _setStartDate(endDate);
-        }else{
-            _setStartDate(newValue);
-        }
-    }
-
-    const setEndDate = (newValue) => {
-        if (newValue<startDate){
-            _setStartDate(newValue);
-            _setEndDate(startDate);
-        }else{
-            _setEndDate(newValue);
-        }  
-    }
 
 
     useEffect(() => {

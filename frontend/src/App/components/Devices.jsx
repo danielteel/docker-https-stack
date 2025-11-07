@@ -42,12 +42,15 @@ export default function Devices() {
     };
   }, [api]);
 
-  const toggleDevice = (deviceId) => {
-    setSelectedDevices(prev =>
-      prev.includes(deviceId)
-        ? prev.filter(id => id !== deviceId)
-        : [...prev, deviceId]
-    );
+  const toggleDevice = (device) => {
+    setSelectedDevices(prev => {
+      const alreadySelected = prev.some(d => d.device_id === device.device_id);
+      if (alreadySelected) {
+        return prev.filter(d => d.device_id !== device.device_id);
+      } else {
+        return [...prev, device];
+      }
+    });
   };
 
   return (
@@ -60,7 +63,7 @@ export default function Devices() {
       <Grid container spacing={2}>
         {devices.map(device => {
           const online = device.connected;
-          const selected = selectedDevices.includes(device.device_id);
+          const selected = selectedDevices.some(d => d.device_id === device.device_id);
 
           return (
             <Grid item xs={12} sm={6} md={4} lg={3} key={device.device_id}>
@@ -81,7 +84,7 @@ export default function Devices() {
                     transform: "scale(1.03)"
                   } : {}
                 }}
-                onClick={() => online && toggleDevice(device.device_id)}
+                onClick={() => online && toggleDevice(device)}
               >
                 <CardActionArea disabled={!online} sx={{ height: "100%" }}>
                   <CardContent sx={{ textAlign: "center" }}>
@@ -121,9 +124,9 @@ export default function Devices() {
           </Typography>
 
           <Grid container spacing={3}>
-            {selectedDevices.map(id => (
-              <Grid item xs={12} sm={12} md={6} lg={4} key={id}>
-                <DeviceCard deviceId={id} />
+            {selectedDevices.map(device => (
+              <Grid item xs={12} sm={12} md={6} lg={4} key={device.device_id}>
+                <DeviceCard device={device} />
               </Grid>
             ))}
           </Grid>
