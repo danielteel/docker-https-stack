@@ -193,18 +193,19 @@ export default function DeviceCard({ device }) {
                     />
                 </Collapse>
 
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        Actions
-                    </Typography>
-                    <IconButton size="small" onClick={() => setShowActions(a => !a)}>
-                        {showActions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                </Stack>
-
                 {
                     device?.actions?.length > 0 
                     ? 
+                        <>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                Actions
+                            </Typography>
+                            <IconButton size="small" onClick={() => setShowActions(a => !a)}>
+                                {showActions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                        </Stack>
+
                         <Collapse in={showActions} timeout="auto" unmountOnExit>
                             <DeviceActions
                                 deviceId={deviceId}
@@ -213,6 +214,7 @@ export default function DeviceCard({ device }) {
                                 webSocket={wsRef}
                             />
                         </Collapse>
+                        </>
                     :
                         null
                 }
