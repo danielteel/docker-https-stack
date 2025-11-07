@@ -157,6 +157,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     slotProps={{
                                         htmlInput: { min: -2147483648, max: 2147483647 },
                                     }}
+                                    shrink
                                 />
                             );
                             break;
@@ -168,6 +169,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     value={userValues[name]}
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
+                                    shrink
                                 />
                             );
                             break;
@@ -179,6 +181,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     value={userValues[name]}
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
+                                    shrink
                                 />
                             );
                             break;
