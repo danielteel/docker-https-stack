@@ -202,14 +202,20 @@ export default function DeviceCard({ device }) {
                     </IconButton>
                 </Stack>
 
-                <Collapse in={showActions} timeout="auto" unmountOnExit>
-                    <DeviceActions
-                        deviceId={deviceId}
-                        actions={device?.actions}
-                        values={values}
-                        webSocket={wsRef}
-                    />
-                </Collapse>
+                {
+                    device?.actions?.length > 0 
+                    ? 
+                        <Collapse in={showActions} timeout="auto" unmountOnExit>
+                            <DeviceActions
+                                deviceId={deviceId}
+                                actions={device?.actions}
+                                values={values}
+                                webSocket={wsRef}
+                            />
+                        </Collapse>
+                    :
+                        null
+                }
 
                 <Button href={`/devicelog/${deviceId}`} sx={{ mt: 2 }}>
                     Device Log
