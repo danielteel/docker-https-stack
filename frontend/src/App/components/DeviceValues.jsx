@@ -63,7 +63,7 @@ function KeyCell({ logItems, name }) {
     );
 }
 
-export default function DeviceValues({ values, actions = [], logItems }) {
+export default function DeviceValues({ values, actions, logItems }) {
     if (!values || Object.keys(values).length <= 0) {
         return (
             <>
