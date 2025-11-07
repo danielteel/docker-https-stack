@@ -63,31 +63,56 @@ function KeyCell({ logItems, name }) {
     );
 }
 
-export default function DeviceValues({values, logItems}){
-    if (Object.keys(values).length <=0 ){
-        return <>
+export default function DeviceValues({ values, actions = [], logItems }) {
+    if (!values || Object.keys(values).length <= 0) {
+        return (
+            <>
+                <Typography variant="subtitle1" gutterBottom>
+                    Current Values
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Waiting for values...
+                </Typography>
+            </>
+        );
+    }
+
+    let filteredValues;
+    if (Array.isArray(actions)) {
+        const actionNames = new Set(actions.map(a => a.name));
+        filteredValues = Object.entries(values).filter(([key]) => !actionNames.has(key));
+    } else {
+        filteredValues = values;
+    }
+
+    if (filteredValues.length === 0) {
+        return (
+            <>
+                <Typography variant="subtitle1" gutterBottom>
+                    Current Values
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    No values to display
+                </Typography>
+            </>
+        );
+    }
+
+    return (
+        <>
             <Typography variant="subtitle1" gutterBottom>
                 Current Values
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-                Waiting for values...
-            </Typography>
+            <Table size="small">
+                <TableBody>
+                    {filteredValues.map(([key, val]) => (
+                        <TableRow key={key}>
+                            <KeyCell logItems={logItems} name={key} />
+                            <ValueCell logItems={logItems} name={key} value={val} />
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </>
-    }
-
-    return <>
-        <Typography variant="subtitle1" gutterBottom>
-            Current Values
-        </Typography>
-        <Table size="small">
-            <TableBody>
-                {Object.entries(values).map(([key, val]) => (
-                    <TableRow key={key}>
-                        <KeyCell logItems={logItems} name={key} />
-                        <ValueCell logItems={logItems} name={key} value={val} />
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    </>
+    );
 }

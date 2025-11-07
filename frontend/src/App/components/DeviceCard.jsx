@@ -198,9 +198,8 @@ export default function DeviceCard({ deviceId }) {
                 transition: "opacity 0.3s ease"
             }}>
                 
-                <DeviceValues values={values} logItems={deviceInfo?.log_items}/>
+                <DeviceValues values={values} actions={deviceInfo?.actions} logItems={deviceInfo?.log_items}/>
 
-                
                 <DeviceActions deviceId={deviceId} actions={deviceInfo?.actions} values={values} webSocket={wsRef}/>
 
                 <Button href={'/devicelog/'+deviceId}>Device Log</Button>
