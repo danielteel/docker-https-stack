@@ -58,7 +58,7 @@ function ActionValue({ action, values }) {
             return <Typography variant="body2">{val}</Typography>;
 
         case "bool":
-            return <Typography variant="body2">{val ? "True" : "False"}</Typography>;
+            return <Typography variant="body2">{Number(val) ? "True" : "False"}</Typography>;
 
         case "color": {
             if (typeof val !== "string") return <em>wrong format</em>;
