@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { act, useEffect, useState } from 'react';
 import { MuiColorInput } from 'mui-color-input';
 import {
     Typography,
@@ -73,26 +73,29 @@ export default function DeviceActions({actions, values, webSocket}){
         setUserValues(vals);
     }, [actions]);
 
+
+    const actionsElements = actions?.map(action => {
+        switch (action?.type){
+            case 'number':
+                return <div>{action.name} - number - current <ActionValue action={action} values={values}/><NumberInput label={action.name} value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
+            case 'time':
+                return <div>{action.name} - time - current <ActionValue action={action} values={values}/></div>;
+            case 'string':
+                return <div>{action.name} - string - current <ActionValue action={action} values={values}/></div>;
+            case 'bool':
+                return <div>{action.name} - bool - current <ActionValue action={action} values={values}/></div>;
+            case 'void':
+                return <div>{action.name} - void</div>;
+            case 'color':
+                return <div>{action.name} - color - current <ActionValue action={action} values={values}/><MuiColorInput format="hex" value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
+        }
+        return null;
+    })
+
     return <div>
         <Typography variant="subtitle1" gutterBottom>
             Actions
         </Typography>
-        {actions.map(action => {
-            switch (action?.type){
-                case 'number':
-                    return <div>{action.name} - number - current <ActionValue action={action} values={values}/><NumberInput label={action.name} value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
-                case 'time':
-                    return <div>{action.name} - time - current <ActionValue action={action} values={values}/></div>;
-                case 'string':
-                    return <div>{action.name} - string - current <ActionValue action={action} values={values}/></div>;
-                case 'bool':
-                    return <div>{action.name} - bool - current <ActionValue action={action} values={values}/></div>;
-                case 'void':
-                    return <div>{action.name} - void</div>;
-                case 'color':
-                    return <div>{action.name} - color - current <ActionValue action={action} values={values}/><MuiColorInput format="hex" value={userValues[action.name]} onChange={(newVal)=>setUserValues({...userValues, [action.name]: newVal})}/></div>;
-            }
-            return null;
-        })}
+        {actionsElements}
     </div>
 }
