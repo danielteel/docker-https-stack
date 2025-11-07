@@ -43,7 +43,6 @@ function getDescription(logItems, name){
     const item = logItems.find( item => item.name === name);
     if (!item) return null;
     return item.description || null;
-    
 }
 
 function KeyCell({ logItems, name }) {

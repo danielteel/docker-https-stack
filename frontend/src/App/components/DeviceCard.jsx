@@ -43,7 +43,7 @@ export default function DeviceCard({ deviceId }) {
         if (!deviceId) return;
 
         let retryDelay = 1000; // Starts at 1 second, will grow
-        const maxDelay = 15000;
+        const maxDelay = 5000;
         let active = true;
 
         let timeoutId = null;
@@ -124,11 +124,13 @@ export default function DeviceCard({ deviceId }) {
 
             ws.onerror = () => {
                 setStatus("error/disconnected");
+                setDeviceConnected(false);
                 scheduleReconnect();
             };
 
             ws.onclose = () => {
                 setStatus("disconnected");
+                setDeviceConnected(false);
                 scheduleReconnect();
             };
         };

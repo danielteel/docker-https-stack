@@ -8,7 +8,11 @@ import {
     Stack,
     Box,
     Paper,
+    Tooltip,
 } from "@mui/material";
+
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
 
 function rgbToHex(r, g, b) {
     return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -142,7 +146,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
 
             <Stack spacing={1}>
                 {actions.map((action) => {
-                    const { name, type } = action;
+                    const { name, type, description } = action;
 
                     let inputField = null;
                     switch (type) {
@@ -228,6 +232,14 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                         >
                             <Typography sx={{ minWidth: 100 }} fontWeight={500}>
                                 {name}
+                                {description && (
+                                    <Tooltip title={description} placement="right" enterTouchDelay={0} leaveTouchDelay={3000}>
+                                        <InfoOutlinedIcon
+                                            fontSize="small"
+                                            sx={{ ml: 0.5, opacity: 0.7, cursor: "pointer" }}
+                                        />
+                                    </Tooltip>
+                                )}
                             </Typography>
 
                             <Box sx={{ flexGrow: 1, display: "flex", gap: 2, alignItems: "center" }}>
