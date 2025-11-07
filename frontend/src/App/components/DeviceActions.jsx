@@ -12,7 +12,7 @@ function rgbToHex(r, g, b) {
 
 function ActionValue({action, values}){
     if (!action || !values) return null;
-
+    if (values[action.name]===undefined) return 'UNK VAL';
     switch (action.type){
         case 'number':
             return values[action.name];
@@ -23,10 +23,12 @@ function ActionValue({action, values}){
         case 'bool':
             return values[action.name] ? 'True' : 'False';
         case 'color':{
-            if (typeof values[action.name] !== 'string') return null;
+            if (typeof values[action.name] !== 'string') return 'wrong format';
             const [r, g, b] = values[action.name].split(',').map(Number);
             return <div style={{backgroundColor: `rgb(${r}, ${g}, ${b})`, width: '24px', height: '24px', borderRadius: '4px'}}>{rgbToHex(r, g, b)}</div>;
         }
+        default:
+            return 'UNK TYPE';
     }
 }
 
