@@ -75,6 +75,7 @@ export default function DeviceLog({ deviceId }) {
             Device Log Viewer
           </Typography>
 
+          {/* Date Pickers */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
@@ -100,47 +101,45 @@ export default function DeviceLog({ deviceId }) {
             </Grid>
           </LocalizationProvider>
 
-          {/* Quick Range & Time Shift Row */}
-          <Box sx={{ mt: 2 }}>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="center"
-              spacing={2}
-              flexWrap="wrap"
+          {/* Shift Buttons */}
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            spacing={2}
+          >
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => shiftRange(-1)}
             >
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={() => shiftRange(-1)}
-              >
-                Back a Day
-              </Button>
+              Back a Day
+            </Button>
+            <Button
+              variant="outlined"
+              endIcon={<ArrowForwardIcon />}
+              onClick={() => shiftRange(1)}
+            >
+              Forward a Day
+            </Button>
+          </Stack>
 
-              <ButtonGroup
-                variant="contained"
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                }}
-              >
-                <Button onClick={() => setRange(7 * 24)}>7 Days</Button>
-                <Button onClick={() => setRange(24)}>24 Hours</Button>
-                <Button onClick={() => setRange(12)}>12 Hours</Button>
-                <Button onClick={() => setRange(6)}>6 Hours</Button>
-                <Button onClick={() => setRange(3)}>3 Hours</Button>
-              </ButtonGroup>
-
-              <Button
-                variant="outlined"
-                endIcon={<ArrowForwardIcon />}
-                onClick={() => shiftRange(1)}
-              >
-                Forward a Day
-              </Button>
-            </Stack>
-          </Box>
+          {/* Quick Ranges */}
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            spacing={1}
+            flexWrap="wrap"
+          >
+            <ButtonGroup variant="contained">
+              <Button onClick={() => setRange(7 * 24)}>Last 7 Days</Button>
+              <Button onClick={() => setRange(24)}>Last 24 Hours</Button>
+              <Button onClick={() => setRange(12)}>Last 12 Hours</Button>
+              <Button onClick={() => setRange(6)}>Last 6 Hours</Button>
+              <Button onClick={() => setRange(3)}>Last 3 Hours</Button>
+            </ButtonGroup>
+          </Stack>
         </Stack>
       </Paper>
 
