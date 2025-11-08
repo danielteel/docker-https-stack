@@ -190,6 +190,9 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                 />
                             );
                             break;
+                        case 'void':
+                            inputField=null;
+                            break;
                         default:
                             inputField = (
                                 <Typography variant="body2" color="text.secondary">
@@ -224,31 +227,48 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     )}
                                 </Typography>
 
-                                <Stack direction="row" alignItems="center" spacing={1}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Current:
-                                    </Typography>
-                                    <ActionValue action={action} values={values} />
-                                </Stack>
+                                {
+                                    type==='void'
+                                    ?
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={() => sendAction(action)}
+                                        >
+                                            Send
+                                        </Button>
+                                    :
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Current:
+                                            </Typography>
+                                            <ActionValue action={action} values={values} />
+                                        </Stack>
+                                }
                             </Stack>
 
                             {/* Bottom line: input + send */}
-                            <Stack
-                                direction="row"
-                                spacing={1}
-                                alignItems="center"
-                                sx={{ mt: 1, flexWrap: "wrap" }}
-                            >
-                                {inputField}
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    onClick={() => sendAction(action)}
-                                >
-                                    Send
-                                </Button>
-                            </Stack>
-
+                            {
+                                type==='void'
+                                ?
+                                    null
+                                :
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        alignItems="center"
+                                        sx={{ mt: 1, flexWrap: "wrap" }}
+                                    >
+                                        {inputField}
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={() => sendAction(action)}
+                                        >
+                                            Send
+                                        </Button>
+                                    </Stack>
+                            }
                             {i < actions.length - 1 && <Divider sx={{ mt: 1.5 }} />}
                         </Box>
                     );
