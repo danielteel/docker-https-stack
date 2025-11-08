@@ -100,9 +100,6 @@ export default function DeviceValues({ values, actions, logItems }) {
 
     return (
         <>
-            <Typography variant="subtitle1" gutterBottom>
-                Current Values
-            </Typography>
             <Table size="small">
                 <TableBody>
                     {filteredValues.map(([key, val]) => (

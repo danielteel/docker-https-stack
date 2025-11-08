@@ -4,11 +4,11 @@ import {
     Typography,
     TextField,
     Button,
-    Switch,
     Stack,
     Box,
     Tooltip,
     Divider,
+    Checkbox,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
@@ -137,10 +137,6 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
 
     return (
         <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-                Actions
-            </Typography>
-
             <Stack spacing={1.5}>
                 {actions.map((action, i) => {
                     const { name, type, description } = action;
@@ -171,7 +167,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                             break;
                         case "bool":
                             inputField = (
-                                <Switch
+                                <Checkbox
                                     checked={Boolean(userValues[name])}
                                     onChange={(e) => handleChange(name, e.target.checked)}
                                 />
@@ -203,7 +199,6 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                 alignItems="center"
                                 justifyContent="space-between"
                                 flexWrap="wrap"
-                                spacing={1}
                             >
                                 <Typography fontWeight={500}>
                                     {name}
@@ -222,7 +217,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     )}
                                 </Typography>
 
-                                <Stack direction="row" alignItems="center" spacing={1}>
+                                <Stack direction="row" alignItems="center">
                                     <Typography variant="body2" color="text.secondary">
                                         Current:
                                     </Typography>

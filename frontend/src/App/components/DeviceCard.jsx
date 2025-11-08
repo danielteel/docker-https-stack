@@ -143,7 +143,7 @@ export default function DeviceCard({ device }) {
     const deviceLabel = deviceConnected ? "Dev Live" : "Dev Disconnected";
 
     return (
-        <Card sx={{ maxWidth: 500, margin: "auto", mt: 2, boxShadow: 4 }}>
+        <Card sx={{ maxWidth: 500, minWidth:240, margin: "auto", mt: 2, boxShadow: 4 }}>
             <Box sx={{ p: 1, position: "relative" }}>
                 <Stack direction="row" spacing={1} sx={{ position: "absolute", right: 8, top: 8 }}>
                     <Chip label={statusLabel} color={statusColor} size="small" />
