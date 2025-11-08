@@ -62,8 +62,11 @@ function ActionValue({ action, values }) {
     if (val === undefined) return <em>UNK VAL</em>;
 
     switch (action.type) {
+        case "time":{
+            const [h, m, s] = (val?.split(":").map((n) => Number(n) || 0) || []);
+            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        }
         case "number":
-        case "time":
         case "string":
             return <Typography variant="body2">{val}</Typography>;
         case "bool":
