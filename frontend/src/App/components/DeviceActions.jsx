@@ -217,7 +217,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     )}
                                 </Typography>
 
-                                <Stack direction="row" alignItems="center">
+                                <Stack direction="row" alignItems="center" spacing={1}>
                                     <Typography variant="body2" color="text.secondary">
                                         Current:
                                     </Typography>
