@@ -146,11 +146,12 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                         case "number":
                             inputField = (
                                 <TextField
-                                    label="Value"
+                                    label={name}
                                     value={userValues[name]}
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
                                     type="number"
+                                    shrink
                                 />
                             );
                             break;
@@ -158,10 +159,11 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                         case "string":
                             inputField = (
                                 <TextField
-                                    label="Value"
+                                    label={name}
                                     value={userValues[name]}
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
+                                    shrink
                                 />
                             );
                             break;
@@ -181,7 +183,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     onChange={(val) => handleChange(name, val)}
                                     size="small"
                                     isAlphaHidden={true}
-                                    sx={{'& input':{maxWidth:'6em'}}}
+                                    sx={{'& input':{maxWidth:'7em'}}}
                                 />
                             );
                             break;
