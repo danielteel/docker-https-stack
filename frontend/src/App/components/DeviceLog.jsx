@@ -54,6 +54,11 @@ export default function DeviceLog({ deviceId }) {
     setEndDate((prev) => prev.add(days, "day"));
   };
 
+  const setRange = (hours) => {
+    setEndDate(dayjs());
+    setStartDate(dayjs().subtract(hours, "hour"));
+  };
+
   return (
     <Container maxWidth="xl">
       <Paper
@@ -72,7 +77,7 @@ export default function DeviceLog({ deviceId }) {
 
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={5}>
+              <Grid item xs={12} md={6}>
                 <DateTimePicker
                   label="Start"
                   value={startDate}
@@ -82,7 +87,7 @@ export default function DeviceLog({ deviceId }) {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={5}>
+              <Grid item xs={12} md={6}>
                 <DateTimePicker
                   label="End"
                   value={endDate}
@@ -92,73 +97,54 @@ export default function DeviceLog({ deviceId }) {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={2}>
-                <ButtonGroup
-                  variant="outlined"
-                  fullWidth
-                  sx={{ height: "40px" }}
-                >
-                  <Button onClick={() => shiftRange(-1)}>
-                    <ArrowBackIcon fontSize="small" /> Back a Day
-                  </Button>
-                  <Button onClick={() => shiftRange(1)}>
-                    Forward a Day <ArrowForwardIcon fontSize="small" />
-                  </Button>
-                </ButtonGroup>
-              </Grid>
             </Grid>
           </LocalizationProvider>
 
-          <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Quick Ranges
-            </Typography>
-            <ButtonGroup variant="contained">
+          {/* Quick Range & Time Shift Row */}
+          <Box sx={{ mt: 2 }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="center"
+              spacing={2}
+              flexWrap="wrap"
+            >
               <Button
-                onClick={() => {
-                  setEndDate(dayjs());
-                  setStartDate(dayjs().subtract(7, "day"));
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => shiftRange(-1)}
+              >
+                Back a Day
+              </Button>
+
+              <ButtonGroup
+                variant="contained"
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
                 }}
               >
-                7 Days
-              </Button>
+                <Button onClick={() => setRange(7 * 24)}>7 Days</Button>
+                <Button onClick={() => setRange(24)}>24 Hours</Button>
+                <Button onClick={() => setRange(12)}>12 Hours</Button>
+                <Button onClick={() => setRange(6)}>6 Hours</Button>
+                <Button onClick={() => setRange(3)}>3 Hours</Button>
+              </ButtonGroup>
+
               <Button
-                onClick={() => {
-                  setEndDate(dayjs());
-                  setStartDate(dayjs().subtract(24, "hour"));
-                }}
+                variant="outlined"
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => shiftRange(1)}
               >
-                24 Hours
+                Forward a Day
               </Button>
-              <Button
-                onClick={() => {
-                  setEndDate(dayjs());
-                  setStartDate(dayjs().subtract(12, "hour"));
-                }}
-              >
-                12 Hours
-              </Button>
-              <Button
-                onClick={() => {
-                  setEndDate(dayjs());
-                  setStartDate(dayjs().subtract(6, "hour"));
-                }}
-              >
-                6 Hours
-              </Button>
-              <Button
-                onClick={() => {
-                  setEndDate(dayjs());
-                  setStartDate(dayjs().subtract(3, "hour"));
-                }}
-              >
-                3 Hours
-              </Button>
-            </ButtonGroup>
+            </Stack>
           </Box>
         </Stack>
       </Paper>
 
+      {/* Temperature Chart */}
       <Paper
         elevation={2}
         sx={{ p: 3, borderRadius: 3, bgcolor: "background.default", mb: 3 }}
@@ -183,6 +169,7 @@ export default function DeviceLog({ deviceId }) {
         />
       </Paper>
 
+      {/* Humidity Chart */}
       <Paper
         elevation={2}
         sx={{ p: 3, borderRadius: 3, bgcolor: "background.default" }}
