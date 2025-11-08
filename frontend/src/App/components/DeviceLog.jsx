@@ -1,123 +1,211 @@
-import dayjs from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-
-import { useAppContext } from '../../contexts/AppContext';
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { useAppContext } from "../../contexts/AppContext";
 import { useEffect, useState } from "react";
-import { LineChart } from '@mui/x-charts';
-import { Button, ButtonGroup, Container, Grid, Stack } from '@mui/material';
-
-
+import { LineChart } from "@mui/x-charts";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Container,
+  Grid,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function DeviceLog({ deviceId }) {
-    const { api } = useAppContext();
-    const [log, setLog] = useState(null);
-    const [startDate, setStartDate] = useState(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
-    const [endDate, setEndDate] = useState(dayjs(new Date()));
+  const { api } = useAppContext();
+  const [log, setLog] = useState(null);
+  const [startDate, setStartDate] = useState(dayjs().subtract(24, "hour"));
+  const [endDate, setEndDate] = useState(dayjs());
 
+  useEffect(() => {
+    let cancel = false;
 
+    async function fetchLogs() {
+      const [ok, data] = await api.devicesLog(
+        deviceId,
+        startDate.toDate().toISOString(),
+        endDate.toDate().toISOString()
+      );
+      if (!cancel && ok && Array.isArray(data)) {
+        setLog(
+          data.map((log) => ({
+            id: log.time,
+            time: new Date(log.time),
+            humidity: Number(log.data.humidity),
+            temperature: Number(log.data.temperature),
+          }))
+        );
+      }
+    }
 
-    useEffect(() => {
-        let cancel = false;
+    fetchLogs();
+    return () => (cancel = true);
+  }, [deviceId, startDate, endDate, api]);
 
-        async function getLast24HoursLog(deviceId) {
-            const startTime = startDate.toDate().toISOString(); // 24 hours ago
-            const endTime = endDate.toDate().toISOString(); // now, in UTC ISO format
-            return await api.devicesLog(deviceId, startTime, endTime);
-        }
+  const shiftRange = (days) => {
+    setStartDate((prev) => prev.add(days, "day"));
+    setEndDate((prev) => prev.add(days, "day"));
+  };
 
-        async function getLog() {
-            if (cancel) return;
-            let [passed, fetchedLogs, ] = await getLast24HoursLog(deviceId);
-            if (passed && Array.isArray(fetchedLogs)) {
-                const mappedLogs = fetchedLogs.map(log => ({
-                    id: log.time,
-                    time: new Date(log.time),
-                    humidity: Number(log.data.humidity),
-                    temperature: Number(log.data.temperature),
-                }));
-                setLog(mappedLogs);
-            } else {
-                setLog(null);
-            }
-        }
-        getLog();
+  return (
+    <Container maxWidth="xl">
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          bgcolor: "background.paper",
+          mb: 3,
+        }}
+      >
+        <Stack spacing={2}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Device Log Viewer
+          </Typography>
 
-        return () => {
-            cancel = true;
-        }
-    }, [deviceId, startDate, endDate, api]);
-
-    return (
-        <Container maxWidth='xl'>
-            <Stack>
-                <Grid 
-                container
-                spacing={0.5}   
-                sx={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                                <DateTimePicker
-                                    label="Start Date & Time"
-                                    value={startDate}
-                                    onChange={(newValue) => setStartDate(newValue)}
-                                />
-                            </Grid>
-                            <Grid size={6} container alignContent={"center"} alignItems={"center"} justifyContent={"center"} justifyItems={"center"}>
-                                <DateTimePicker
-                                    label="End Date & Time"
-                                    value={endDate}
-                                    onChange={(newValue) => setEndDate(newValue)}
-                                />
-                            </Grid>
-                    </LocalizationProvider> 
-                </Grid>
-                <ButtonGroup>
-                    <Button onClick={()=>{
-                        setEndDate(dayjs(new Date()));
-                        setStartDate(dayjs(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
-                    }}>Last 7 Days</Button>            
-                    <Button onClick={()=>{
-                        setEndDate(dayjs(new Date()));
-                        setStartDate(dayjs(new Date(Date.now() - 24 * 60 * 60 * 1000)));
-                    }}>Last 24 hours</Button>
-                    <Button onClick={()=>{
-                        setEndDate(dayjs(new Date()));
-                        setStartDate(dayjs(new Date(Date.now() - 12 * 60 * 60 * 1000)));
-                    }}>Last 12 hours</Button>            
-                    <Button onClick={()=>{
-                        setEndDate(dayjs(new Date()));
-                        setStartDate(dayjs(new Date(Date.now() - 6 * 60 * 60 * 1000)));
-                    }}>Last 6 hours</Button>            
-                    <Button onClick={()=>{
-                        setEndDate(dayjs(new Date()));
-                        setStartDate(dayjs(new Date(Date.now() - 3 * 60 * 60 * 1000)));
-                    }}>Last 3 hours</Button>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={5}>
+                <DateTimePicker
+                  label="Start"
+                  value={startDate}
+                  onChange={(newValue) => setStartDate(newValue)}
+                  slotProps={{
+                    textField: { fullWidth: true, size: "small" },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={5}>
+                <DateTimePicker
+                  label="End"
+                  value={endDate}
+                  onChange={(newValue) => setEndDate(newValue)}
+                  slotProps={{
+                    textField: { fullWidth: true, size: "small" },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <ButtonGroup
+                  variant="outlined"
+                  fullWidth
+                  sx={{ height: "40px" }}
+                >
+                  <Button onClick={() => shiftRange(-1)}>
+                    <ArrowBackIcon fontSize="small" /> Back a Day
+                  </Button>
+                  <Button onClick={() => shiftRange(1)}>
+                    Forward a Day <ArrowForwardIcon fontSize="small" />
+                  </Button>
                 </ButtonGroup>
-            </Stack>
+              </Grid>
+            </Grid>
+          </LocalizationProvider>
 
-            <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
-                series={[
-                    {id: 'sync', dataKey: 'temperature', label: 'Temp (°F)', color: 'red', showMark: false},
-                ]}
-                dataset={log || []}
-                height={300}
-                grid={{ vertical: true, horizontal: true }}
-            />
-            <LineChart
-                xAxis={[{ dataKey: 'time', scaleType: 'time', label: 'Time'}]}
-                series={[
-                    {id: 'sync', dataKey: 'humidity', label: 'Humidity (%RH)', color: 'blue', showMark: false},
-                ]}
-                dataset={log || []}
-                height={300}
-                grid={{ vertical: true, horizontal: true }}
-            />
-        </Container>
-    );
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+              Quick Ranges
+            </Typography>
+            <ButtonGroup variant="contained">
+              <Button
+                onClick={() => {
+                  setEndDate(dayjs());
+                  setStartDate(dayjs().subtract(7, "day"));
+                }}
+              >
+                7 Days
+              </Button>
+              <Button
+                onClick={() => {
+                  setEndDate(dayjs());
+                  setStartDate(dayjs().subtract(24, "hour"));
+                }}
+              >
+                24 Hours
+              </Button>
+              <Button
+                onClick={() => {
+                  setEndDate(dayjs());
+                  setStartDate(dayjs().subtract(12, "hour"));
+                }}
+              >
+                12 Hours
+              </Button>
+              <Button
+                onClick={() => {
+                  setEndDate(dayjs());
+                  setStartDate(dayjs().subtract(6, "hour"));
+                }}
+              >
+                6 Hours
+              </Button>
+              <Button
+                onClick={() => {
+                  setEndDate(dayjs());
+                  setStartDate(dayjs().subtract(3, "hour"));
+                }}
+              >
+                3 Hours
+              </Button>
+            </ButtonGroup>
+          </Box>
+        </Stack>
+      </Paper>
+
+      <Paper
+        elevation={2}
+        sx={{ p: 3, borderRadius: 3, bgcolor: "background.default", mb: 3 }}
+      >
+        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+          Temperature (°F)
+        </Typography>
+        <LineChart
+          xAxis={[{ dataKey: "time", scaleType: "time", label: "Time" }]}
+          series={[
+            {
+              id: "temp",
+              dataKey: "temperature",
+              label: "Temperature (°F)",
+              color: "#ff5252",
+              showMark: false,
+            },
+          ]}
+          dataset={log || []}
+          height={300}
+          grid={{ vertical: true, horizontal: true }}
+        />
+      </Paper>
+
+      <Paper
+        elevation={2}
+        sx={{ p: 3, borderRadius: 3, bgcolor: "background.default" }}
+      >
+        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+          Humidity (%RH)
+        </Typography>
+        <LineChart
+          xAxis={[{ dataKey: "time", scaleType: "time", label: "Time" }]}
+          series={[
+            {
+              id: "hum",
+              dataKey: "humidity",
+              label: "Humidity (%RH)",
+              color: "#42a5f5",
+              showMark: false,
+            },
+          ]}
+          dataset={log || []}
+          height={300}
+          grid={{ vertical: true, horizontal: true }}
+        />
+      </Paper>
+    </Container>
+  );
 }
