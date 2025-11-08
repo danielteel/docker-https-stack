@@ -181,7 +181,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     onChange={(val) => handleChange(name, val)}
                                     size="small"
                                     isAlphaHidden={true}
-                                    sx={{maxWidth: '6em'}}
+                                    sx={{'& input':{maxWidth:'6em'}}}
                                 />
                             );
                             break;
