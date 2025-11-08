@@ -151,7 +151,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
                                     type="number"
-                                    shrink
+                                    slotProps={{ inputLabel: { shrink: true } }}
                                 />
                             );
                             break;
@@ -163,7 +163,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                     value={userValues[name]}
                                     onChange={(e) => handleChange(name, e.target.value)}
                                     size="small"
-                                    shrink
+                                    slotProps={{ inputLabel: { shrink: true } }}
                                 />
                             );
                             break;
@@ -180,7 +180,7 @@ export default function DeviceActions({ deviceId, actions = [], values = {}, web
                                 <MuiColorInput
                                     format="hex"
                                     value={userValues[name]}
-                                    onChange={(val) => handleChange(name, val)}
+                                    onChange={(val) => {handleChange(name, val)}}
                                     size="small"
                                     isAlphaHidden={true}
                                     sx={{'& input':{maxWidth:'7em'}}}
