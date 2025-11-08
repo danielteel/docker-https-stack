@@ -50,6 +50,9 @@ function isBadLogItems(logItems){
 
         if (typeof logItem.type!=='string') return 'log_items has entry with type not a string';
         if (!logItemTypes.includes(logItem.type.toLowerCase().trim())) return 'log_items has entry with invalid type';
+
+        if (typeof logItem.stored!=='boolean') return 'log_items has entry with stored not of type boolean';
+        
         
         if (typeof logItem.description!=='string') return 'log_items has entry with description not a string';
     }

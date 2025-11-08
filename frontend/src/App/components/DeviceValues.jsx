@@ -26,7 +26,7 @@ function formatValue(logItems, name, value){
         case 'number':
             return Number(value).toString();
         case 'bool':
-            return value ? 'True' : 'False';
+            return Number(value) ? 'True' : 'False';
         case 'string':
             return String(value);
         default:

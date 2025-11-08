@@ -65,7 +65,7 @@ export default function EditFormatDialog({ api, devices, setDevices, editItem, s
     const handleUpdate = async () => {
         try{
             setInProgress('update');
-            const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, description: item.description})));
+            const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, stored: item.stored, description: item.description})));
             const sanitizedActions = JSON.stringify(actions.map( item => ({name: item.name, byte: Number(item.byte), type: item.type, description: item.description})));
             const [passed, newDevices] = await api.devicesUpdate(editItem?.item?.device_id, name, encroKey, sanitizedLogItems, sanitizedActions);
             if (passed) {

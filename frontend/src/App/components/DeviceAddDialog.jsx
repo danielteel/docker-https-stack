@@ -57,7 +57,7 @@ export default function DeviceAddDialog({ api, devices, setDevices, open, setOpe
     const handleAdd = async () => {
         try{
             setInProgress('adding');
-            const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, description: item.description})));
+            const sanitizedLogItems = JSON.stringify(logItems.map( item => ({name: item.name, type: item.type, stored: item.stored, description: item.description})));
             const sanitizedActions = JSON.stringify(actions.map( item => ({name: item.name, byte: Number(item.byte), type: item.type, description: item.description})));
             const [passed, newDevices] = await api.devicesAdd(name, encroKey, sanitizedLogItems, sanitizedActions);
             if (passed) {

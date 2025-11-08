@@ -165,7 +165,11 @@ class DeviceIO {
     log = () => {
         const data={};
         for (const item of this.logItems){
-            if (this.values[item.name]!==undefined) data[item.name]=this.values[item.name];
+            if (item.stored){
+                if (this.values[item.name]!==undefined){
+                    data[item.name]=this.values[item.name];
+                }
+            }
         }
 
         let jsonData='{}';

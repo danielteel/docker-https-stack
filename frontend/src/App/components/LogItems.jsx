@@ -8,6 +8,7 @@ const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
 const logItemColumns=[
         {field: 'name', headerName: 'Name', type: 'string', width: 160, editable: true, sortable: false, filterable: false},
         {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 100, editable: true, sortable: false, filterable: false},
+        {field: 'stored', headerName: 'Stored', type:'boolean', editable: true, sortable: false, filterable: false},
         {field: 'description', headerName: 'Description', type:'string', flex: 1, editable: true, sortable: false, filterable: false}
 ];
 
@@ -18,19 +19,19 @@ export default function LogItems({logItems, setLogItems}){
     }, [logItems]);
 
     const processRowUpdate = useCallback((newRow) => {
-        setLogItems((prev) => prev.map((row, index) => (index === newRow.id ? {name: newRow.name, type: newRow.type, description: newRow.description} : row)));
+        setLogItems((prev) => prev.map((row, index) => (index === newRow.id ? {name: newRow.name, type: newRow.type, stored: newRow.stored, description: newRow.description} : row)));
         return newRow;
     }, [setLogItems]);
 
     const handleAddRow = useCallback(() => {
-        const newItem = { name: '', type: logItemTypes[0], description: '' };
+        const newItem = { name: '', type: logItemTypes[0], stored: false, description: '' };
         setLogItems((prev) => [...prev, newItem]);
     }, [setLogItems]);
     
     const handleDeleteRow = useCallback( (id) => {
         setLogItems((prev) => {
             const filtered = prev.filter((row, index) => index !== id)
-            return filtered.map( item => ({name: item.name, type: item.type, description: item.description}));
+            return filtered.map( item => ({name: item.name, type: item.type, stored: item.stored, description: item.description}));
     });
     }, [setLogItems]);
 
