@@ -21,7 +21,7 @@ function buildActionPacket(value, deviceId, action) {
         case "number":
             return [{ type: "action", deviceId, actionByte: action.byte, a: Number(value) }, Number(value)];
         case "time": {
-            let [h, m, s] = (value?.split(":").map((n) => Number(n) || 0) || []);
+            let [h=0, m=0, s=0] = (value?.split(":").map((n) => Number(n) || 0) || []);
             if (s > 59) {
                 m += Math.floor(s / 60);
                 s = s % 60;
@@ -63,7 +63,7 @@ function ActionValue({ action, values }) {
 
     switch (action.type) {
         case "time":{
-            const [h, m, s] = (val?.split(":").map((n) => Number(n) || 0) || []);
+            const [h=0, m=0, s=0] = (val?.split(":").map((n) => Number(n) || 0) || []);
             return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
         }
         case "number":
