@@ -151,21 +151,28 @@ export default function DeviceLog({ deviceId }) {
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
           Temperature (°F)
         </Typography>
-        <LineChart
-          xAxis={[{ dataKey: "time", scaleType: "time", label: "Time" }]}
-          series={[
-            {
-              id: "temp",
-              dataKey: "temperature",
-              label: "Temperature (°F)",
-              color: "#ff5252",
-              showMark: false,
-            },
-          ]}
-          dataset={log || []}
-          height={300}
-          grid={{ vertical: true, horizontal: true }}
-        />
+        <Box
+          sx={{
+            touchAction: "pan-y pinch-zoom", // ✅ allow vertical page scroll + zoom
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <LineChart
+            xAxis={[{ dataKey: "time", scaleType: "time", label: "Time" }]}
+            series={[
+              {
+                id: "temp",
+                dataKey: "temperature",
+                label: "Temperature (°F)",
+                color: "#ff5252",
+                showMark: false,
+              },
+            ]}
+            dataset={log || []}
+            height={300}
+            grid={{ vertical: true, horizontal: true }}
+          />
+        </Box>
       </Paper>
 
       {/* Humidity Chart */}
@@ -176,6 +183,12 @@ export default function DeviceLog({ deviceId }) {
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
           Humidity (%RH)
         </Typography>
+        <Box
+          sx={{
+            touchAction: "pan-y pinch-zoom", // ✅ allow vertical page scroll + zoom
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
         <LineChart
           xAxis={[{ dataKey: "time", scaleType: "time", label: "Time" }]}
           series={[
@@ -191,6 +204,7 @@ export default function DeviceLog({ deviceId }) {
           height={300}
           grid={{ vertical: true, horizontal: true }}
         />
+        </Box>
       </Paper>
     </Container>
   );

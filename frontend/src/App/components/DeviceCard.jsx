@@ -176,11 +176,11 @@ export default function DeviceCard({ device }) {
                 }}
             >
                 {/* --- VALUES (expanded by default) --- */}
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ cursor: 'pointer' }} onClick={() => setShowValues(v => !v)}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         Values
                     </Typography>
-                    <IconButton size="small" onClick={() => setShowValues(v => !v)}>
+                    <IconButton size="small">
                         {showValues ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </IconButton>
                 </Stack>
