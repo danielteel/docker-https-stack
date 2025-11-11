@@ -153,8 +153,13 @@ export default function DeviceLog({ deviceId }) {
         </Typography>
         <Box
           sx={{
-            touchAction: "pan-y pinch-zoom", // ✅ allow vertical page scroll + zoom
+            position: "relative",
+            overflow: "hidden",
+            touchAction: "manipulation", // ✅ allow vertical page scroll + zoom
             WebkitOverflowScrolling: "touch",
+            "& canvas": {
+              touchAction: "auto !important", // ← forces browser to handle pinch
+            },
           }}
         >
           <LineChart
@@ -185,8 +190,12 @@ export default function DeviceLog({ deviceId }) {
         </Typography>
         <Box
           sx={{
-            touchAction: "pan-y pinch-zoom", // ✅ allow vertical page scroll + zoom
+            overflow: "hidden",
+            touchAction: "manipulation", // ✅ allow vertical page scroll + zoom
             WebkitOverflowScrolling: "touch",
+            "& canvas": {
+              touchAction: "auto !important", // ← forces browser to handle pinch
+            },
           }}
         >
         <LineChart
