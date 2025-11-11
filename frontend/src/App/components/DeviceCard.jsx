@@ -197,7 +197,7 @@ export default function DeviceCard({ device }) {
                     device?.actions?.length > 0 
                     ? 
                         <>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }} onClick={() => setShowActions(a => !a)}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2, cursor: 'pointer' }} onClick={() => setShowActions(a => !a)}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                 Actions
                             </Typography>
