@@ -153,7 +153,6 @@ export default function DeviceLog({ deviceId }) {
         </Typography>
         <Box
           sx={{
-            position: "relative",
             overflow: "hidden",
             touchAction: "manipulation", // ✅ allow vertical page scroll + zoom
             WebkitOverflowScrolling: "touch",
