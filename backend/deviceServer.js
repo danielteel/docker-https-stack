@@ -62,6 +62,8 @@ class DeviceIO {
         this.values={};
         this.image=null;
 
+        this.subscriptions=new Set();
+
         socket.on('end', () => {
             this.disconnect(this.name+' '+this.socket.address+' disconnected.');
         });        
@@ -71,6 +73,10 @@ class DeviceIO {
         socket.on('error', (err)=>{
             this.disconnect(this.name+' '+this.socket.address+' error occured: '+err);
         });
+    }
+
+    subscriptionUpdate = (deviceName, valueName, value) => {
+        return this.sendPacket(new Uint8Array([Number(0xFF), ...textEncoder.encode(deviceName+":"+valueName+"="+value)]));
     }
 
     sendActionByByte = (byte, a, b, c) => {
@@ -202,16 +208,29 @@ class DeviceIO {
             if (data){
                 if (data[0]===0xFF && data[1]===0xD8){
                     this.image=data;
-                    this.deviceServer.imageUpdate(this.deviceId, this.image);
+                    this.deviceServer.imageUpdate(this.deviceId, this.name, this.image);
                 }else if (data[0]===0xFF){
                 }else{
                     const [dataName, dataVal]=textDecoder.decode(data).split('=');
+                    const [subscribeMatch, subscribeName]=textDecoder.decode(data).split(':');
 
                     if (dataName.toLowerCase().trim()==='log'){
                         this.log();
+                    }else if (subscribeMatch.toLowerCase().trim()==='subscribe'){
+                        const lowerTrimmedName=subscribeName.toLowerCase().trim();
+                        this.subscriptions.add(lowerTrimmedName);
+                        const subscribedDevice=this.deviceServer.getDeviceOfName(lowerTrimmedName);
+                        if (subscribedDevice){
+                            for (const valueName in subscribedDevice.values){
+                                this.subscriptionUpdate(lowerTrimmedName, valueName.toLowerCase().trim(), subscribedDevice.values[valueName]);
+                            }
+                        }
+
+                    }else if (subscribeMatch.toLowerCase().trim()==='unsubscribe'){
+                        this.subscriptions.delete(subscribeName.toLowerCase().trim());
                     }else{
                         this.values[dataName]=dataVal;
-                        this.deviceServer.valueUpdate(this.deviceId, dataName, dataVal);
+                        this.deviceServer.valueUpdate(this.deviceId, this.name, dataName, dataVal);
                     }
                 }
             }
@@ -407,7 +426,7 @@ class DeviceServer{
 
     getDeviceOfName = (name) =>{
         for (const device of this.devices){
-            if (device.name===name){
+            if (device.name.toLowerCase().trim()===name.toLowerCase().trim()){
                 return device;
             }
         }
@@ -447,7 +466,7 @@ class DeviceServer{
         this.updateCallbacks.delete(callback);
     }
 
-    valueUpdate = (deviceId, valueName, valueData) => {
+    valueUpdate = (deviceId, deviceName, valueName, valueData) => {
         for (const callback of this.updateCallbacks){
             if (typeof callback==='function'){
                 callback('value', deviceId, valueName, valueData);
@@ -455,14 +474,29 @@ class DeviceServer{
                 this.updateCallbacks.delete(callback);
             }
         }
+
+        if (typeof deviceName==='string'){
+            const lowerTrimmedName = deviceName.trim().toLowerCase();
+            for (const device of this.devices){
+                if (device.subscriptions.has(lowerTrimmedName)){
+                    device.subscriptionUpdate(lowerTrimmedName, valueName, valueData);
+                }
+            }
+        }else{
+            console.error('valueUpdate got deviceName with type different than string');
+        }
     }
 
-    imageUpdate = (deviceId, imageData) => {
-        for (const callback of this.updateCallbacks){
-            if (typeof callback==='function'){
-                callback('image', deviceId, null, Buffer.from(imageData).toString('base64'));
-            }else{
-                this.updateCallbacks.delete(callback);
+    imageUpdate = (deviceId, deviceName, imageData) => {
+        if (this.updateCallbacks.length>0){
+            const imgBase64 = Buffer.from(imageData).toString('base64');
+
+            for (const callback of this.updateCallbacks){
+                if (typeof callback==='function'){
+                    callback('image', deviceId, null, imgBase64);
+                }else{
+                    this.updateCallbacks.delete(callback);
+                }
             }
         }
     }
