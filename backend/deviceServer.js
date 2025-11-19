@@ -211,18 +211,24 @@ class DeviceIO {
                     this.deviceServer.imageUpdate(this.deviceId, this.name, this.image);
                 }else if (data[0]===0xFF){
                 }else{
-                    const [dataName, dataVal]=textDecoder.decode(data).split('=');
-                    const [subscribeMatch, subscribeName]=textDecoder.decode(data).split(':');
+                    const rawText=textDecoder.decode(data);
+                    const [dataName, dataVal]=rawText.split('=');
+                    const [subscribeMatch, subscribeName, subscribeValueName]=rawText.split(':');
 
                     if (dataName.toLowerCase().trim()==='log'){
                         this.log();
                     }else if (subscribeMatch.toLowerCase().trim()==='subscribe'){
                         const lowerTrimmedName=subscribeName.toLowerCase().trim();
-                        this.subscriptions.add(lowerTrimmedName);
+                        const lowerTrimmedValueName=subscribeValueName.toLowerCase().trim();
+                        this.subscriptions.add(lowerTrimmedName+":"+lowerTrimmedValueName);
+
                         const subscribedDevice=this.deviceServer.getDeviceOfName(lowerTrimmedName);
                         if (subscribedDevice){
                             for (const valueName in subscribedDevice.values){
-                                this.subscriptionUpdate(lowerTrimmedName, valueName.toLowerCase().trim(), subscribedDevice.values[valueName]);
+                                if (valueName.toLowerCase().trim()===lowerTrimmedValueName){
+                                    this.subscriptionUpdate(lowerTrimmedName, lowerTrimmedValueName, subscribedDevice.values[valueName]);
+                                    break;
+                                }
                             }
                         }
 
@@ -477,9 +483,10 @@ class DeviceServer{
 
         if (typeof deviceName==='string'){
             const lowerTrimmedName = deviceName.trim().toLowerCase();
+            const lowerTrimmedValueName = valueName.toLowerCase().trim();
             for (const device of this.devices){
-                if (device.subscriptions.has(lowerTrimmedName)){
-                    device.subscriptionUpdate(lowerTrimmedName, valueName, valueData);
+                if (device.subscriptions.has(lowerTrimmedName+":"+lowerTrimmedValueName)){
+                    device.subscriptionUpdate(lowerTrimmedName, lowerTrimmedValueName, valueData);
                 }
             }
         }else{
