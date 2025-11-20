@@ -5,9 +5,14 @@ import {
     TableCell,
     TableRow,
     Tooltip,
+    Stack
 } from "@mui/material";
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
+function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
 
 function formatValue(logItems, name, value){
     if (!logItems || !Array.isArray(logItems)) return String(value);
@@ -29,6 +34,25 @@ function formatValue(logItems, name, value){
             return Number(value) ? 'True' : 'False';
         case 'string':
             return String(value);
+        case "color": {
+            if (typeof value !== "string") return <em>wrong format</em>;
+            const [r, g, b] = value.split(",").map(Number);
+            const hex = rgbToHex(r, g, b);
+            return (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box
+                        sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 1,
+                            bgcolor: `rgb(${r}, ${g}, ${b})`,
+                            border: "1px solid #ccc",
+                        }}
+                    />
+                    <Typography variant="body2">{hex}</Typography>
+                </Stack>
+            );
+        }
         default:
             return String(value);
     }

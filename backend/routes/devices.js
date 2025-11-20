@@ -37,7 +37,7 @@ function isBadActions(actions){
 }
 
 function isBadLogItems(logItems){
-    const logItemTypes = ['degree', 'percent', 'number', 'bool', 'string', 'time'];
+    const logItemTypes = ['degree', 'percent', 'number', 'bool', 'string', 'time', 'color'];
     const logItemNames = new Set();
     if (logItems===null || logItems===undefined) return false;
     if (!Array.isArray(logItems)) return 'log_items not an array';

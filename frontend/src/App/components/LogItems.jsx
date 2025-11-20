@@ -4,7 +4,7 @@ import { DataGrid, GridActionsCellItem  } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 
-const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time'];
+const logItemTypes = ['number', 'degree', 'percent', 'bool', 'string', 'time', 'color'];
 const logItemColumns=[
         {field: 'name', headerName: 'Name', type: 'string', width: 160, editable: true, sortable: false, filterable: false},
         {field: 'type', headerName: 'Type', type: 'singleSelect', valueOptions: logItemTypes, width: 100, editable: true, sortable: false, filterable: false},
