@@ -231,9 +231,10 @@ class DeviceIO {
                                 }
                             }
                         }
-
                     }else if (subscribeMatch.toLowerCase().trim()==='unsubscribe'){
-                        this.subscriptions.delete(subscribeName.toLowerCase().trim());
+                        const lowerTrimmedName=subscribeName.toLowerCase().trim();
+                        const lowerTrimmedValueName=subscribeValueName.toLowerCase().trim();
+                        this.subscriptions.delete(lowerTrimmedName+":"+lowerTrimmedValueName);
                     }else{
                         this.values[dataName]=dataVal;
                         this.deviceServer.valueUpdate(this.deviceId, this.name, dataName, dataVal);
