@@ -5,7 +5,8 @@ import {
     TableCell,
     TableRow,
     Tooltip,
-    Stack
+    Stack,
+    Box
 } from "@mui/material";
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
