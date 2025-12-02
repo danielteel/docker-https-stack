@@ -92,8 +92,9 @@ function HideOnScroll({ children, element }) {
 }
 
 const MenuItemLink = ({ selected, text, icon, href }) => {
+
     return (
-        <Link href={href}>
+        <Link href={href} sx={{ color: 'inherit', textDecoration: 'none', textTransform: 'uppercase' }}>
             <ListItemButton selected={selected}>
                 {/* <ListItemIcon>{icon}</ListItemIcon> */}
                 <ListItemText primary={text} />
