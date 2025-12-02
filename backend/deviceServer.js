@@ -65,13 +65,13 @@ class DeviceIO {
         this.subscriptions=new Set();
 
         socket.on('end', () => {
-            this.disconnect(this.name+' '+this.socket.address+' disconnected.');
+            this.disconnect(this.name+' disconnected.');
         });        
         socket.on('timeout', () => {
-            this.disconnect(this.name+' '+this.socket.address+' timed out.');
+            this.disconnect(this.name+' timed out.');
         });
         socket.on('error', (err)=>{
-            this.disconnect(this.name+' '+this.socket.address+' error occured: '+err);
+            this.disconnect(this.name+' error occured: '+err);
         });
     }
 
