@@ -21,7 +21,7 @@ router.post('/changemailend', [needKnex, authenticate.bind(null, 'unverified')],
             await req.knex('users').update({email: changeEmailRecord.new_email}).where({id: req.user.id});
             return res.status(200).json({status: 'success'});
         }
-        return res.status(400).json({status: 'invalid confirmation code'});
+        return res.status(400).json({error: 'invalid confirmation code'});
     } catch (e) {
         console.error('ERROR POST /user/forgotend', req.body, e);
         return res.status(400).json({error: 'error'});
@@ -67,8 +67,8 @@ router.post('/changemailstart', [needKnex, authenticate.bind(null, 'unverified')
         sendMail(
             newEmail,
             "Change email request",
-            "Somone initiated an email change request, the confirmation code is "+confirmationCode,  
-            "Somone initiated an email change request, the confirmation code is "+confirmationCode+' or <a href="https://'+process.env.DOMAIN+'/changemailend/'+req.user.email+'/'+confirmationCode+'">Click here</a>'
+            "Someone initiated an email change request, the confirmation code is "+confirmationCode,  
+            "Someone initiated an email change request, the confirmation code is <b>"+confirmationCode+"</b>"
         );
         
         return res.status(200).json({status: 'check email'});
