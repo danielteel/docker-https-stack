@@ -8,12 +8,14 @@ import { Container } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import Box from '@mui/material/Box';
 import ChangePasswordDialog from './ChangePasswordDialog';
+import ChangeEmailDialog from './ChangeEmailDialog';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
 export default function Profile() {
     const {api, user} = useAppContext();
     const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+    const [changeEmailOpen, setChangeEmailOpen] = useState(false);
     const [snackBarOpen, setSnackBarOpen] = useState(false);
     const [snackBarProps, setSnackBarProps] = useState({type: 'error', message:'blah'});
 
@@ -23,6 +25,7 @@ export default function Profile() {
                 <Alert onClose={()=>setSnackBarOpen(false)} elevation={6} severity={snackBarProps?.type}>{snackBarProps?.message}</Alert>
             </Snackbar>
             <ChangePasswordDialog open={changePasswordOpen} setOpen={setChangePasswordOpen}/>
+            <ChangeEmailDialog open={changeEmailOpen} setOpen={setChangeEmailOpen}/>
             <Paper sx={{p: 1}}>
                 <Title>Profile</Title>
                 <Box >
@@ -40,7 +43,7 @@ export default function Profile() {
                             <Typography variant='body2'>{user.role}</Typography>
                         </Grid>
                         <Grid item sm={12} lg={4}>
-                            <Button variant='outlined' fullWidth disabled>Change Email</Button>
+                            <Button variant='outlined' fullWidth onClick={()=>setChangeEmailOpen(true)}>Change Email</Button>
                         </Grid>
                         <Grid item sm={12} lg={4}>
                             <Button variant='outlined' fullWidth onClick={()=>setChangePasswordOpen(true)}>Change Password</Button>

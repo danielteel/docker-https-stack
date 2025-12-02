@@ -53,27 +53,27 @@ router.post('/changemailstart', [needKnex, authenticate.bind(null, 'unverified')
             return res.status(400).json({error: 'incorrect password'});
         }
 
+        let confirmationCode =  generateVerificationCode();
+
         const [changeEmailRecord] = await req.knex('user_changeemail').select('*').where({user_id: req.user.id});
         if (changeEmailRecord){
-            sendMail(
-                newEmail, 
-                "Change email request resent", 
-                "Somone initiated an email change request, the confirmation code is "+changeEmailRecord.confirmation_code,  
-                "Somone initiated an email change request, the confirmation code is "+changeEmailRecord.confirmation_code+' or <a href="https://'+process.env.DOMAIN+'/changemailend/'+req.user.email+'/'+changeEmailRecord.confirmation_code+'">Click here</a>'
-            );
-        }else{
-            const confirmationCode =  generateVerificationCode();
-            await req.knex('user_changeemail').insert({user_id: req.user.id, new_email: newEmail, confirmation_code: confirmationCode});
-            sendMail(
-                newEmail,
-                "Change email request",
-                "Somone initiated an email change request, the confirmation code is "+confirmationCode,  
-                "Somone initiated an email change request, the confirmation code is "+confirmationCode+' or <a href="https://'+process.env.DOMAIN+'/changemailend/'+req.user.email+'/'+confirmationCode+'">Click here</a>'
-            );
+            if (changeEmailRecord.new_email===newEmail){
+                confirmationCode = changeEmailRecord.confirmation_code;
+            }
+            await req.knex('user_changeemail').delete().where({user_id: req.user.id});
         }
+        
+        await req.knex('user_changeemail').insert({user_id: req.user.id, new_email: newEmail, confirmation_code: confirmationCode});
+        sendMail(
+            newEmail,
+            "Change email request",
+            "Somone initiated an email change request, the confirmation code is "+confirmationCode,  
+            "Somone initiated an email change request, the confirmation code is "+confirmationCode+' or <a href="https://'+process.env.DOMAIN+'/changemailend/'+req.user.email+'/'+confirmationCode+'">Click here</a>'
+        );
+        
         return res.status(200).json({status: 'check email'});
     } catch (e) {
-        console.error('ERROR POST /user/forgotstart', req.body, e);
+        console.error('ERROR POST /user/changemailstart', req.body, e);
         return res.status(400).json({error: 'error'});
     }
 });
