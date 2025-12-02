@@ -24,8 +24,8 @@ export default function ChangeEmailDialog({open, setOpen}){
             }
         }
 
-        fetchStatus();
-    }, [api]);
+        if (open) fetchStatus();
+    }, [api, open]);
 
     const handleClose = () => {
         setNewEmail('');
