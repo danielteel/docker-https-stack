@@ -78,85 +78,93 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-function HideOnScroll({ children, element }) {
+function HideOnScroll({children, element}) {
     // Note that you normally won't need to set the window ref as useScrollTrigger
     // will default to window.
     // This is only being set here because the demo is in an iframe.
-    const trigger = useScrollTrigger({ target: element, disableHysteresis: true, threshold: 50 });
-
+    const trigger = useScrollTrigger({target: element, disableHysteresis: true, threshold: 50});
+  
     return (
-        <Slide appear={false} direction="down" in={!trigger}>
-            {children}
-        </Slide>
+      <Slide appear={false} direction="down" in={!trigger}>
+        {children}
+      </Slide>
     );
-}
+  }
 
 const MenuItemLink = ({ selected, text, icon, href }) => {
-
     return (
         <Link href={href}>
             <ListItemButton selected={selected}>
                 <ListItemIcon>{icon}</ListItemIcon>
-                {/* <ListItemText primary={text} style={{ color: 'inherit', textDecoration: 'none', textTransform: 'uppercase' }}/> */}
+                {/* <ListItemText primary={text} /> */}
             </ListItemButton>
         </Link>
     );
 }
 
 
-function hrefMatchesLocation(href, location) {
-    if (href === '/' && location.length > 2) return false;
-    if (location.substring(0, href.length) === href) return true;
+function hrefMatchesLocation(href, location){
+    if (href==='/' && location.length>2) return false;
+    if (location.substring(0, href.length)===href) return true;
     return false;
 }
 
 const navigationItems = [
-    { text: 'Devices', href: '/devices', minRole: 'member', icon: <SettingsRemoteIcon /> },
-    { text: 'Manage Devices', href: '/managedevs', minRole: 'admin', icon: <SettingsCellIcon /> },
-    { text: 'Users', href: '/users', minRole: 'manager', icon: <PeopleIcon /> },
-    { text: 'Profile', href: '/profile', minRole: 'unverified', icon: <AccountCircleIcon /> },
+    {text: 'home',          href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
+    {text: 'devices',       href: '/devices',  minRole:'member',        icon: <SettingsRemoteIcon/>},
+    {text: 'managedevices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
+    {text: 'users',         href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
+    {text: 'profile',       href: '/profile',  minRole:'unverified',    icon: <AccountCircleIcon/>},
 ];
 
 export default function App() {
     const contentRef = React.useRef();
     const [content, setContent] = React.useState(undefined);
+    const [open, setOpen] = React.useState(false);
     const [location, setLocation] = useLocation();
 
-    const { user } = useAppContext();
+    const {user} = useAppContext();
 
-    React.useEffect(() => {
+    React.useEffect(()=>{
         setContent(contentRef.current);
     }, []);
 
+    const toggleDrawer = () => {
+        setOpen(!open);
+    };
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex'}}>
             <HideOnScroll element={content}>
-                <AppBar style={{ display: 'absolute' }}>
-                    <Toolbar sx={{ pr: '24px' }}>
-                        <Typography component="h1" variant="h6" color="inherit" noWrap onClick={() => setLocation('/')} sx={{ cursor: 'pointer'}}>
-                            DAN
-                        </Typography>
-                        <List component="nav" sx={{ display: 'flex', flexDirection: 'row', px: 1 }}>
-                            {
-                                navigationItems.map((item) => {
-                                    if (meetsMinRole(user.role, item.minRole)) {
-                                        const selected = hrefMatchesLocation(item.href, location);
-                                        return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon} text={item.text} />;
-                                    }
-                                    return null;
-                                })
-                            }
-                            <div sx={{flexGrow: 1}}></div>
-                        </List>
-                        <LogoutButton />
-                    </Toolbar>
-                </AppBar>
+            <AppBar style={{display:'absolute'}}>
+                <Toolbar sx={{ pr: '24px' }}>
+                    <IconButton children={!open?<ChevronLeftIcon />:<MenuIcon />} edge="start" color="inherit" aria-label="open drawer" onClick={toggleDrawer} sx={{mr: '0px'}}/>
+                    <Typography component="h1" variant="h6" color="inherit" noWrap sx={{flexGrow: 1}}>
+                        DAN
+                    </Typography>
+                    <LogoutButton/>
+                </Toolbar>
+            </AppBar>
             </HideOnScroll>
-            <Box ref={contentRef} component="main" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900], flexGrow: 1, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+            <Drawer variant="permanent" open={open} sx={open?{'& .MuiDrawer-paper': { boxSizing: 'border-box', width: 0 }}:null}>
+                <Toolbar/>
+                <Divider />
+                <List component="nav">
+                    {
+                        navigationItems.map((item) => {
+                            if (meetsMinRole(user.role, item.minRole)){
+                                const selected=hrefMatchesLocation(item.href, location);
+                                return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon}/>;
+                            }
+                            return null;
+                        })
+                    }
+                </List>
+            </Drawer>
+            <Box ref={contentRef} component="main" sx={{backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900], flexGrow: 1, height:'100dvh', display: 'flex', flexDirection:'column', overflow: 'auto'}}>
                 <Toolbar />{/*use this to align content correctly*/}
-                <Container maxWidth='lg' sx={{ my: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <AppRouter />
+                <Container maxWidth='lg' sx={{my: 3, flexGrow: 1, display: 'flex', flexDirection:'column'}}>
+                    <AppRouter/>
                 </Container>
                 <Copyright sx={{ py: 1 }} />
             </Box>
