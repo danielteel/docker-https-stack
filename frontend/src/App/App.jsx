@@ -95,7 +95,7 @@ const MenuItemLink = ({ selected, text, icon, href }) => {
     return (
         <Link href={href}>
             <ListItemButton selected={selected}>
-                <ListItemIcon>{icon}</ListItemIcon>
+                {/* <ListItemIcon>{icon}</ListItemIcon> */}
                 <ListItemText primary={text} />
             </ListItemButton>
         </Link>
@@ -110,10 +110,10 @@ function hrefMatchesLocation(href, location) {
 }
 
 const navigationItems = [
-    { text: 'devices', href: '/devices', minRole: 'member', icon: <SettingsRemoteIcon /> },
-    { text: 'managedevices', href: '/managedevs', minRole: 'admin', icon: <SettingsCellIcon /> },
-    { text: 'users', href: '/users', minRole: 'manager', icon: <PeopleIcon /> },
-    { text: 'profile', href: '/profile', minRole: 'unverified', icon: <AccountCircleIcon /> },
+    { text: 'Devices', href: '/devices', minRole: 'member', icon: <SettingsRemoteIcon /> },
+    { text: 'Manage Devices', href: '/managedevs', minRole: 'admin', icon: <SettingsCellIcon /> },
+    { text: 'Users', href: '/users', minRole: 'manager', icon: <PeopleIcon /> },
+    { text: 'Profile', href: '/profile', minRole: 'unverified', icon: <AccountCircleIcon /> },
 ];
 
 export default function App() {
@@ -133,17 +133,15 @@ export default function App() {
             <HideOnScroll element={content}>
                 <AppBar style={{ display: 'absolute' }}>
                     <Toolbar sx={{ pr: '24px' }}>
-                        <a href="/">
-                            <Typography component="h1" variant="h6" color="inherit" noWrap>
-                                DAN
-                            </Typography>
-                        </a>
+                        <Typography component="h1" variant="h6" color="inherit" noWrap onClick={() => setLocation('/')} sx={{ cursor: 'pointer'}}>
+                            DAN
+                        </Typography>
                         <List component="nav" sx={{ display: 'flex', flexDirection: 'row', px: 1 }}>
                             {
                                 navigationItems.map((item) => {
                                     if (meetsMinRole(user.role, item.minRole)) {
                                         const selected = hrefMatchesLocation(item.href, location);
-                                        return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon} />;
+                                        return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon} text={item.text} />;
                                     }
                                     return null;
                                 })
