@@ -110,7 +110,6 @@ function hrefMatchesLocation(href, location) {
 }
 
 const navigationItems = [
-    { text: 'home', href: '/', minRole: 'unverified', icon: <HomeIcon /> },
     { text: 'devices', href: '/devices', minRole: 'member', icon: <SettingsRemoteIcon /> },
     { text: 'managedevices', href: '/managedevs', minRole: 'admin', icon: <SettingsCellIcon /> },
     { text: 'users', href: '/users', minRole: 'manager', icon: <PeopleIcon /> },
@@ -134,9 +133,11 @@ export default function App() {
             <HideOnScroll element={content}>
                 <AppBar style={{ display: 'absolute' }}>
                     <Toolbar sx={{ pr: '24px' }}>
-                        <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
-                            DAN
-                        </Typography>
+                        <a href="/">
+                            <Typography component="h1" variant="h6" color="inherit" noWrap>
+                                DAN
+                            </Typography>
+                        </a>
                         <List component="nav" sx={{ display: 'flex', flexDirection: 'row', px: 1 }}>
                             {
                                 navigationItems.map((item) => {
@@ -147,6 +148,7 @@ export default function App() {
                                     return null;
                                 })
                             }
+                            <div sx={{flexGrow: 1}}></div>
                         </List>
                         <LogoutButton />
                     </Toolbar>
