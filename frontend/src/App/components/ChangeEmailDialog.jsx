@@ -55,7 +55,8 @@ export default function ChangeEmailDialog({open, setOpen}){
         setInProgress(false);
     }
 
-    const handleConfirmNewEmail = async () => {
+    const handleConfirmNewEmail = async (e) => {
+        e.preventDefault();
         setConfirmNewEmailError(null);
         setInProgress(true);
         try {
@@ -74,10 +75,10 @@ export default function ChangeEmailDialog({open, setOpen}){
 
     return (
         <Dialog open={open} onClose={()=>handleClose()}>
+            <DialogTitle>
+                Change Password
+            </DialogTitle>
             <form onSubmit={handleInitiateNewEmail}>
-                <DialogTitle>
-                    Change Password
-                </DialogTitle>
                 <DialogContent>
                     <input type='email' hidden autoComplete="email" value={user?.email} readOnly/>
                     <TextField disabled={inProgress} fullWidth margin='dense' label='New email' type="email" required autoComplete="new-email" value={newEmail} onChange={(e)=>setNewEmail(e.target.value)}/>
@@ -90,6 +91,8 @@ export default function ChangeEmailDialog({open, setOpen}){
                     <Button disabled={inProgress} onClick={()=>handleClose()}>Cancel</Button>
                     <LoadingButton loading={inProgress} type='submit'>Start Email Change</LoadingButton>
                 </DialogActions>
+            </form>
+            <form onSubmit={handleConfirmNewEmail}>
                 <DialogContent>
                     {newEmailStatus && (
                         <>
@@ -103,7 +106,7 @@ export default function ChangeEmailDialog({open, setOpen}){
                 </DialogActions>
                 <DialogActions>
                     {newEmailStatus && (
-                        <LoadingButton loading={inProgress} onClick={handleConfirmNewEmail}>Complete Email Change</LoadingButton>
+                        <LoadingButton loading={inProgress} type='submit'>Complete Email Change</LoadingButton>
                     )}
                 </DialogActions>
             </form>
