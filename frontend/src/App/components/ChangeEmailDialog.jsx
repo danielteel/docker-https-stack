@@ -14,7 +14,7 @@ export default function ChangeEmailDialog({open, setOpen}){
     const [confirmNewEmailError, setConfirmNewEmailError] = useState(null);
     const [inProgress, setInProgress] = useState(false);
 
-    const {api, user} = useAppContext();
+    const {api, user, updateMe} = useAppContext();
 
     useEffect(() => {
         async function fetchStatus(){
@@ -64,6 +64,7 @@ export default function ChangeEmailDialog({open, setOpen}){
                 setConfirmNewEmailError('Error: ' + response.error);
             } else {
                 handleClose();
+                updateMe();
             }
         } catch (e) {
             setConfirmNewEmailError('Error occured: ' + String(e));

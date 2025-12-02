@@ -79,9 +79,16 @@ export function AppProvider({ children }) {
         loadUser();
     }, []);
 
+    const updateMe = async () => {
+        const [passed, me] = await userMe();
+        if (passed) {
+            setUser(me);
+        }
+    };
+
 
     return (
-        <AppContext.Provider value={{ api, user, setUser, startingUp }}>
+        <AppContext.Provider value={{ api, user, setUser, startingUp, updateMe }}>
             {children}
         </AppContext.Provider>
     );
