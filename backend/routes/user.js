@@ -19,6 +19,14 @@ router.post('/changemailend', [needKnex, authenticate.bind(null, 'unverified')],
         if (changeEmailRecord){
             await req.knex('user_changeemail').delete().where({user_id: req.user.id});
             await req.knex('users').update({email: changeEmailRecord.new_email}).where({id: req.user.id});
+
+            sendMail(
+                req.user.email,
+                "Account email changed",
+                "Your account email has been changed to "+changeEmailRecord.new_email,  
+                "Your account email has been changed to <b>"+changeEmailRecord.new_email+"</b>"
+            );
+
             return res.status(200).json({status: 'success'});
         }
         return res.status(400).json({error: 'invalid confirmation code'});
