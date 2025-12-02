@@ -96,8 +96,8 @@ const MenuItemLink = ({ selected, text, icon, href }) => {
     return (
         <Link href={href}>
             <ListItemButton selected={selected}>
-                {/* <ListItemIcon>{icon}</ListItemIcon> */}
-                <ListItemText primary={text} style={{ color: 'inherit', textDecoration: 'none', textTransform: 'uppercase' }}/>
+                <ListItemIcon>{icon}</ListItemIcon>
+                {/* <ListItemText primary={text} style={{ color: 'inherit', textDecoration: 'none', textTransform: 'uppercase' }}/> */}
             </ListItemButton>
         </Link>
     );
