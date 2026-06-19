@@ -29,7 +29,7 @@ export default function AppRouter(){
                 <Route path='/devices'><Devices/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>
-                <Route path='/apikeys'><ApiKeys/></Route>
+                <Route path='/keys'><ApiKeys/></Route>
                 <Route path='/'>Home</Route>
                 <Route><Redirect to={'/'}/></Route>
             </Switch>
