@@ -61,44 +61,10 @@ function normalizeDeviceType(deviceType) {
     return String(deviceType || "unknown").trim().toLowerCase();
 }
 
-function titleCase(value) {
-    return String(value || "")
-        .replace(/[_-]+/g, " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function getStateSummary(obj) {
-    const state = obj.state || {};
-    const summary = [];
-
-    if (state.door?.state !== undefined) summary.push({label: "Door", value: state.door.state});
-    if (state.light?.state !== undefined) summary.push({label: "Light", value: state.light.state});
-    if (state.feeder?.state !== undefined) summary.push({label: "Feeder", value: state.feeder.state});
-    if (state.feeder?.feedLevel !== undefined) summary.push({label: "Feed", value: state.feeder.feedLevel});
-    if (state.fan?.state !== undefined) summary.push({label: "Fan", value: state.fan.state});
-    if (state.fan?.temperature !== undefined) summary.push({label: "Temp C", value: state.fan.temperature});
-    if (state.fan?.humidity !== undefined) summary.push({label: "Humidity", value: state.fan.humidity});
-    if (state.general?.batteryLevel !== undefined) summary.push({label: "Battery", value: `${state.general.batteryLevel}%`});
-    if (state.connectivity?.wifiStrength !== undefined) summary.push({label: "WiFi", value: state.connectivity.wifiStrength});
-
-    return summary;
-}
-
-function getActions(obj, device) {
-    if (Array.isArray(obj.actions) && obj.actions.length) {
-        return obj.actions.map((action) => {
-            const actionName = action.actionName || action.name || action.action || "";
-            const actionPath = action.url?.split("/").filter(Boolean).pop() || actionName;
-            return {
-                name: actionName ? titleCase(actionName) : titleCase(actionPath),
-                description: action.description || "",
-                actionName: actionPath,
-                action: () => device.coop.action(device.deviceId, actionPath),
-            };
-        });
-    }
-
-    return device.getDefaultActions();
+function celsiusToFahrenheit(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return value;
+    return Math.round((number * 1.8 + 32) * 10) / 10;
 }
 
 export class Coop {
@@ -144,7 +110,6 @@ export class Coop {
             name: obj.name,
             connected: getConnected(obj),
             powerLevel: getPowerLevel(obj),
-            stateSummary: getStateSummary(obj),
         };
 
         const type = normalizeDeviceType(obj.deviceType);
@@ -189,13 +154,14 @@ export class Coop {
                 break;
         }
 
-        device.actions = getActions(obj, device);
+        device.stateSummary = device.getStateSummary();
+        device.actions = device.getDefaultActions();
         return device;
     }
 }
 
 export class OmletDevice {
-    constructor({ coop, raw, deviceId, name, deviceType, connected, powerLevel, stateSummary }) {
+    constructor({ coop, raw, deviceId, name, deviceType, connected, powerLevel }) {
         this.coop = coop;
         this.raw = raw;
         this.deviceId = deviceId;
@@ -203,8 +169,12 @@ export class OmletDevice {
         this.deviceType = deviceType;
         this.connected = connected;
         this.powerLevel = powerLevel;
-        this.stateSummary = stateSummary || [];
+        this.stateSummary = [];
         this.actions = [];
+    }
+
+    getStateSummary() {
+        return [];
     }
 
     getDefaultActions() {
@@ -219,7 +189,7 @@ export class OmletDevice {
 }
 
 export class OmletUnknownDevice extends OmletDevice {
-    constructor({coop, raw, deviceId, name, deviceType, connected, powerLevel, stateSummary}) {
+    constructor({coop, raw, deviceId, name, deviceType, connected, powerLevel}) {
         super({
             coop,
             raw,
@@ -228,7 +198,6 @@ export class OmletUnknownDevice extends OmletDevice {
             deviceType: deviceType || "unknown",
             connected,
             powerLevel,
-            stateSummary,
         });
     }
 }
@@ -241,7 +210,6 @@ export class OmletFeeder extends OmletDevice {
         name,
         connected,
         powerLevel,
-        stateSummary,
         doorState,
         fault,
         feedLevel,
@@ -254,7 +222,6 @@ export class OmletFeeder extends OmletDevice {
             deviceType: "autofeeder",
             connected,
             powerLevel,
-            stateSummary,
         });
 
         this.doorState = doorState;
@@ -267,6 +234,14 @@ export class OmletFeeder extends OmletDevice {
             ...super.getDefaultActions(),
             {name: "Open", actionName: "open", action: () => this.open()},
             {name: "Close", actionName: "close", action: () => this.close()},
+        ];
+    }
+
+    getStateSummary() {
+        return [
+            {label: "Door", value: this.doorState},
+            {label: "Feed", value: this.feedLevel},
+            {label: "Fault", value: this.fault},
         ];
     }
 
@@ -287,7 +262,6 @@ export class OmletAutoDoor extends OmletDevice {
         name,
         connected,
         powerLevel,
-        stateSummary,
         lightState,
         doorState,
         doorFault,
@@ -300,7 +274,6 @@ export class OmletAutoDoor extends OmletDevice {
             deviceType: "autodoor",
             connected,
             powerLevel,
-            stateSummary,
         });
 
         this.lightState = lightState;
@@ -315,6 +288,14 @@ export class OmletAutoDoor extends OmletDevice {
             {name: "Close", actionName: "close", action: () => this.close()},
             {name: "Light On", actionName: "on", action: () => this.lightOn()},
             {name: "Light Off", actionName: "off", action: () => this.lightOff()},
+        ];
+    }
+
+    getStateSummary() {
+        return [
+            {label: "Door", value: this.doorState},
+            {label: "Light", value: this.lightState},
+            {label: "Fault", value: this.doorFault},
         ];
     }
 
@@ -343,7 +324,6 @@ export class OmletFan extends OmletDevice {
         name,
         connected,
         powerLevel,
-        stateSummary,
         humidity,
         state,
         temperature,
@@ -357,13 +337,12 @@ export class OmletFan extends OmletDevice {
             deviceType: "fan",
             connected,
             powerLevel,
-            stateSummary,
         });
 
         this.humidity = humidity;
         this.state = state;
         this.temperatureC = temperature;
-        this.temperatureF = temperature == null ? null : temperature * 1.8 + 32;
+        this.temperatureF = temperature == null ? null : celsiusToFahrenheit(temperature);
         this.mode = mode;
     }
 
@@ -376,6 +355,15 @@ export class OmletFan extends OmletDevice {
             );
         }
         return actions;
+    }
+
+    getStateSummary() {
+        return [
+            {label: "Fan", value: this.state},
+            {label: "Temp", value: this.temperatureF == null ? "?" : `${this.temperatureF} F`},
+            {label: "Humidity", value: this.humidity},
+            {label: "Mode", value: this.mode},
+        ];
     }
 
     on() {

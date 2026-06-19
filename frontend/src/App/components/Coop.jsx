@@ -16,11 +16,19 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import Title from './Title';
 import { Coop } from '../../common/coopHelper';
 import { useAppContext } from '../../contexts/AppContext';
+import { getCoopDeviceIcon } from './CoopIcons';
 
 function statusColor(status) {
     if (status === 'connected' || status === 'polling') return 'success';
-    if (status === 'overdue') return 'warning';
     return 'error';
+}
+
+function powerColor(powerLevel) {
+    const numericPower = Number(powerLevel);
+    if (!Number.isFinite(numericPower)) return 'default';
+    if (numericPower < 15) return 'error';
+    if (numericPower <= 30) return 'warning';
+    return 'success';
 }
 
 function formatValue(value) {
@@ -28,34 +36,42 @@ function formatValue(value) {
     return String(value);
 }
 
+function formatPowerLevel(value) {
+    const formattedValue = formatValue(value);
+    return Number.isFinite(Number(value)) ? `${formattedValue}%` : formattedValue;
+}
+
 function CoopDeviceCard({device, onAction, inProgress}) {
+    const DeviceIcon = getCoopDeviceIcon(device.deviceType);
+
     return (
-        <Card sx={{height: '100%'}}>
-            <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+        <Card sx={{height: '100%', borderRadius: 1}}>
+            <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column', p: 1.25, '&:last-child': {pb: 1.25}}}>
                 <Stack direction='row' alignItems='flex-start' justifyContent='space-between' spacing={1}>
-                    <Box sx={{minWidth: 0}}>
-                        <Typography variant='h6' sx={{overflowWrap: 'anywhere'}}>
-                            {device.name || device.deviceId}
-                        </Typography>
-                        <Typography variant='body2' color='text.secondary' sx={{overflowWrap: 'anywhere'}}>
-                            {device.deviceType}
-                        </Typography>
-                    </Box>
-                    <Chip size='small' color={statusColor(device.connected)} label={device.connected}/>
+                    <Stack direction='row' spacing={1} sx={{minWidth: 0}}>
+                        <DeviceIcon color='primary' sx={{fontSize: 32, flexShrink: 0, mt: 0.25}}/>
+                        <Box sx={{minWidth: 0}}>
+                            <Typography variant='subtitle1' sx={{fontWeight: 700, lineHeight: 1.2, overflowWrap: 'anywhere'}}>
+                                {device.name || device.deviceId}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary' sx={{overflowWrap: 'anywhere'}}>
+                                {device.deviceType}
+                            </Typography>
+                        </Box>
+                    </Stack>
+                    <Stack direction='row' spacing={0.5} sx={{flexShrink: 0}}>
+                        <Chip size='small' color={statusColor(device.connected)} label={device.connected}/>
+                        <Chip size='small' color={powerColor(device.powerLevel)} label={formatPowerLevel(device.powerLevel)}/>
+                    </Stack>
                 </Stack>
 
-                <Stack direction='row' spacing={1} sx={{mt: 1, flexWrap: 'wrap', rowGap: 1}}>
-                    <Chip size='small' variant='outlined' label={`Power ${formatValue(device.powerLevel)}${Number.isFinite(Number(device.powerLevel)) ? '%' : ''}`}/>
-                    <Chip size='small' variant='outlined' label={device.deviceId}/>
-                </Stack>
-
-                <Grid container spacing={1} sx={{mt: 1}}>
+                <Grid container spacing={0.75} sx={{mt: 1}}>
                     {device.stateSummary.length ? device.stateSummary.map(item => (
                         <Grid item xs={6} key={`${device.deviceId}-${item.label}`}>
-                            <Typography variant='caption' color='text.secondary'>
+                            <Typography variant='caption' color='text.secondary' sx={{display: 'block', lineHeight: 1}}>
                                 {item.label}
                             </Typography>
-                            <Typography variant='body2' sx={{overflowWrap: 'anywhere'}}>
+                            <Typography variant='body2' sx={{fontWeight: 600, lineHeight: 1.25, overflowWrap: 'anywhere'}}>
                                 {formatValue(item.value)}
                             </Typography>
                         </Grid>
@@ -66,8 +82,8 @@ function CoopDeviceCard({device, onAction, inProgress}) {
                     )}
                 </Grid>
 
-                <Box sx={{mt: 'auto', pt: 2}}>
-                    <Stack direction='row' spacing={1} sx={{flexWrap: 'wrap', rowGap: 1}}>
+                <Box sx={{mt: 'auto', pt: 1}}>
+                    <Stack direction='row' spacing={0.75} sx={{flexWrap: 'wrap', rowGap: 0.75}}>
                         {device.actions.map(action => (
                             <LoadingButton
                                 key={`${device.deviceId}-${action.actionName}`}
@@ -125,7 +141,7 @@ export default function CoopPage() {
         async function pollDevices() {
             if (cancel) return;
             await loadDevices({quiet: hasLoadedRef.current});
-            if (!cancel) timeoutId = setTimeout(pollDevices, 30000);
+            if (!cancel) timeoutId = setTimeout(pollDevices, 5000);
         }
 
         pollDevices();
@@ -178,7 +194,7 @@ export default function CoopPage() {
             ) : (
                 <Grid container spacing={2}>
                     {devices.map(device => (
-                        <Grid item xs={12} sm={6} md={4} key={device.deviceId}>
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={device.deviceId}>
                             <CoopDeviceCard
                                 device={device}
                                 inProgress={actionProgress[device.deviceId]}
