@@ -73,7 +73,7 @@ function CoopDeviceCard({device, onAction, inProgress}) {
                     </Stack>
                     <Stack direction='row' spacing={0.5} sx={{flexShrink: 0}}>
                         <Chip size='small' color={statusColor(device.connected)} label={device.connected}/>
-                        <Chip size='small' color={powerColor(device.powerLevel)} icon={<PowerIcon powerLevel={device.powerLevel}/>} label={formatPowerLevel(device.powerLevel)}/>
+                        <Chip size='small' color={powerColor(device.powerLevel)} icon={<PowerIcon powerLevel={device.powerLevel}/>} label={formatPowerLevel(device.powerLevel)} sx={blurredSx}/>
                     </Stack>
                 </Stack>
 
@@ -153,7 +153,7 @@ export default function CoopPage() {
         async function pollDevices() {
             if (cancel) return;
             await loadDevices({quiet: hasLoadedRef.current});
-            if (!cancel) timeoutId = setTimeout(pollDevices, 5000);
+            if (!cancel) timeoutId = setTimeout(pollDevices, 3000);
         }
 
         pollDevices();
