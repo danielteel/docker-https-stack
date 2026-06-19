@@ -1,6 +1,7 @@
 const {getHash, generateVerificationCode} = require('../common/common');
 
 exports.seed = async function(knex) {
+    await knex('api_keys').del();
     await knex('user_changeemail').del();
     await knex('user_changepassword').del();
     await knex('users').del();
@@ -14,10 +15,16 @@ exports.seed = async function(knex) {
 
     await knex('users').insert({email: superUser, pass_hash: getHash(superPass), role: 'super'});
 
-    const devices=[
-        {name: process.env.DEVICE1_NAME, encro_key: process.env.DEVICE1_KEY},
-        {name: process.env.DEVICE2_NAME, encro_key: process.env.DEVICE2_KEY},
-    ];
+
+    const devices=[];
+    let deviceNumber=1;
+    while (process.env[`DEVICE${deviceNumber}_NAME`] && process.env[`DEVICE${deviceNumber}_KEY`]) {
+        devices.push({
+            name: process.env[`DEVICE${deviceNumber}_NAME`],
+            encro_key: process.env[`DEVICE${deviceNumber}_KEY`]
+        });
+        deviceNumber++;
+    }
     await knex('devices').insert(devices);
 
     await knex("api_keys").insert({

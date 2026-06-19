@@ -5,6 +5,7 @@ import { userLogin, userMe, userLogout, userLogoutEverywhere, userChangePassword
 import { manageUsers, manageUserRole, manageUserEmail } from '../api/manage';
 
 import { devicesGet, devicesList, devicesImage, devicesAdd, devicesUpdate, devicesDelete, devicesAction, devicesLog } from '../api/devices';
+import { apiKeysList, apiKeysAdd, apiKeysUpdate, apiKeysDelete } from '../api/apiKeys';
 
 
 
@@ -53,6 +54,11 @@ function makeApiObject(setUserFn) {
         devicesDelete: async (id) => checkForLogout(...await devicesDelete(id)),
         devicesAction: async (id, action, data) => checkForLogout(...await devicesAction(id, action, data)),
         devicesLog: async (id, startTime, endTime) => checkForLogout(...await devicesLog(id, startTime, endTime)),
+
+        apiKeysList: async () => checkForLogout(...await apiKeysList()),
+        apiKeysAdd: async (name, apiKey) => checkForLogout(...await apiKeysAdd(name, apiKey)),
+        apiKeysUpdate: async (id, name, apiKey) => checkForLogout(...await apiKeysUpdate(id, name, apiKey)),
+        apiKeysDelete: async (id) => checkForLogout(...await apiKeysDelete(id)),
 
     };
 }

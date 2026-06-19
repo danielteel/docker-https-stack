@@ -19,6 +19,7 @@ app.use(cookieparser());
 app.use(express.json());
 
 app.use('/api/devices', require('./routes/devices'));
+app.use('/api/api_keys', require('./routes/apiKeys'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/manage', require('./routes/manage'));
 

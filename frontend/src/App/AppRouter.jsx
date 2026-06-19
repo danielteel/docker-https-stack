@@ -8,6 +8,7 @@ import Profile from "./components/Profile";
 import Devices from './components/Devices';
 import ManageDevices from './components/ManageDevices';
 import DeviceLog from "./components/DeviceLog";
+import ApiKeys from "./components/ApiKeys";
 
 
 function RedirectWithParams({to, params}){
@@ -28,6 +29,7 @@ export default function AppRouter(){
                 <Route path='/devices'><Devices/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>
+                <Route path='/apikeys'><ApiKeys/></Route>
                 <Route path='/'>Home</Route>
                 <Route><Redirect to={'/'}/></Route>
             </Switch>

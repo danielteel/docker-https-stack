@@ -21,6 +21,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PeopleIcon from '@mui/icons-material/People';
 import DisplaySettingsIcon from '@mui/icons-material/DisplaySettings';
 import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import Slide from '@mui/material/Slide';
 
@@ -113,6 +114,7 @@ const navigationItems = [
     {text: 'home',          href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
     {text: 'devices',       href: '/devices',  minRole:'member',        icon: <SettingsRemoteIcon/>},
     {text: 'managedevices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
+    {text: 'apikeys',       href: '/apikeys',  minRole:'admin',         icon: <VpnKeyIcon/>},
     {text: 'users',         href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
     {text: 'profile',       href: '/profile',  minRole:'unverified',    icon: <AccountCircleIcon/>},
 ];
