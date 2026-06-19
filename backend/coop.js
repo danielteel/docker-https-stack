@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const OMLET_BASE_URL = 'https://x107.omlet.co.uk/api/v1';
+const OMLET_BASE_URL = 'https://x107.omlet.co.uk/api/v1/';
 const OMLET_API_KEY_NAME = 'omlet';
 
 async function getOmletApiKey(knex){
@@ -36,7 +36,8 @@ async function callOmlet(knex, path, {method='GET', body, query={}}={}){
         };
     }
 
-    const url = new URL(path, OMLET_BASE_URL);
+    const normalizedPath = String(path).replace(/^\/+/, '');
+    const url = new URL(normalizedPath, OMLET_BASE_URL);
     appendQueryParams(url, query);
 
     const options = {
