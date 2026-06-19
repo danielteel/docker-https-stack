@@ -11,23 +11,15 @@ import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import HomeIcon from '@mui/icons-material/Home';
-import SettingsRemoteIcon from '@mui/icons-material/SettingsRemote';
-import SettingsCellIcon from '@mui/icons-material/SettingsCell';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import PeopleIcon from '@mui/icons-material/People';
-import DisplaySettingsIcon from '@mui/icons-material/DisplaySettings';
-import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import Slide from '@mui/material/Slide';
 
 import AppRouter from './AppRouter';
 import { Link, useLocation } from 'wouter';
 import LogoutButton from './components/LogoutButton';
+import navigationItems from './navigationItems';
 
 import Copyright from '../common/Copyright';
 import { meetsMinRole } from '../common/common';
@@ -95,9 +87,8 @@ function HideOnScroll({children, element}) {
 const MenuItemLink = ({ selected, text, icon, href }) => {
     return (
         <Link href={href}>
-            <ListItemButton selected={selected}>
+            <ListItemButton selected={selected} title={text}>
                 <ListItemIcon>{icon}</ListItemIcon>
-                {/* <ListItemText primary={text} /> */}
             </ListItemButton>
         </Link>
     );
@@ -109,15 +100,6 @@ function hrefMatchesLocation(href, location){
     if (location.substring(0, href.length)===href) return true;
     return false;
 }
-
-const navigationItems = [
-    {text: 'home',          href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
-    {text: 'devices',       href: '/devices',  minRole:'member',        icon: <SettingsRemoteIcon/>},
-    {text: 'managedevices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
-    {text: 'apikeys',       href: '/keys',     minRole:'admin',         icon: <VpnKeyIcon/>},
-    {text: 'users',         href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
-    {text: 'profile',       href: '/profile',  minRole:'unverified',    icon: <AccountCircleIcon/>},
-];
 
 export default function App() {
     const contentRef = React.useRef();
@@ -156,7 +138,7 @@ export default function App() {
                         navigationItems.map((item) => {
                             if (meetsMinRole(user.role, item.minRole)){
                                 const selected=hrefMatchesLocation(item.href, location);
-                                return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon}/>;
+                                return <MenuItemLink selected={selected} key={item.href} href={item.href} icon={item.icon} text={item.text}/>;
                             }
                             return null;
                         })
