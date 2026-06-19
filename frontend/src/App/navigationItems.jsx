@@ -4,11 +4,12 @@ import SettingsCellIcon from '@mui/icons-material/SettingsCell';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PeopleIcon from '@mui/icons-material/People';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import EggIcon from '@mui/icons-material/Egg';
 
 const navigationItems = [
     {text: 'Home',           href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
     {text: 'Devices',        href: '/devices',  minRole:'member',        icon: <SettingsRemoteIcon/>},
-    {text: 'Coops',          href: '/coops',    minRole:'member',        icon: <SettingsRemoteIcon/>},
+    {text: 'Coop',           href: '/coop',     minRole:'member',        icon: <EggIcon/>},
     {text: 'Manage Devices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
     {text: 'API Keys',       href: '/keys',     minRole:'admin',         icon: <VpnKeyIcon/>},
     {text: 'Users',          href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},

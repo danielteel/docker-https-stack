@@ -87,7 +87,7 @@ function CoopDeviceCard({device, onAction, inProgress}) {
     );
 }
 
-export default function Coops() {
+export default function CoopPage() {
     const coopRef = useRef(new Coop());
     const hasLoadedRef = useRef(false);
     const [devices, setDevices] = useState([]);
@@ -158,7 +158,7 @@ export default function Coops() {
     return (
         <Box sx={{p: 1}}>
             <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{mb: 2}}>
-                <Title sx={{mb: 0}}>Coops</Title>
+                <Title sx={{mb: 0}}>Coop</Title>
                 <Button
                     variant='contained'
                     startIcon={refreshing ? <CircularProgress color='inherit' size={16}/> : <RefreshIcon/>}

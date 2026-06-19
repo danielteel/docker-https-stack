@@ -10,7 +10,7 @@ import ManageDevices from './components/ManageDevices';
 import DeviceLog from "./components/DeviceLog";
 import ApiKeys from "./components/ApiKeys";
 import Home from "./components/Home";
-import Coops from "./components/Coops";
+import Coop from "./components/Coop";
 
 
 function RedirectWithParams({to, params}){
@@ -29,7 +29,7 @@ export default function AppRouter(){
                 <Route path='/users'><Users/></Route>
                 <Route path='/profile/:email?/:confirmCode?'><Profile/></Route>
                 <Route path='/devices'><Devices/></Route>
-                <Route path='/coops'><Coops/></Route>
+                <Route path='/coop'><Coop/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>
                 <Route path='/keys'><ApiKeys/></Route>
