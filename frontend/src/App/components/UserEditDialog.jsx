@@ -63,7 +63,6 @@ export default function UserEditDialog({user, open, setOpen, updateUser}) {
                         <Select labelId="edit-user-role-label" value={role} label="Role" onChange={(e)=>setRole(e.target.value)}>
                             <MenuItem value='unverified'>Unverified</MenuItem>
                             <MenuItem value='member'>Member</MenuItem>
-                            <MenuItem value='manager'>Manager</MenuItem>
                             <MenuItem value='admin'>Admin</MenuItem>
                             <MenuItem value='super'>Super</MenuItem>
                         </Select>
