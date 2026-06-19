@@ -13,6 +13,8 @@ import {
 import Grid from '@mui/material/GridLegacy';
 import LoadingButton from '@mui/lab/LoadingButton';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import BatteryFullIcon from '@mui/icons-material/BatteryFull';
+import BatteryAlertIcon from '@mui/icons-material/BatteryAlert';
 import Title from './Title';
 import { Coop } from '../../common/coopHelper';
 import { useAppContext } from '../../contexts/AppContext';
@@ -41,6 +43,10 @@ function formatPowerLevel(value) {
     return Number.isFinite(Number(value)) ? `${formattedValue}%` : formattedValue;
 }
 
+function PowerIcon({powerLevel}) {
+    return Number(powerLevel) < 15 ? <BatteryAlertIcon/> : <BatteryFullIcon/>;
+}
+
 function CoopDeviceCard({device, onAction, inProgress}) {
     const DeviceIcon = getCoopDeviceIcon(device.deviceType);
 
@@ -61,7 +67,7 @@ function CoopDeviceCard({device, onAction, inProgress}) {
                     </Stack>
                     <Stack direction='row' spacing={0.5} sx={{flexShrink: 0}}>
                         <Chip size='small' color={statusColor(device.connected)} label={device.connected}/>
-                        <Chip size='small' color={powerColor(device.powerLevel)} label={formatPowerLevel(device.powerLevel)}/>
+                        <Chip size='small' color={powerColor(device.powerLevel)} icon={<PowerIcon powerLevel={device.powerLevel}/>} label={formatPowerLevel(device.powerLevel)}/>
                     </Stack>
                 </Stack>
 
