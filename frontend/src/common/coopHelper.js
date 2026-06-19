@@ -361,7 +361,7 @@ export class OmletFan extends OmletDevice {
         return [
             {label: "Fan", value: this.state},
             {label: "Temp", value: this.temperatureF == null ? "?" : `${this.temperatureF} F`},
-            {label: "Humidity", value: this.humidity},
+            {label: "Humidity", value: Number.isFinite(Number(this.humidity)) ? `${this.humidity}%` : this.humidity},
             {label: "Mode", value: this.mode},
         ];
     }

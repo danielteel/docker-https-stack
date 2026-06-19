@@ -47,14 +47,20 @@ function PowerIcon({powerLevel}) {
     return Number(powerLevel) < 15 ? <BatteryAlertIcon/> : <BatteryFullIcon/>;
 }
 
+function isUnavailable(status) {
+    return status === 'disconnected' || status === 'overdue';
+}
+
 function CoopDeviceCard({device, onAction, inProgress}) {
     const DeviceIcon = getCoopDeviceIcon(device.deviceType);
+    const unavailable = isUnavailable(device.connected);
+    const blurredSx = unavailable ? {filter: 'blur(1.5px)', opacity: 0.45} : null;
 
     return (
-        <Card sx={{height: '100%', borderRadius: 1}}>
+        <Card sx={{height: '100%', borderRadius: 1, bgcolor: unavailable ? 'action.hover' : 'background.paper'}}>
             <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column', p: 1.25, '&:last-child': {pb: 1.25}}}>
                 <Stack direction='row' alignItems='flex-start' justifyContent='space-between' spacing={1}>
-                    <Stack direction='row' spacing={1} sx={{minWidth: 0}}>
+                    <Stack direction='row' spacing={1} sx={{minWidth: 0, ...blurredSx}}>
                         <DeviceIcon color='primary' sx={{fontSize: 32, flexShrink: 0, mt: 0.25}}/>
                         <Box sx={{minWidth: 0}}>
                             <Typography variant='subtitle1' sx={{fontWeight: 700, lineHeight: 1.2, overflowWrap: 'anywhere'}}>
@@ -71,7 +77,7 @@ function CoopDeviceCard({device, onAction, inProgress}) {
                     </Stack>
                 </Stack>
 
-                <Grid container spacing={0.75} sx={{mt: 1}}>
+                <Grid container spacing={0.75} sx={{mt: 1, ...blurredSx}}>
                     {device.stateSummary.length ? device.stateSummary.map(item => (
                         <Grid item xs={6} key={`${device.deviceId}-${item.label}`}>
                             <Typography variant='caption' color='text.secondary' sx={{display: 'block', lineHeight: 1}}>
@@ -88,7 +94,7 @@ function CoopDeviceCard({device, onAction, inProgress}) {
                     )}
                 </Grid>
 
-                <Box sx={{mt: 'auto', pt: 1}}>
+                <Box sx={{mt: 'auto', pt: 1, ...blurredSx}}>
                     <Stack direction='row' spacing={0.75} sx={{flexWrap: 'wrap', rowGap: 0.75}}>
                         {device.actions.map(action => (
                             <LoadingButton
