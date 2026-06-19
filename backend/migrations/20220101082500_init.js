@@ -65,15 +65,25 @@ exports.up = async function(knex) {
         table.string('confirmation_code');
         table.string('new_email').notNullable();
     });
+
+    await knex.schema.createTable("api_keys", (table) => {
+        table.increments("id");
+        table.timestamp("created_at").defaultTo(knex.fn.now());
+        table.timestamp("updated_at").defaultTo(knex.fn.now());
+
+        table.string("name").notNullable().unique();
+        table.text("api_key").notNullable();
+    });
 };
 
 
-exports.down = async function(knex) {
-  await knex.schema.dropTableIfExists('user_changeemail');
-  await knex.schema.dropTableIfExists('user_changepassword');
-  await knex.schema.dropTableIfExists('users');
-  await knex.schema.dropTableIfExists('unverified_users');
-  await knex.schema.dropTableIfExists('device_logs');
-  await knex.schema.dropTableIfExists('devices');
-  await knex.schema.dropTableIfExists('crypto');
+exports.down = async function (knex) {
+    await knex.schema.dropTableIfExists("api_keys");
+    await knex.schema.dropTableIfExists('user_changeemail');
+    await knex.schema.dropTableIfExists('user_changepassword');
+    await knex.schema.dropTableIfExists('users');
+    await knex.schema.dropTableIfExists('unverified_users');
+    await knex.schema.dropTableIfExists('device_logs');
+    await knex.schema.dropTableIfExists('devices');
+    await knex.schema.dropTableIfExists('crypto');
 };

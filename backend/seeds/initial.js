@@ -19,4 +19,9 @@ exports.seed = async function(knex) {
         {name: process.env.DEVICE2_NAME, encro_key: process.env.DEVICE2_KEY},
     ];
     await knex('devices').insert(devices);
+
+    await knex("api_keys").insert({
+        name: "omlet",
+        api_key: process.env.OMLET_API_KEY,
+    });
 };
