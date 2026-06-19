@@ -496,7 +496,7 @@ class DeviceServer{
     }
 
     imageUpdate = (deviceId, deviceName, imageData) => {
-        if (this.updateCallbacks.length>0){
+        if (this.updateCallbacks.size>0){
             const imgBase64 = Buffer.from(imageData).toString('base64');
 
             for (const callback of this.updateCallbacks){
