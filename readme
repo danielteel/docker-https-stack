@@ -28,10 +28,6 @@ EMAIL_PORT=465
 
 OMLET_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
 
-DEVICE1_NAME=Device1 name
-DEVICE1_KEY='device1 key'
-
-DEVICE2_NAME=Device2 name
-DEVICE2_KEY='device2 key'
+DEVICES=[{"name":"Device1 name","encro_key":"device1 key"},{"name":"Device2 name","encro_key":"device2 key"}]
 
 KASA_PLUGS=[{"id":"lamp","name":"Lamp","ip":"192.168.1.50"}]

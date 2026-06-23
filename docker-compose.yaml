@@ -66,10 +66,7 @@ services:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_PORT=${EMAIL_PORT}
-      - DEVICE1_NAME=${DEVICE1_NAME}
-      - DEVICE1_KEY=${DEVICE1_KEY}
-      - DEVICE2_NAME=${DEVICE2_NAME}
-      - DEVICE2_KEY=${DEVICE2_KEY}
+      - DEVICES=${DEVICES}
       - KASA_PLUGS=${KASA_PLUGS}
     tmpfs:
       - /usr/src/app/tmp:rw,size=50m
