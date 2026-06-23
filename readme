@@ -33,3 +33,5 @@ DEVICE1_KEY='device1 key'
 
 DEVICE2_NAME=Device2 name
 DEVICE2_KEY='device2 key'
+
+KASA_PLUGS=[{"id":"lamp","name":"Lamp","ip":"192.168.1.50"}]

@@ -11,6 +11,7 @@ import DeviceLog from "./components/DeviceLog";
 import ApiKeys from "./components/ApiKeys";
 import Home from "./components/Home";
 import Coop from "./components/Coop";
+import Kasa from "./components/Kasa";
 
 
 function RedirectWithParams({to, params}){
@@ -30,6 +31,7 @@ export default function AppRouter(){
                 <Route path='/profile/:email?/:confirmCode?'><Profile/></Route>
                 <Route path='/devices'><Devices/></Route>
                 <Route path='/coop'><Coop/></Route>
+                <Route path='/kasa'><Kasa/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>
                 <Route path='/keys'><ApiKeys/></Route>
