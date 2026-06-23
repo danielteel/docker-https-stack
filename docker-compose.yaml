@@ -68,6 +68,10 @@ services:
       - EMAIL_PORT=${EMAIL_PORT}
       - DEVICES=${DEVICES}
       - KASA_PLUGS=${KASA_PLUGS}
+      - PECRON_EMAIL=${PECRON_EMAIL}
+      - PECRON_PASSWORD=${PECRON_PASSWORD}
+      - PECRON_REGION=${PECRON_REGION}
+      - PECRON_DEVICE=${PECRON_DEVICE}
     tmpfs:
       - /usr/src/app/tmp:rw,size=50m
     depends_on:

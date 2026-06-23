@@ -7,6 +7,7 @@ import { manageUsers, manageUserRole, manageUserEmail } from '../api/manage';
 import { devicesGet, devicesList, devicesImage, devicesAdd, devicesUpdate, devicesDelete, devicesAction, devicesLog } from '../api/devices';
 import { apiKeysList, apiKeysAdd, apiKeysUpdate, apiKeysDelete } from '../api/apiKeys';
 import { kasaPlugs, kasaSetPlugState } from '../api/kasa';
+import { pecronStatus, pecronSetAc, pecronSetDc } from '../api/pecron';
 
 
 
@@ -63,6 +64,10 @@ function makeApiObject(setUserFn) {
 
         kasaPlugs: async () => checkForLogout(...await kasaPlugs()),
         kasaSetPlugState: async (id, on) => checkForLogout(...await kasaSetPlugState(id, on)),
+
+        pecronStatus: async () => checkForLogout(...await pecronStatus()),
+        pecronSetAc: async (on) => checkForLogout(...await pecronSetAc(on)),
+        pecronSetDc: async (on) => checkForLogout(...await pecronSetDc(on)),
 
     };
 }

@@ -106,7 +106,7 @@ export default function Kasa() {
             hasLoadedRef.current = true;
             setPlugs(data);
         } else {
-            setError(data?.error || 'Failed to load Kasa plugs');
+            setError(data?.error || 'Failed to load smart plugs');
         }
 
         setLoading(false);
@@ -152,7 +152,7 @@ export default function Kasa() {
     return (
         <Box sx={{p: 1}}>
             <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{mb: 2}}>
-                <Title sx={{mb: 0}}>Kasa Plugs</Title>
+                <Title sx={{mb: 0}}>Smart Plugs</Title>
                 <Button
                     variant='contained'
                     startIcon={refreshing ? <CircularProgress color='inherit' size={16}/> : <RefreshIcon/>}
@@ -183,7 +183,7 @@ export default function Kasa() {
                     ))}
                     {plugs.length ? null : (
                         <Grid item xs={12} textAlign='center'>
-                            <Typography variant='body2'>No Kasa plugs are configured</Typography>
+                            <Typography variant='body2'>No smart plugs are configured</Typography>
                         </Grid>
                     )}
                 </Grid>

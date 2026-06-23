@@ -1,7 +1,7 @@
 const express = require('express');
 const {authenticate} = require('../common/accessToken');
 const {verifyFields} = require('../common/common');
-const {getKasaStatus, setKasaStatus} = require('../kasa');
+const {getKasaStatus, setKasaStatus} = require('../integrations/kasa');
 
 const router = express.Router();
 module.exports = router;

@@ -1,7 +1,7 @@
 const express = require('express');
 const {authenticate} = require('../common/accessToken');
 const { needKnex } = require('../database');
-const {callOmlet, relayOmletResponse, getJsonBody} = require('../coop');
+const {callOmlet, relayOmletResponse, getJsonBody} = require('../integrations/coop');
 
 
 const router = express.Router();
