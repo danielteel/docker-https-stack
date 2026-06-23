@@ -7,6 +7,7 @@ import {
     CardContent,
     Chip,
     CircularProgress,
+    Divider,
     Stack,
     Switch,
     Typography
@@ -14,20 +15,37 @@ import {
 import Grid from '@mui/material/GridLegacy';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import BoltIcon from '@mui/icons-material/Bolt';
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
 import PowerIcon from '@mui/icons-material/Power';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
 import Title from './Title';
 import { useAppContext } from '../../contexts/AppContext';
 import { meetsMinRole } from '../../common/common';
 
+function isKnown(value) {
+    return value !== null && value !== undefined && !Number.isNaN(Number(value));
+}
+
 function formatWatts(value) {
-    if (value === null || value === undefined || Number.isNaN(Number(value))) return 'Unknown';
-    return `${value} W`;
+    return isKnown(value) ? `${value} W` : 'Unknown';
+}
+
+function formatVolts(value) {
+    return isKnown(value) ? `${value} V` : 'Unknown';
+}
+
+function formatHertz(value) {
+    return isKnown(value) ? `${value} Hz` : 'Unknown';
 }
 
 function formatPercent(value) {
-    if (value === null || value === undefined || Number.isNaN(Number(value))) return 'Unknown';
-    return `${value}%`;
+    return isKnown(value) ? `${value}%` : 'Unknown';
+}
+
+function formatTemperature(value) {
+    return isKnown(value) ? `${value} F` : 'Unknown';
 }
 
 function formatOnOff(value) {
@@ -36,53 +54,79 @@ function formatOnOff(value) {
     return 'Unknown';
 }
 
-function StatusCard({icon, label, value}) {
+function MiniStat({label, value}) {
+    return (
+        <Box sx={{minWidth: 0}}>
+            <Typography variant='caption' color='text.secondary' sx={{display: 'block', lineHeight: 1}}>
+                {label}
+            </Typography>
+            <Typography variant='body2' sx={{fontWeight: 700, overflowWrap: 'anywhere'}}>
+                {value}
+            </Typography>
+        </Box>
+    );
+}
+
+function MetricCard({icon, title, value, children}) {
     return (
         <Card sx={{height: '100%', borderRadius: 1}}>
-            <CardContent sx={{p: 1.5, '&:last-child': {pb: 1.5}}}>
-                <Stack direction='row' spacing={1} alignItems='center'>
+            <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column', p: 1.5, '&:last-child': {pb: 1.5}}}>
+                <Stack direction='row' alignItems='flex-start' spacing={1}>
                     {icon}
                     <Box sx={{minWidth: 0}}>
                         <Typography variant='caption' color='text.secondary' sx={{display: 'block', lineHeight: 1}}>
-                            {label}
+                            {title}
                         </Typography>
-                        <Typography variant='h6' sx={{fontWeight: 700, lineHeight: 1.25, overflowWrap: 'anywhere'}}>
+                        <Typography variant='h5' sx={{fontWeight: 800, lineHeight: 1.2, overflowWrap: 'anywhere'}}>
                             {value}
                         </Typography>
                     </Box>
                 </Stack>
+                {children && (
+                    <>
+                        <Divider sx={{my: 1.25}}/>
+                        {children}
+                    </>
+                )}
             </CardContent>
         </Card>
     );
 }
 
-function OutputControl({label, checked, watts, canControl, changing, onToggle}) {
+function OutputCard({title, watts, checked, canControl, changing, onToggle, children}) {
     return (
         <Card sx={{height: '100%', borderRadius: 1}}>
-            <CardContent sx={{p: 1.5, '&:last-child': {pb: 1.5}}}>
-                <Stack direction='row' alignItems='center' justifyContent='space-between' spacing={1}>
-                    <Stack direction='row' spacing={1} alignItems='center' sx={{minWidth: 0}}>
-                        <PowerIcon color={checked ? 'success' : 'disabled'}/>
+            <CardContent sx={{height: '100%', display: 'flex', flexDirection: 'column', p: 1.5, '&:last-child': {pb: 1.5}}}>
+                <Stack direction='row' alignItems='flex-start' justifyContent='space-between' spacing={1}>
+                    <Stack direction='row' alignItems='center' spacing={1} sx={{minWidth: 0}}>
+                        <PowerIcon color={checked ? 'success' : 'disabled'} sx={{fontSize: 32, flexShrink: 0}}/>
                         <Box sx={{minWidth: 0}}>
-                            <Typography variant='subtitle1' sx={{fontWeight: 700, lineHeight: 1.2}}>
-                                {label}
+                            <Typography variant='caption' color='text.secondary' sx={{display: 'block', lineHeight: 1}}>
+                                {title}
                             </Typography>
-                            <Typography variant='body2' color='text.secondary'>
+                            <Typography variant='h5' sx={{fontWeight: 800, lineHeight: 1.2}}>
                                 {formatWatts(watts)}
                             </Typography>
                         </Box>
                     </Stack>
-                    <Stack direction='row' spacing={1} alignItems='center'>
+                    <Stack direction='row' alignItems='center' spacing={1} sx={{flexShrink: 0}}>
                         <Chip size='small' color={checked ? 'success' : 'default'} label={formatOnOff(checked)}/>
-                        {canControl && (
-                            <Switch
-                                checked={checked === true}
-                                disabled={changing}
-                                onChange={(event) => onToggle(event.target.checked)}
-                            />
-                        )}
+                        <Switch
+                            checked={checked === true}
+                            disabled={!canControl || changing}
+                            onChange={(event) => onToggle(event.target.checked)}
+                            inputProps={{'aria-label': `${title} output`}}
+                        />
                     </Stack>
                 </Stack>
+
+                {children && (
+                    <>
+                        <Divider sx={{my: 1.25}}/>
+                        {children}
+                    </>
+                )}
+
                 {changing && (
                     <Stack direction='row' alignItems='center' spacing={1} sx={{mt: 1}}>
                         <CircularProgress size={16}/>
@@ -159,15 +203,25 @@ export default function Pecron() {
     return (
         <Box sx={{p: 1}}>
             <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{mb: 2}}>
-                <Title sx={{mb: 0}}>Pecron</Title>
-                <Button
-                    variant='contained'
-                    startIcon={refreshing ? <CircularProgress color='inherit' size={16}/> : <RefreshIcon/>}
-                    disabled={loading || refreshing}
-                    onClick={() => loadStatus({quiet: true})}
-                >
-                    Refresh
-                </Button>
+                <Box sx={{minWidth: 0}}>
+                    <Title sx={{mb: 0}}>Pecron</Title>
+                    {status && (
+                        <Typography variant='body2' color='text.secondary' sx={{overflowWrap: 'anywhere'}}>
+                            {status.deviceName} {status.productName ? `- ${status.productName}` : ''}
+                        </Typography>
+                    )}
+                </Box>
+                <Stack direction='row' spacing={1} alignItems='center'>
+                    {status && <Chip size='small' color={status.online ? 'success' : 'error'} label={status.online ? 'Online' : 'Offline'}/>}
+                    <Button
+                        variant='contained'
+                        startIcon={refreshing ? <CircularProgress color='inherit' size={16}/> : <RefreshIcon/>}
+                        disabled={loading || refreshing}
+                        onClick={() => loadStatus({quiet: true})}
+                    >
+                        Refresh
+                    </Button>
+                </Stack>
             </Stack>
 
             {error && <Alert severity='error' sx={{mb: 2}}>{error}</Alert>}
@@ -177,61 +231,75 @@ export default function Pecron() {
                     <CircularProgress/>
                 </Stack>
             ) : status ? (
-                <Stack spacing={2}>
-                    <Card sx={{borderRadius: 1}}>
-                        <CardContent sx={{p: 1.5, '&:last-child': {pb: 1.5}}}>
-                            <Stack direction='row' alignItems='center' justifyContent='space-between' spacing={1}>
-                                <Stack direction='row' spacing={1} alignItems='center' sx={{minWidth: 0}}>
-                                    <BatteryChargingFullIcon color='primary' sx={{fontSize: 34, flexShrink: 0}}/>
-                                    <Box sx={{minWidth: 0}}>
-                                        <Typography variant='subtitle1' sx={{fontWeight: 700, lineHeight: 1.2, overflowWrap: 'anywhere'}}>
-                                            {status.deviceName}
-                                        </Typography>
-                                        <Typography variant='caption' color='text.secondary' sx={{overflowWrap: 'anywhere'}}>
-                                            {status.productName || 'Pecron power station'}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                                <Chip size='small' color={status.online ? 'success' : 'error'} label={status.online ? 'Online' : 'Offline'}/>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <MetricCard
+                            icon={<BatteryChargingFullIcon color='primary' sx={{fontSize: 34, flexShrink: 0}}/>}
+                            title='Battery'
+                            value={formatPercent(status.batteryPercentage)}
+                        >
+                            <Stack direction='row' spacing={1} alignItems='center'>
+                                <DeviceThermostatIcon color='action' fontSize='small'/>
+                                <MiniStat label='Temperature' value={formatTemperature(status.temperatureFahrenheit)}/>
                             </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6} md={3}>
-                            <StatusCard icon={<BatteryChargingFullIcon color='primary'/>} label='Battery' value={formatPercent(status.batteryPercentage)}/>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                            <StatusCard icon={<BoltIcon color='primary'/>} label='Power In' value={formatWatts(status.totalInputPower)}/>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                            <StatusCard icon={<BoltIcon color='primary'/>} label='AC Out' value={formatWatts(status.acOutputPower)}/>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                            <StatusCard icon={<BoltIcon color='primary'/>} label='DC Out' value={formatWatts(status.dcOutputPower)}/>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <OutputControl
-                                label='AC Power'
-                                checked={status.acOn}
-                                watts={status.acOutputPower}
-                                canControl={canControl}
-                                changing={changing === 'ac'}
-                                onToggle={(on) => handleOutput('ac', on)}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <OutputControl
-                                label='DC Power'
-                                checked={status.dcOn}
-                                watts={status.dcOutputPower}
-                                canControl={canControl}
-                                changing={changing === 'dc'}
-                                onToggle={(on) => handleOutput('dc', on)}
-                            />
-                        </Grid>
+                        </MetricCard>
                     </Grid>
-                </Stack>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                        <MetricCard
+                            icon={<SettingsInputComponentIcon color='primary' sx={{fontSize: 34, flexShrink: 0}}/>}
+                            title='Total Power In'
+                            value={formatWatts(status.totalInputPower)}
+                        >
+                            <Stack direction='row' spacing={2}>
+                                <MiniStat label='AC Input' value={formatWatts(status.acInputPower)}/>
+                                <MiniStat label='DC Input' value={formatWatts(status.dcInputPower)}/>
+                            </Stack>
+                        </MetricCard>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                        <MetricCard
+                            icon={<ElectricBoltIcon color='primary' sx={{fontSize: 34, flexShrink: 0}}/>}
+                            title='Total Power Out'
+                            value={formatWatts(status.totalOutputPower)}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={3}>
+                        <OutputCard
+                            title='DC Power Out'
+                            watts={status.dcOutputPower}
+                            checked={status.dcOn}
+                            canControl={canControl}
+                            changing={changing === 'dc'}
+                            onToggle={(on) => handleOutput('dc', on)}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <OutputCard
+                            title='AC Power Out'
+                            watts={status.acOutputPower}
+                            checked={status.acOn}
+                            canControl={canControl}
+                            changing={changing === 'ac'}
+                            onToggle={(on) => handleOutput('ac', on)}
+                        >
+                            <Grid container spacing={2}>
+                                <Grid item xs={6} sm={4}>
+                                    <MiniStat label='Voltage' value={formatVolts(status.acOutputVoltage)}/>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <MiniStat label='Frequency' value={formatHertz(status.acOutputFrequency)}/>
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <MiniStat label='UPS Mode' value={formatOnOff(status.upsMode)}/>
+                                </Grid>
+                            </Grid>
+                        </OutputCard>
+                    </Grid>
+                </Grid>
             ) : (
                 <Typography variant='body2'>No Pecron status is available</Typography>
             )}

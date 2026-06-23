@@ -192,17 +192,37 @@ function parseNumber(value) {
     return null;
   }
 
-  const parsed = Number.parseInt(String(value).replace(/,/g, ""), 10);
+  const parsed = Number.parseFloat(String(value).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function firstNumberByCode(byCode, codes) {
-  for (const code of codes) {
-    const value = parseNumber(byCode[code]);
+function firstNumber(...values) {
+  for (const rawValue of values) {
+    const value = parseNumber(rawValue);
     if (value !== null) return value;
   }
 
   return null;
+}
+
+function firstNumberByCode(byCode, codes) {
+  return firstNumber(...codes.map((code) => byCode[code]));
+}
+
+function parseBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (value === undefined || value === null || value === "") return null;
+
+  const normalized = String(value).trim().toLowerCase();
+  if (["true", "1", "on"].includes(normalized)) return true;
+  if (["false", "0", "off"].includes(normalized)) return false;
+  return null;
+}
+
+function celsiusToFahrenheit(celsius) {
+  const numeric = parseNumber(celsius);
+  if (numeric === null) return null;
+  return Number(((numeric * 9) / 5 + 32).toFixed(1));
 }
 
 async function getDeviceProperties(session, device) {
@@ -230,28 +250,66 @@ async function getDeviceProperties(session, device) {
     }
   }
 
-  return {
-    raw,
-    byCode,
-    batteryPercentage: parseNumber(byCode.battery_percentage),
-    totalInputPower: parseNumber(byCode.total_input_power),
-    totalOutputPower: parseNumber(byCode.total_output_power),
-    acOutputPower: firstNumberByCode(byCode, [
-      "ac_output_power",
-      "ac_out_power",
-      "ac_power",
-      "ac_power_hm",
-      "ac_output_power_hm",
-    ]),
-    dcOutputPower: firstNumberByCode(byCode, [
+  const batteryPercentage = firstNumber(
+    result.batteryPercentage,
+    result.batteryPack?.host_packet_electric_percentage,
+    byCode.battery_percentage,
+  );
+  const dcInputPower = firstNumber(
+    result.dcInput?.dc_input_power,
+    byCode.dc_input_power,
+    byCode.dc_in_power,
+  );
+  const acInputPower = firstNumber(
+    result.acInput?.ac_power,
+    result.acInput?.ac_input_power,
+    byCode.ac_input_power,
+    byCode.ac_in_power,
+  );
+  const summedInputPower = dcInputPower === null && acInputPower === null
+    ? null
+    : (dcInputPower || 0) + (acInputPower || 0);
+  const totalInputPower = firstNumber(
+    result.totalInputPower,
+    byCode.total_input_power,
+    summedInputPower,
+  );
+  const dcOutputPower = firstNumber(
+    result.dcOutput?.dc_output_power,
+    firstNumberByCode(byCode, [
       "dc_output_power",
       "dc_out_power",
       "dc_power",
       "dc_power_hm",
       "dc_output_power_hm",
     ]),
-    acOn: byCode.ac_switch_hm === undefined ? null : String(byCode.ac_switch_hm).toLowerCase() === "true",
-    dcOn: byCode.dc_switch_hm === undefined ? null : String(byCode.dc_switch_hm).toLowerCase() === "true",
+  );
+  const acOutputPower = firstNumber(
+    result.acOutput?.ac_output_power,
+    firstNumberByCode(byCode, [
+      "ac_output_power",
+      "ac_out_power",
+      "ac_power_hm",
+      "ac_output_power_hm",
+    ]),
+  );
+
+  return {
+    raw,
+    byCode,
+    batteryPercentage,
+    temperatureFahrenheit: celsiusToFahrenheit(result.batteryPack?.host_packet_temp ?? byCode.host_packet_temp),
+    totalInputPower,
+    acInputPower,
+    dcInputPower,
+    totalOutputPower: firstNumber(result.totalOutputPower, byCode.total_output_power),
+    acOutputPower,
+    dcOutputPower,
+    acOutputVoltage: firstNumber(result.acOutput?.ac_output_voltage, byCode.ac_output_voltage),
+    acOutputFrequency: firstNumber(result.acOutput?.ac_output_hz, byCode.ac_output_hz),
+    upsMode: parseBoolean(result.upsStatus ?? byCode.ups_status ?? byCode.upsStatus),
+    acOn: parseBoolean(result.acSwitch ?? byCode.ac_switch_hm),
+    dcOn: parseBoolean(result.dcSwitch ?? byCode.dc_switch_hm),
   };
 }
 
@@ -271,10 +329,16 @@ async function getPecronStatus({ email, password, region = "US", device } = {}) 
     batteryPercentage: properties.batteryPercentage,
     acOn: properties.acOn,
     dcOn: properties.dcOn,
+    temperatureFahrenheit: properties.temperatureFahrenheit,
     totalInputPower: properties.totalInputPower,
+    acInputPower: properties.acInputPower,
+    dcInputPower: properties.dcInputPower,
     totalOutputPower: properties.totalOutputPower,
     acOutputPower: properties.acOutputPower,
     dcOutputPower: properties.dcOutputPower,
+    acOutputVoltage: properties.acOutputVoltage,
+    acOutputFrequency: properties.acOutputFrequency,
+    upsMode: properties.upsMode,
     properties,
   };
 }
