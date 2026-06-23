@@ -239,7 +239,10 @@ async function getDeviceProperties(session, device) {
     },
   );
 
-  const raw = result.customizeTslInfo || [];
+  const source = result.properties && typeof result.properties === "object"
+    ? result.properties
+    : result;
+  const raw = source.customizeTslInfo || source.raw || [];
   const byCode = {};
 
   for (const item of raw) {
@@ -251,18 +254,18 @@ async function getDeviceProperties(session, device) {
   }
 
   const batteryPercentage = firstNumber(
-    result.batteryPercentage,
-    result.batteryPack?.host_packet_electric_percentage,
+    source.batteryPercentage,
+    source.batteryPack?.host_packet_electric_percentage,
     byCode.battery_percentage,
   );
   const dcInputPower = firstNumber(
-    result.dcInput?.dc_input_power,
+    source.dcInput?.dc_input_power,
     byCode.dc_input_power,
     byCode.dc_in_power,
   );
   const acInputPower = firstNumber(
-    result.acInput?.ac_power,
-    result.acInput?.ac_input_power,
+    source.acInput?.ac_power,
+    source.acInput?.ac_input_power,
     byCode.ac_input_power,
     byCode.ac_in_power,
   );
@@ -270,12 +273,12 @@ async function getDeviceProperties(session, device) {
     ? null
     : (dcInputPower || 0) + (acInputPower || 0);
   const totalInputPower = firstNumber(
-    result.totalInputPower,
+    source.totalInputPower,
     byCode.total_input_power,
     summedInputPower,
   );
   const dcOutputPower = firstNumber(
-    result.dcOutput?.dc_output_power,
+    source.dcOutput?.dc_output_power,
     firstNumberByCode(byCode, [
       "dc_output_power",
       "dc_out_power",
@@ -285,7 +288,7 @@ async function getDeviceProperties(session, device) {
     ]),
   );
   const acOutputPower = firstNumber(
-    result.acOutput?.ac_output_power,
+    source.acOutput?.ac_output_power,
     firstNumberByCode(byCode, [
       "ac_output_power",
       "ac_out_power",
@@ -298,18 +301,18 @@ async function getDeviceProperties(session, device) {
     raw,
     byCode,
     batteryPercentage,
-    temperatureFahrenheit: celsiusToFahrenheit(result.batteryPack?.host_packet_temp ?? byCode.host_packet_temp),
+    temperatureFahrenheit: celsiusToFahrenheit(source.batteryPack?.host_packet_temp ?? byCode.host_packet_temp),
     totalInputPower,
     acInputPower,
     dcInputPower,
-    totalOutputPower: firstNumber(result.totalOutputPower, byCode.total_output_power),
+    totalOutputPower: firstNumber(source.totalOutputPower, byCode.total_output_power),
     acOutputPower,
     dcOutputPower,
-    acOutputVoltage: firstNumber(result.acOutput?.ac_output_voltage, byCode.ac_output_voltage),
-    acOutputFrequency: firstNumber(result.acOutput?.ac_output_hz, byCode.ac_output_hz),
-    upsMode: parseBoolean(result.upsStatus ?? byCode.ups_status ?? byCode.upsStatus),
-    acOn: parseBoolean(result.acSwitch ?? byCode.ac_switch_hm),
-    dcOn: parseBoolean(result.dcSwitch ?? byCode.dc_switch_hm),
+    acOutputVoltage: firstNumber(source.acOutput?.ac_output_voltage, byCode.ac_output_voltage),
+    acOutputFrequency: firstNumber(source.acOutput?.ac_output_hz, byCode.ac_output_hz),
+    upsMode: parseBoolean(source.upsStatus ?? byCode.ups_status ?? byCode.upsStatus),
+    acOn: parseBoolean(source.acSwitch ?? byCode.ac_switch_hm),
+    dcOn: parseBoolean(source.dcSwitch ?? byCode.dc_switch_hm),
   };
 }
 
