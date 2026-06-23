@@ -219,6 +219,69 @@ function parseBoolean(value) {
   return null;
 }
 
+function parseJsonObject(value) {
+  if (!value || typeof value !== "string") {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function applyProperty(props, item) {
+  const code = item.resourceCode || "";
+  const value = item.resourceValce ?? item.resourceValue ?? "";
+  const dataType = item.dataType || "";
+
+  switch (code) {
+    case "battery_percentage":
+      props.batteryPercentage = parseNumber(value);
+      break;
+    case "total_input_power":
+      props.totalInputPower = parseNumber(value);
+      break;
+    case "total_output_power":
+      props.totalOutputPower = parseNumber(value);
+      break;
+    case "ac_switch_hm":
+      props.acSwitch = parseBoolean(value);
+      break;
+    case "dc_switch_hm":
+      props.dcSwitch = parseBoolean(value);
+      break;
+    case "ups_status_hm":
+      props.upsStatus = parseBoolean(value);
+      break;
+    case "remain_charging_time":
+      props.remainChargingTime = parseNumber(value);
+      break;
+    case "remain_time":
+      props.remainDischargingTime = parseNumber(value);
+      break;
+    case "ac_data_output_hm":
+      props.acOutput = dataType === "STRUCT" ? parseJsonObject(value) : null;
+      break;
+    case "dc_data_output_hm":
+      props.dcOutput = dataType === "STRUCT" ? parseJsonObject(value) : null;
+      break;
+    case "ac_data_input_hm":
+      props.acInput = dataType === "STRUCT" ? parseJsonObject(value) : null;
+      break;
+    case "dc_data_input_hm":
+      props.dcInput = dataType === "STRUCT" ? parseJsonObject(value) : null;
+      break;
+    case "host_packet_data_jdb":
+      props.batteryPack = dataType === "STRUCT" ? parseJsonObject(value) : null;
+      break;
+    default:
+      break;
+  }
+}
+
 function celsiusToFahrenheit(celsius) {
   const numeric = parseNumber(celsius);
   if (numeric === null) return null;
@@ -239,10 +302,11 @@ async function getDeviceProperties(session, device) {
     },
   );
 
-  const source = result.properties && typeof result.properties === "object"
+  const directSource = result.properties && typeof result.properties === "object"
     ? result.properties
     : result;
-  const raw = source.customizeTslInfo || source.raw || [];
+  const raw = directSource.customizeTslInfo || directSource.raw || [];
+  const parsedSource = { raw };
   const byCode = {};
 
   for (const item of raw) {
@@ -251,7 +315,29 @@ async function getDeviceProperties(session, device) {
     if (code) {
       byCode[code] = item.resourceValce ?? item.resourceValue ?? null;
     }
+
+    try {
+      applyProperty(parsedSource, item);
+    } catch {
+      // Unsupported properties should not block the status response.
+    }
   }
+
+  const source = {
+    ...parsedSource,
+    ...directSource,
+    acOutput: directSource.acOutput || parsedSource.acOutput,
+    dcOutput: directSource.dcOutput || parsedSource.dcOutput,
+    acInput: directSource.acInput || parsedSource.acInput,
+    dcInput: directSource.dcInput || parsedSource.dcInput,
+    batteryPack: directSource.batteryPack || parsedSource.batteryPack,
+    acSwitch: directSource.acSwitch ?? parsedSource.acSwitch,
+    dcSwitch: directSource.dcSwitch ?? parsedSource.dcSwitch,
+    upsStatus: directSource.upsStatus ?? parsedSource.upsStatus,
+    batteryPercentage: directSource.batteryPercentage ?? parsedSource.batteryPercentage,
+    totalInputPower: directSource.totalInputPower ?? parsedSource.totalInputPower,
+    totalOutputPower: directSource.totalOutputPower ?? parsedSource.totalOutputPower,
+  };
 
   const batteryPercentage = firstNumber(
     source.batteryPercentage,
