@@ -148,7 +148,15 @@ function getWebSocketServer(server, path, deviceSrv){
         }
     });
 
-    wss = new WebSocketServer({server, path});
+    wss = new WebSocketServer({noServer: true, perMessageDeflate: false});
+    server.on('upgrade', (req, socket, head) => {
+        const pathname = req.url.split('?')[0];
+        if (pathname !== path) return;
+
+        wss.handleUpgrade(req, socket, head, (ws) => {
+            wss.emit('connection', ws, req);
+        });
+    });
     wss.on('connection', onConnection);
     return wss;
 }
