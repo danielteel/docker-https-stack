@@ -4,6 +4,7 @@ const {app} = require('./app.js');
 
 const {DeviceServer} = require('./deviceServer.js');
 const { getWebSocketServer } = require('./deviceWebSocket.js');
+const { getWssDeviceWebSocketServer } = require('./wssDeviceWebSocket.js');
 
 
 const apiPort = process.env.API_PORT || 4001;
@@ -14,6 +15,7 @@ const deviceServer=new DeviceServer(devicePort);
 
 const server = http.createServer(app);
 const webSocketServer = getWebSocketServer(server, '/api/ws', deviceServer);
+const wssDeviceWebSocketServer = getWssDeviceWebSocketServer(server, '/api/wss-devices/ws');
 
 server.listen(apiPort, () => {
   console.log('App listening on '+apiPort)

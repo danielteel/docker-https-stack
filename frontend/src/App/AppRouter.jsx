@@ -13,6 +13,7 @@ import Home from "./components/Home";
 import Coop from "./components/Coop";
 import Kasa from "./components/Kasa";
 import Pecron from "./components/Pecron";
+import WssDevices from "./components/WssDevices";
 
 
 function RedirectWithParams({to, params}){
@@ -34,6 +35,7 @@ export default function AppRouter(){
                 <Route path='/coop'><Coop/></Route>
                 <Route path='/kasa'><Kasa/></Route>
                 <Route path='/pecron'><Pecron/></Route>
+                <Route path='/wss-devices'><WssDevices/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>
                 <Route path='/keys'><ApiKeys/></Route>

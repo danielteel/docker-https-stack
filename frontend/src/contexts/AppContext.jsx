@@ -8,6 +8,7 @@ import { devicesGet, devicesList, devicesImage, devicesAdd, devicesUpdate, devic
 import { apiKeysList, apiKeysAdd, apiKeysUpdate, apiKeysDelete } from '../api/apiKeys';
 import { kasaPlugs, kasaSetPlugState } from '../api/kasa';
 import { pecronStatus, pecronSetAc, pecronSetDc } from '../api/pecron';
+import { wssDevicesList, wssDevicesSetColor } from '../api/wssDevices';
 
 
 
@@ -68,6 +69,9 @@ function makeApiObject(setUserFn) {
         pecronStatus: async () => checkForLogout(...await pecronStatus()),
         pecronSetAc: async (on) => checkForLogout(...await pecronSetAc(on)),
         pecronSetDc: async (on) => checkForLogout(...await pecronSetDc(on)),
+
+        wssDevicesList: async () => checkForLogout(...await wssDevicesList()),
+        wssDevicesSetColor: async (deviceId, color) => checkForLogout(...await wssDevicesSetColor(deviceId, color)),
 
     };
 }

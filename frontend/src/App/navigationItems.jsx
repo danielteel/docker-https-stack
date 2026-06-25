@@ -7,6 +7,7 @@ import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import EggIcon from '@mui/icons-material/Egg';
 import OutletIcon from '@mui/icons-material/Outlet';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 const navigationItems = [
     {text: 'Home',           href: '/',         minRole:'unverified',    icon: <HomeIcon/>},
@@ -14,6 +15,7 @@ const navigationItems = [
     {text: 'Coop',           href: '/coop',     minRole:'member',        icon: <EggIcon/>},
     {text: 'Smart Plugs',    href: '/kasa',     minRole:'member',        icon: <OutletIcon/>},
     {text: 'Pecron',         href: '/pecron',   minRole:'member',        icon: <BatteryChargingFullIcon/>},
+    {text: 'WSS Devices',    href: '/wss-devices',minRole:'member',      icon: <LightbulbIcon/>},
     {text: 'Manage Devices', href: '/managedevs',minRole:'admin',        icon: <SettingsCellIcon/>},
     {text: 'API Keys',       href: '/keys',     minRole:'admin',         icon: <VpnKeyIcon/>},
     {text: 'Users',          href: '/users',    minRole:'manager',       icon: <PeopleIcon/>},
