@@ -3,6 +3,16 @@ const { WebSocketServer } = require("ws");
 let wss = null;
 const devices = new Map();
 
+function isSecureRequest(req) {
+    if (req.socket?.encrypted) return true;
+
+    const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+        .split(",")
+        .map((value) => value.trim().toLowerCase());
+
+    return forwardedProto.includes("https") || forwardedProto.includes("wss");
+}
+
 function normalizeDeviceId(deviceId) {
     if (typeof deviceId !== "string") return null;
     const trimmed = deviceId.trim();
@@ -63,6 +73,12 @@ function getWssDeviceWebSocketServer(server, path = "/api/wss-devices/ws") {
     server.on("upgrade", (req, socket, head) => {
         const pathname = req.url.split("?")[0];
         if (pathname !== path) return;
+
+        if (!isSecureRequest(req)) {
+            socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+            socket.destroy();
+            return;
+        }
 
         wss.handleUpgrade(req, socket, head, (ws) => {
             wss.emit("connection", ws, req);
