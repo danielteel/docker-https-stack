@@ -11,17 +11,7 @@ export async function wssDevicesList() {
     }
 }
 
-export async function wssDevicesSetColor(deviceId, color) {
-    try {
-        const response = await fetch("/api/wss-devices/color", {
-            credentials: "include",
-            method: "POST",
-            cache: "no-cache",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ deviceId, color }),
-        });
-        return [response.status >= 200 && response.status <= 299, await response.json(), response.status];
-    } catch {
-        return [false, "failed", 400];
-    }
+export function wssDevicesLiveUrl() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/api/wss-devices/live`;
 }

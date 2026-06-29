@@ -1,7 +1,9 @@
 const { WebSocketServer } = require("ws");
+const { manualAuthenticate } = require("./common/accessToken");
 
 let wss = null;
 const devices = new Map();
+const browserClients = new Set();
 
 function isSecureRequest(req) {
     if (req.socket?.encrypted) return true;
@@ -21,58 +23,174 @@ function normalizeDeviceId(deviceId) {
     return trimmed;
 }
 
-function colorPayload(color) {
-    if (typeof color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(color)) {
-        return null;
-    }
+function parseCookies(header) {
+    return String(header || "")
+        .split(";")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .reduce((cookies, part) => {
+            const separatorIndex = part.indexOf("=");
+            if (separatorIndex === -1) return cookies;
+            const key = decodeURIComponent(part.slice(0, separatorIndex).trim());
+            const value = decodeURIComponent(part.slice(separatorIndex + 1).trim());
+            cookies[key] = value;
+            return cookies;
+        }, {});
+}
 
-    const hex = color.slice(1);
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-
+function publicDevice(device) {
     return {
-        type: "color",
-        color: `#${hex.toLowerCase()}`,
-        r,
-        g,
-        b,
+        deviceId: device.deviceId,
+        connectedAt: device.connectedAt,
+        lastSeenAt: device.lastSeenAt,
+        disconnectedAt: device.disconnectedAt || null,
+        online: device.ws?.readyState === 1,
+        image: device.image || null,
+        temperature: device.temperature,
+        humidity: device.humidity,
+        telemetryAt: device.telemetryAt || null,
     };
 }
 
 function listWssDevices() {
-    return Array.from(devices.entries()).map(([deviceId, device]) => ({
-        deviceId,
-        connectedAt: device.connectedAt,
-        lastSeenAt: device.lastSeenAt,
-        lastColor: device.lastColor,
-    }));
+    return Array.from(devices.values()).map(publicDevice);
 }
 
-function sendColorToWssDevice(deviceId, color) {
-    const normalizedDeviceId = normalizeDeviceId(deviceId);
-    const payload = colorPayload(color);
-    if (!normalizedDeviceId || !payload) return { ok: false, error: "invalid request" };
+function broadcast(payload) {
+    const message = JSON.stringify(payload);
+    for (const client of browserClients) {
+        if (client.readyState === 1) {
+            client.send(message);
+        }
+    }
+}
 
-    const device = devices.get(normalizedDeviceId);
-    if (!device || device.ws.readyState !== 1) {
-        return { ok: false, error: "device not connected" };
+function broadcastSnapshot() {
+    broadcast({ type: "snapshot", devices: listWssDevices() });
+}
+
+function updateTelemetry(device, payload) {
+    const temperature = Number(payload.temperature);
+    const humidity = Number(payload.humidity);
+
+    if (Number.isFinite(temperature)) {
+        device.temperature = temperature;
+    }
+    if (Number.isFinite(humidity)) {
+        device.humidity = humidity;
     }
 
-    device.lastColor = payload.color;
-    device.lastSeenAt = new Date().toISOString();
-    device.ws.send(JSON.stringify(payload));
-    return { ok: true, device: { ...device, ws: undefined } };
+    device.telemetryAt = new Date().toISOString();
+    device.lastSeenAt = device.telemetryAt;
+    broadcast({ type: "device", device: publicDevice(device) });
 }
 
-function getWssDeviceWebSocketServer(server, path = "/api/wss-devices/ws") {
+function updateImage(device, metadata, data) {
+    const capturedAt = new Date().toISOString();
+    device.image = {
+        id: Number.isFinite(Number(metadata.id)) ? Number(metadata.id) : null,
+        format: metadata.format === "jpeg" ? "jpeg" : "jpeg",
+        length: data.length,
+        capturedAt,
+        dataUrl: `data:image/jpeg;base64,${data.toString("base64")}`,
+    };
+    device.lastSeenAt = capturedAt;
+    broadcast({ type: "device", device: publicDevice(device) });
+}
+
+function handleDeviceMessage(device, message, isBinary) {
+    device.lastSeenAt = new Date().toISOString();
+
+    if (isBinary) {
+        if (device.pendingImageMetadata) {
+            updateImage(device, device.pendingImageMetadata, Buffer.from(message));
+            device.pendingImageMetadata = null;
+        }
+        return;
+    }
+
+    let payload = null;
+    try {
+        payload = JSON.parse(message.toString());
+    } catch {
+        return;
+    }
+
+    if (payload.type === "telemetry") {
+        updateTelemetry(device, payload);
+    } else if (payload.type === "image") {
+        device.pendingImageMetadata = payload;
+    } else if (payload.type === "deviceReady") {
+        broadcast({ type: "device", device: publicDevice(device) });
+    }
+}
+
+async function handleBrowserConnection(ws, req) {
+    const user = await manualAuthenticate("member", parseCookies(req.headers.cookie));
+    if (!user) {
+        ws.close(1008, "Authentication required");
+        return;
+    }
+
+    browserClients.add(ws);
+    ws.send(JSON.stringify({ type: "snapshot", devices: listWssDevices() }));
+
+    ws.on("close", () => {
+        browserClients.delete(ws);
+    });
+}
+
+function handleDeviceConnection(ws, req) {
+    const url = new URL(req.url, "http://localhost");
+    const deviceId = normalizeDeviceId(url.searchParams.get("deviceId"));
+
+    if (!deviceId) {
+        ws.close(1008, "Missing or invalid deviceId");
+        return;
+    }
+
+    const existing = devices.get(deviceId);
+    if (existing?.ws) {
+        existing.ws.close(1000, "Replaced by a new connection");
+    }
+
+    const device = {
+        ...(existing || {}),
+        ws,
+        deviceId,
+        connectedAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString(),
+        disconnectedAt: null,
+        pendingImageMetadata: null,
+    };
+
+    devices.set(deviceId, device);
+    console.log("WSS device connected:", deviceId);
+    broadcast({ type: "device", device: publicDevice(device) });
+
+    ws.on("message", (message, isBinary) => {
+        handleDeviceMessage(device, message, isBinary);
+    });
+
+    ws.on("close", () => {
+        if (devices.get(deviceId)?.ws === ws) {
+            devices.delete(deviceId);
+            broadcastSnapshot();
+        }
+        console.log("WSS device disconnected:", deviceId);
+    });
+
+    ws.send(JSON.stringify({ type: "ready", deviceId }));
+}
+
+function getWssDeviceWebSocketServer(server, path = "/api/wss-devices/ws", livePath = "/api/wss-devices/live") {
     if (wss) return wss;
 
     wss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
     server.on("upgrade", (req, socket, head) => {
         const pathname = req.url.split("?")[0];
-        if (pathname !== path) return;
+        if (pathname !== path && pathname !== livePath) return;
 
         if (!isSecureRequest(req)) {
             socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
@@ -86,42 +204,13 @@ function getWssDeviceWebSocketServer(server, path = "/api/wss-devices/ws") {
     });
 
     wss.on("connection", (ws, req) => {
-        const url = new URL(req.url, "http://localhost");
-        const deviceId = normalizeDeviceId(url.searchParams.get("deviceId"));
-
-        if (!deviceId) {
-            ws.close(1008, "Missing or invalid deviceId");
+        const pathname = req.url.split("?")[0];
+        if (pathname === livePath) {
+            handleBrowserConnection(ws, req);
             return;
         }
 
-        const existing = devices.get(deviceId);
-        if (existing?.ws) {
-            existing.ws.close(1000, "Replaced by a new connection");
-        }
-
-        const device = {
-            ws,
-            deviceId,
-            connectedAt: new Date().toISOString(),
-            lastSeenAt: new Date().toISOString(),
-            lastColor: null,
-        };
-
-        devices.set(deviceId, device);
-        console.log("WSS device connected:", deviceId);
-
-        ws.on("message", () => {
-            device.lastSeenAt = new Date().toISOString();
-        });
-
-        ws.on("close", () => {
-            if (devices.get(deviceId)?.ws === ws) {
-                devices.delete(deviceId);
-            }
-            console.log("WSS device disconnected:", deviceId);
-        });
-
-        ws.send(JSON.stringify({ type: "ready", deviceId }));
+        handleDeviceConnection(ws, req);
     });
 
     return wss;
@@ -130,5 +219,4 @@ function getWssDeviceWebSocketServer(server, path = "/api/wss-devices/ws") {
 module.exports = {
     getWssDeviceWebSocketServer,
     listWssDevices,
-    sendColorToWssDevice,
 };
