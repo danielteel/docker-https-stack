@@ -83,6 +83,34 @@ services:
       - database
     restart: unless-stopped
 
+  integrations:
+    build: ./integrations
+    container_name: integrations
+    environment:
+      - RTSP_CAPTURE_ENABLED=${RTSP_CAPTURE_ENABLED:-true}
+      - RTSP_DVR_USERNAME=${RTSP_DVR_USERNAME}
+      - RTSP_DVR_PASSWORD=${RTSP_DVR_PASSWORD}
+      - RTSP_DVR_HOST=${RTSP_DVR_HOST}
+      - RTSP_DVR_PORT=${RTSP_DVR_PORT:-554}
+      - RTSP_DVR_CHANNELS=${RTSP_DVR_CHANNELS:-1,2,3,4}
+      - RTSP_DVR_SUBTYPE=${RTSP_DVR_SUBTYPE:-1}
+      - RTSP_TRANSPORT=${RTSP_TRANSPORT:-tcp}
+      - RTSP_CAPTURE_INTERVAL_SECONDS=${RTSP_CAPTURE_INTERVAL_SECONDS:-2}
+      - RTSP_STREAM_STALL_SECONDS=${RTSP_STREAM_STALL_SECONDS:-60}
+      - RTSP_DEVICE_ID_PATTERN=${RTSP_DEVICE_ID_PATTERN}
+      - RTSP_BACKEND_WS_SCHEME=ws
+      - RTSP_BACKEND_WS_HOST=backend
+      - RTSP_BACKEND_WS_PORT=${API_PORT:-3000}
+      - RTSP_BACKEND_WS_PATH=/api/wss-devices/ws
+      - RTSP_BACKEND_WS_FORWARDED_PROTO=https
+      - RTSP_WS_RECONNECT_MS=${RTSP_WS_RECONNECT_MS:-5000}
+      - RTSP_WS_MAX_BUFFERED_BYTES=${RTSP_WS_MAX_BUFFERED_BYTES:-5242880}
+    depends_on:
+      - backend
+    networks:
+      - web
+    restart: unless-stopped
+
   postgres:
     image: postgres:15-alpine
     container_name: postgres

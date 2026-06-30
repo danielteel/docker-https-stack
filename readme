@@ -36,3 +36,15 @@ PECRON_EMAIL=your pecron account email
 PECRON_PASSWORD=your pecron account password
 PECRON_REGION=US
 PECRON_DEVICE=optional device name, serial, or device key filter
+
+RTSP_CAPTURE_ENABLED=true
+RTSP_DVR_USERNAME=your dvr username
+RTSP_DVR_PASSWORD=your dvr password
+RTSP_DVR_HOST=ip address of DVR
+RTSP_DVR_PORT=554
+RTSP_DVR_CHANNELS=1,2,3,4 (add more or take away, this example has 4 cameras)
+RTSP_DVR_SUBTYPE=1 (1 is usually lower quality on lorex)
+RTSP_TRANSPORT=tcp
+RTSP_CAPTURE_INTERVAL_SECONDS=2
+RTSP_STREAM_STALL_SECONDS=15 (restart ffmpeg if no frames arrive for this many seconds; must be at least double RTSP_CAPTURE_INTERVAL_SECONDS)
+RTSP_DEVICE_ID_PATTERN=lorex-camera-{channel}
