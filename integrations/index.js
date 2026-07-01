@@ -163,10 +163,6 @@ function connectDevice(state) {
     console.log(`[channel ${state.channel}] Connected as ${state.deviceId}`);
     sendJson(ws, {
       type: "deviceReady",
-      deviceType: "rtspCamera",
-      source: "lorex",
-      channel: state.channel,
-      subtype: config.subtype,
     });
   });
 
@@ -206,14 +202,9 @@ function sendDeviceImage(channel, jpeg) {
     return;
   }
 
-  const now = Date.now();
   sendJson(ws, {
     type: "image",
-    id: `${state.deviceId}-${now}`,
-    format: "jpeg",
     length: jpeg.length,
-    channel,
-    capturedAt: new Date(now).toISOString(),
   });
   ws.send(jpeg, { binary: true });
 }

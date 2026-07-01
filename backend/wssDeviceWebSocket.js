@@ -109,16 +109,15 @@ function updateDeviceInfo(device, payload) {
     broadcast({ type: "device", device: publicDevice(device) });
 }
 
-function updateImage(device, metadata, data) {
-    const capturedAt = new Date().toISOString();
+function updateImage(device, image, data) {
+    if (Number.isFinite(image.length) && image.length !== data.length) {
+        console.warn(`WSS image length mismatch for ${device.deviceId}: expected ${image.length}, received ${data.length}`);
+    }
+
     device.image = {
-        id: Number.isFinite(Number(metadata.id)) ? Number(metadata.id) : null,
-        format: metadata.format === "jpeg" ? "jpeg" : "jpeg",
-        length: data.length,
-        capturedAt,
         dataUrl: `data:image/jpeg;base64,${data.toString("base64")}`,
     };
-    device.lastSeenAt = capturedAt;
+    device.lastSeenAt = new Date().toISOString();
     broadcast({ type: "device", device: publicDevice(device) });
 }
 
@@ -126,9 +125,9 @@ function handleDeviceMessage(device, message, isBinary) {
     device.lastSeenAt = new Date().toISOString();
 
     if (isBinary) {
-        if (device.pendingImageMetadata) {
-            updateImage(device, device.pendingImageMetadata, Buffer.from(message));
-            device.pendingImageMetadata = null;
+        if (device.pendingImage) {
+            updateImage(device, device.pendingImage, Buffer.from(message));
+            device.pendingImage = null;
         }
         return;
     }
@@ -143,7 +142,9 @@ function handleDeviceMessage(device, message, isBinary) {
     if (payload.type === "telemetry") {
         updateTelemetry(device, payload);
     } else if (payload.type === "image") {
-        device.pendingImageMetadata = payload;
+        device.pendingImage = {
+            length: Number.isFinite(Number(payload.length)) ? Number(payload.length) : null,
+        };
     } else if (payload.type === "deviceReady") {
         updateDeviceInfo(device, payload);
     }
@@ -185,7 +186,7 @@ function handleDeviceConnection(ws, req) {
         connectedAt: new Date().toISOString(),
         lastSeenAt: new Date().toISOString(),
         disconnectedAt: null,
-        pendingImageMetadata: null,
+        pendingImage: null,
     };
 
     devices.set(deviceId, device);
