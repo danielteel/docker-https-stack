@@ -552,25 +552,6 @@ function createPecronPublisher() {
 
     ws.on("open", () => {
       console.log(`[pecron] Connected as ${config.deviceId}`);
-      sendJson(ws, {
-        type: "deviceReady",
-        deviceType: "pecronPowerStation",
-        source: "pecron",
-        actions: [
-          {
-            name: "setDcOutput",
-            label: "DC Output",
-            type: "toggle",
-            stateKey: "dcOutput",
-          },
-          {
-            name: "setAcOutput",
-            label: "AC Output",
-            type: "toggle",
-            stateKey: "acOutput",
-          },
-        ],
-      });
       publishStatus();
     });
 
@@ -612,8 +593,21 @@ function createPecronPublisher() {
       sendJson(ws, {
         type: "deviceReady",
         deviceName: status.device?.deviceName || "Pecron",
-        productName: status.device?.productName || "",
         serialNumber: status.device?.serialNumber || "",
+        actions: [
+          {
+            name: "setDcOutput",
+            label: "DC Output",
+            type: "toggle",
+            stateKey: "dcOutput",
+          },
+          {
+            name: "setAcOutput",
+            label: "AC Output",
+            type: "toggle",
+            stateKey: "acOutput",
+          },
+        ],
       });
       sendJson(ws, {
         type: "telemetry",
@@ -622,6 +616,10 @@ function createPecronPublisher() {
     } catch (error) {
       nextPollMs = Math.max(60000, nextPollMs);
       console.error(`[pecron] Failed to publish status: ${error.message}`);
+      sendJson(ws, {
+        type: "deviceReady",
+        actions: [],
+      });
       sendJson(ws, {
         type: "telemetry",
         values: {
