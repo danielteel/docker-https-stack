@@ -9,8 +9,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-COPY index.js ./
-
-ENV FFMPEG_BIN=/usr/bin/ffmpeg
+COPY *.js ./
 
 CMD ["npm", "start"]
