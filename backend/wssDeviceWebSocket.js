@@ -45,9 +45,9 @@ function publicDevice(device) {
         lastSeenAt: device.lastSeenAt,
         disconnectedAt: device.disconnectedAt || null,
         online: device.ws?.readyState === 1,
+        deviceInfo: device.deviceInfo || {},
         image: device.image || null,
-        temperature: device.temperature,
-        humidity: device.humidity,
+        telemetry: device.telemetry || {},
         telemetryAt: device.telemetryAt || null,
     };
 }
@@ -70,18 +70,42 @@ function broadcastSnapshot() {
 }
 
 function updateTelemetry(device, payload) {
-    const temperature = Number(payload.temperature);
-    const humidity = Number(payload.humidity);
+    const telemetry = {};
+    const source = payload.values && typeof payload.values === "object" && !Array.isArray(payload.values)
+        ? payload.values
+        : payload;
 
-    if (Number.isFinite(temperature)) {
-        device.temperature = temperature;
-    }
-    if (Number.isFinite(humidity)) {
-        device.humidity = humidity;
+    for (const [key, value] of Object.entries(source)) {
+        if (key === "type") continue;
+        if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+            telemetry[key] = value;
+        }
     }
 
+    device.telemetry = {
+        ...(device.telemetry || {}),
+        ...telemetry,
+    };
     device.telemetryAt = new Date().toISOString();
     device.lastSeenAt = device.telemetryAt;
+    broadcast({ type: "device", device: publicDevice(device) });
+}
+
+function updateDeviceInfo(device, payload) {
+    const deviceInfo = {};
+
+    for (const [key, value] of Object.entries(payload)) {
+        if (key === "type") continue;
+        if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+            deviceInfo[key] = value;
+        }
+    }
+
+    device.deviceInfo = {
+        ...(device.deviceInfo || {}),
+        ...deviceInfo,
+    };
+    device.lastSeenAt = new Date().toISOString();
     broadcast({ type: "device", device: publicDevice(device) });
 }
 
@@ -121,7 +145,7 @@ function handleDeviceMessage(device, message, isBinary) {
     } else if (payload.type === "image") {
         device.pendingImageMetadata = payload;
     } else if (payload.type === "deviceReady") {
-        broadcast({ type: "device", device: publicDevice(device) });
+        updateDeviceInfo(device, payload);
     }
 }
 
