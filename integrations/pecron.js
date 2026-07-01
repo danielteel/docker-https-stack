@@ -413,6 +413,94 @@ async function getPecronStatus({ email, password, region = "US", device } = {}) 
   };
 }
 
+async function setPecronProperties(session, device, properties) {
+  const data = Object.entries(properties).map(([code, value]) => ({ [code]: value }));
+  const result = await pecronRequest(
+    session.config,
+    session.accessToken,
+    "POST",
+    "/v2/binding/enduserapi/batchControlDevice",
+    {
+      json: {
+        data: JSON.stringify(data),
+        deviceList: [
+          {
+            productKey: device.productKey,
+            deviceKey: device.deviceKey,
+          },
+        ],
+        type: 2,
+      },
+    },
+  );
+
+  for (const item of result.successList || []) {
+    const itemData = item.data || {};
+
+    if (itemData.productKey === device.productKey && itemData.deviceKey === device.deviceKey) {
+      return {
+        success: true,
+        ticket: item.ticket || null,
+      };
+    }
+  }
+
+  for (const item of result.failureList || []) {
+    const itemData = item.data || {};
+
+    if (itemData.productKey === device.productKey && itemData.deviceKey === device.deviceKey) {
+      return {
+        success: false,
+        errorMessage: item.msg || "Command failed.",
+      };
+    }
+  }
+
+  return {
+    success: false,
+    errorMessage: "Device was not present in the command response.",
+  };
+}
+
+async function setPecronOutput({ email, password, region = "US", device } = {}, { ac, dc } = {}) {
+  if (ac === undefined && dc === undefined) {
+    throw new Error("Pass ac, dc, or both as booleans.");
+  }
+
+  if (ac !== undefined && typeof ac !== "boolean") {
+    throw new TypeError("ac must be a boolean when provided.");
+  }
+
+  if (dc !== undefined && typeof dc !== "boolean") {
+    throw new TypeError("dc must be a boolean when provided.");
+  }
+
+  const session = await loginPecron({ email, password, region });
+  const devices = await listPecronDevices(session);
+  const selectedDevice = findDevice(devices, device);
+
+  if (!selectedDevice) {
+    throw new Error(device ? `No Pecron device matched "${device}".` : "No Pecron devices found.");
+  }
+
+  const updates = {};
+
+  if (ac !== undefined) {
+    updates.ac_switch_hm = ac;
+  }
+
+  if (dc !== undefined) {
+    updates.dc_switch_hm = dc;
+  }
+
+  const result = await setPecronProperties(session, selectedDevice, updates);
+  if (!result.success) {
+    throw new Error(result.errorMessage || "Failed to update Pecron output.");
+  }
+
+  return result;
+}
+
 function createPecronPublisher() {
   const pecronEmail = getEnv("PECRON_EMAIL", "");
   const pecronPassword = getEnv("PECRON_PASSWORD", "");
@@ -468,6 +556,20 @@ function createPecronPublisher() {
         type: "deviceReady",
         deviceType: "pecronPowerStation",
         source: "pecron",
+        actions: [
+          {
+            name: "setDcOutput",
+            label: "DC Output",
+            type: "toggle",
+            stateKey: "dcOutput",
+          },
+          {
+            name: "setAcOutput",
+            label: "AC Output",
+            type: "toggle",
+            stateKey: "acOutput",
+          },
+        ],
       });
       publishStatus();
     });
@@ -476,6 +578,7 @@ function createPecronPublisher() {
       const text = Buffer.isBuffer(data) ? data.toString("utf8") : String(data);
       if (text) {
         console.log(`[pecron] Backend message: ${text}`);
+        handleBackendMessage(ws, text);
       }
     });
 
@@ -531,6 +634,43 @@ function createPecronPublisher() {
     }
   }
 
+  async function handleBackendMessage(ws, text) {
+    let payload = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return;
+    }
+
+    if (payload.type !== "action") return;
+
+    try {
+      if (payload.action === "setDcOutput") {
+        await setPecronOutput(config, { dc: payload.value === true });
+      } else if (payload.action === "setAcOutput") {
+        await setPecronOutput(config, { ac: payload.value === true });
+      } else {
+        throw new Error(`Unknown Pecron action "${payload.action}".`);
+      }
+
+      sendJson(ws, {
+        type: "actionResult",
+        requestId: payload.requestId,
+        action: payload.action,
+        success: true,
+      });
+      publishStatus();
+    } catch (error) {
+      sendJson(ws, {
+        type: "actionResult",
+        requestId: payload.requestId,
+        action: payload.action,
+        success: false,
+        error: error.message || "Action failed.",
+      });
+    }
+  }
+
   function schedulePoll(delayMs) {
     clearPollTimer();
     if (state.shuttingDown) return;
@@ -565,8 +705,8 @@ function pecronTelemetry(status) {
     dcOutputPower: formatWatts(status.dcOutputPower),
     acOutputVoltage: formatVolts(status.acOutputVoltage),
     acOutputFrequency: formatHertz(status.acOutputFrequency),
-    acOutput: formatOnOff(status.acOn),
-    dcOutput: formatOnOff(status.dcOn),
+    acOutput: status.acOn,
+    dcOutput: status.dcOn,
     upsMode: formatOnOff(status.upsMode),
   });
 }

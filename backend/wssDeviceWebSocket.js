@@ -46,6 +46,7 @@ function publicDevice(device) {
         disconnectedAt: device.disconnectedAt || null,
         online: device.ws?.readyState === 1,
         deviceInfo: device.deviceInfo || {},
+        actions: Array.isArray(device.actions) ? device.actions : [],
         image: device.image || null,
         telemetry: device.telemetry || {},
         telemetryAt: device.telemetryAt || null,
@@ -105,6 +106,16 @@ function updateDeviceInfo(device, payload) {
         ...(device.deviceInfo || {}),
         ...deviceInfo,
     };
+    if (Array.isArray(payload.actions)) {
+        device.actions = payload.actions
+            .filter((action) => action && typeof action.name === "string")
+            .map((action) => ({
+                name: action.name,
+                label: typeof action.label === "string" ? action.label : action.name,
+                type: typeof action.type === "string" ? action.type : "button",
+                stateKey: typeof action.stateKey === "string" ? action.stateKey : null,
+            }));
+    }
     device.lastSeenAt = new Date().toISOString();
     broadcast({ type: "device", device: publicDevice(device) });
 }
@@ -147,6 +158,15 @@ function handleDeviceMessage(device, message, isBinary) {
         };
     } else if (payload.type === "deviceReady") {
         updateDeviceInfo(device, payload);
+    } else if (payload.type === "actionResult") {
+        broadcast({
+            type: "actionResult",
+            deviceId: device.deviceId,
+            requestId: typeof payload.requestId === "string" ? payload.requestId : null,
+            action: typeof payload.action === "string" ? payload.action : null,
+            success: payload.success === true,
+            error: typeof payload.error === "string" ? payload.error : null,
+        });
     }
 }
 
@@ -163,6 +183,61 @@ async function handleBrowserConnection(ws, req) {
     ws.on("close", () => {
         browserClients.delete(ws);
     });
+
+    ws.on("message", (message) => {
+        handleBrowserMessage(ws, message);
+    });
+}
+
+function handleBrowserMessage(ws, message) {
+    let payload = null;
+    try {
+        payload = JSON.parse(message.toString());
+    } catch {
+        return;
+    }
+
+    if (payload.type !== "action") return;
+
+    const deviceId = normalizeDeviceId(payload.deviceId);
+    const actionName = typeof payload.action === "string" ? payload.action : null;
+    const requestId = typeof payload.requestId === "string" ? payload.requestId : null;
+    const device = deviceId ? devices.get(deviceId) : null;
+
+    if (!device || device.ws?.readyState !== 1) {
+        ws.send(JSON.stringify({
+            type: "actionResult",
+            deviceId,
+            requestId,
+            action: actionName,
+            success: false,
+            error: "Device is not connected.",
+        }));
+        return;
+    }
+
+    const action = Array.isArray(device.actions)
+        ? device.actions.find((item) => item.name === actionName)
+        : null;
+
+    if (!action) {
+        ws.send(JSON.stringify({
+            type: "actionResult",
+            deviceId,
+            requestId,
+            action: actionName,
+            success: false,
+            error: "Action is not available.",
+        }));
+        return;
+    }
+
+    device.ws.send(JSON.stringify({
+        type: "action",
+        requestId,
+        action: action.name,
+        value: payload.value,
+    }));
 }
 
 function handleDeviceConnection(ws, req) {
@@ -187,6 +262,7 @@ function handleDeviceConnection(ws, req) {
         lastSeenAt: new Date().toISOString(),
         disconnectedAt: null,
         pendingImage: null,
+        actions: existing?.actions || [],
     };
 
     devices.set(deviceId, device);

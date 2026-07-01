@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Alert,
     Box,
     Card,
     CardContent,
     Chip,
+    CircularProgress,
     Grid,
     Stack,
+    Switch,
     Typography,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -33,9 +35,19 @@ function formatValue(value) {
     return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+function actionStateKeys(device) {
+    const actions = Array.isArray(device.actions) ? device.actions : [];
+    return new Set(
+        actions
+            .map((action) => action?.stateKey)
+            .filter((stateKey) => typeof stateKey === "string" && stateKey),
+    );
+}
+
 function telemetryEntries(device) {
     const telemetry = device.telemetry && typeof device.telemetry === "object" ? device.telemetry : {};
-    return Object.entries(telemetry);
+    const stateKeys = actionStateKeys(device);
+    return Object.entries(telemetry).filter(([key]) => !stateKeys.has(key));
 }
 
 function deviceInfoEntries(device) {
@@ -64,9 +76,24 @@ function upsertDevice(devices, nextDevice) {
     ));
 }
 
+function toggleActions(device) {
+    return Array.isArray(device.actions)
+        ? device.actions.filter((action) => action?.type === "toggle" && action.stateKey)
+        : [];
+}
+
+function toggleChecked(value) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") return value.trim().toLowerCase() === "on";
+    return false;
+}
+
 export default function WssDevices() {
     const [devices, setDevices] = useState([]);
     const [connectionState, setConnectionState] = useState("connecting");
+    const [pendingActions, setPendingActions] = useState({});
+    const [actionErrors, setActionErrors] = useState({});
+    const socketRef = useRef(null);
 
     const sortedDevices = useMemo(
         () => [...devices].sort((a, b) => a.deviceId.localeCompare(b.deviceId)),
@@ -81,6 +108,7 @@ export default function WssDevices() {
         function connect() {
             setConnectionState("connecting");
             socket = new WebSocket(wssDevicesLiveUrl());
+            socketRef.current = socket;
 
             socket.addEventListener("open", () => {
                 setConnectionState("connected");
@@ -92,6 +120,17 @@ export default function WssDevices() {
                     setDevices(payload.devices || []);
                 } else if (payload.type === "device" && payload.device) {
                     setDevices((currentDevices) => upsertDevice(currentDevices, payload.device));
+                } else if (payload.type === "actionResult") {
+                    const key = `${payload.deviceId}:${payload.action}`;
+                    setPendingActions((current) => {
+                        const next = { ...current };
+                        delete next[key];
+                        return next;
+                    });
+                    setActionErrors((current) => ({
+                        ...current,
+                        [key]: payload.success ? null : payload.error || "Action failed",
+                    }));
                 }
             });
 
@@ -112,9 +151,26 @@ export default function WssDevices() {
         return () => {
             stopped = true;
             clearTimeout(reconnectTimeout);
+            if (socketRef.current === socket) socketRef.current = null;
             socket?.close();
         };
     }, []);
+
+    function sendAction(device, action, value) {
+        const socket = socketRef.current;
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+        const key = `${device.deviceId}:${action.name}`;
+        setPendingActions((current) => ({ ...current, [key]: true }));
+        setActionErrors((current) => ({ ...current, [key]: null }));
+        socket.send(JSON.stringify({
+            type: "action",
+            requestId: `${key}:${Date.now()}`,
+            deviceId: device.deviceId,
+            action: action.name,
+            value,
+        }));
+    }
 
     return (
         <Box sx={{ p: 3 }}>
@@ -144,6 +200,7 @@ export default function WssDevices() {
                 {sortedDevices.map((device) => {
                     const info = deviceInfoEntries(device);
                     const telemetry = telemetryEntries(device);
+                    const actions = toggleActions(device);
                     const hasDetails = info.length > 0 || telemetry.length > 0;
 
                     return (
@@ -223,6 +280,46 @@ export default function WssDevices() {
                                             <Typography variant="body2" color="text.secondary">
                                                 Waiting for device data
                                             </Typography>
+                                        )}
+
+                                        {actions.length > 0 && (
+                                            <Stack spacing={1}>
+                                                {actions.map((action) => {
+                                                    const key = `${device.deviceId}:${action.name}`;
+                                                    const checked = toggleChecked(device.telemetry?.[action.stateKey]);
+                                                    const pending = pendingActions[key] === true;
+                                                    const error = actionErrors[key];
+
+                                                    return (
+                                                        <Box key={key}>
+                                                            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                                                                <Box sx={{ minWidth: 0 }}>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                                                        {action.label || formatLabel(action.name)}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        {checked ? "On" : "Off"}
+                                                                    </Typography>
+                                                                </Box>
+                                                                <Stack direction="row" alignItems="center" spacing={1}>
+                                                                    {pending && <CircularProgress size={16} />}
+                                                                    <Switch
+                                                                        checked={checked}
+                                                                        disabled={!device.online || pending || connectionState !== "connected"}
+                                                                        onChange={(event) => sendAction(device, action, event.target.checked)}
+                                                                        inputProps={{ "aria-label": action.label || action.name }}
+                                                                    />
+                                                                </Stack>
+                                                            </Stack>
+                                                            {error && (
+                                                                <Alert severity="error" sx={{ mt: 1 }}>
+                                                                    {error}
+                                                                </Alert>
+                                                            )}
+                                                        </Box>
+                                                    );
+                                                })}
+                                            </Stack>
                                         )}
 
                                         {telemetry.length > 0 && (
