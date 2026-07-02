@@ -11,8 +11,6 @@ import DeviceLog from "./components/DeviceLog";
 import ApiKeys from "./components/ApiKeys";
 import Home from "./components/Home";
 import Coop from "./components/Coop";
-import Kasa from "./components/Kasa";
-import Pecron from "./components/Pecron";
 import WssDevices from "./components/WssDevices";
 
 
@@ -33,8 +31,6 @@ export default function AppRouter(){
                 <Route path='/profile/:email?/:confirmCode?'><Profile/></Route>
                 <Route path='/devices'><Devices/></Route>
                 <Route path='/coop'><Coop/></Route>
-                <Route path='/kasa'><Kasa/></Route>
-                <Route path='/pecron'><Pecron/></Route>
                 <Route path='/wss-devices'><WssDevices/></Route>
                 <Route path='/devicelog/:id'>{params => <DeviceLog deviceId={params.id}/>}</Route>
                 <Route path='/managedevs'><ManageDevices/></Route>

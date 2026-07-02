@@ -6,8 +6,6 @@ import { manageUsers, manageUserRole, manageUserEmail } from '../api/manage';
 
 import { devicesGet, devicesList, devicesImage, devicesAdd, devicesUpdate, devicesDelete, devicesAction, devicesLog } from '../api/devices';
 import { apiKeysList, apiKeysAdd, apiKeysUpdate, apiKeysDelete } from '../api/apiKeys';
-import { kasaPlugs, kasaSetPlugState } from '../api/kasa';
-import { pecronStatus, pecronSetAc, pecronSetDc } from '../api/pecron';
 import { wssDevicesList } from '../api/wssDevices';
 
 
@@ -62,13 +60,6 @@ function makeApiObject(setUserFn) {
         apiKeysAdd: async (name, apiKey) => checkForLogout(...await apiKeysAdd(name, apiKey)),
         apiKeysUpdate: async (id, name, apiKey) => checkForLogout(...await apiKeysUpdate(id, name, apiKey)),
         apiKeysDelete: async (id) => checkForLogout(...await apiKeysDelete(id)),
-
-        kasaPlugs: async () => checkForLogout(...await kasaPlugs()),
-        kasaSetPlugState: async (id, on) => checkForLogout(...await kasaSetPlugState(id, on)),
-
-        pecronStatus: async () => checkForLogout(...await pecronStatus()),
-        pecronSetAc: async (on) => checkForLogout(...await pecronSetAc(on)),
-        pecronSetDc: async (on) => checkForLogout(...await pecronSetDc(on)),
 
         wssDevicesList: async () => checkForLogout(...await wssDevicesList()),
 

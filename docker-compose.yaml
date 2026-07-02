@@ -67,11 +67,6 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_PORT=${EMAIL_PORT}
       - DEVICES=${DEVICES}
-      - KASA_PLUGS=${KASA_PLUGS}
-      - PECRON_EMAIL=${PECRON_EMAIL}
-      - PECRON_PASSWORD=${PECRON_PASSWORD}
-      - PECRON_REGION=${PECRON_REGION}
-      - PECRON_DEVICE=${PECRON_DEVICE}
     tmpfs:
       - /usr/src/app/tmp:rw,size=50m
     depends_on:
@@ -107,6 +102,8 @@ services:
       - DESEC_TOKEN=${DESEC_TOKEN}
       - DESEC_DOMAIN=${DESEC_DOMAIN}
       - DDNS_INTERVAL_SECONDS=${DDNS_INTERVAL_SECONDS:-300}
+      - KASA_PLUGS=${KASA_PLUGS}
+      - KASA_POLL_INTERVAL_SECONDS=${KASA_POLL_INTERVAL_SECONDS:-30}
     depends_on:
       - backend
     networks:

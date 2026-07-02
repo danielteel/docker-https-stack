@@ -1,4 +1,5 @@
 const { createDesecPublisher } = require("./desec");
+const { createKasaPublisher } = require("./kasa");
 const { createPecronPublisher } = require("./pecron");
 const { createRtspPublisher } = require("./rtsp");
 
@@ -6,6 +7,7 @@ const publishers = [
   createRtspPublisher(),
   createPecronPublisher(),
   createDesecPublisher(),
+  createKasaPublisher(),
 ];
 
 let stopping = false;

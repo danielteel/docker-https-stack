@@ -32,6 +32,7 @@ OMLET_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
 DEVICES=[{"name":"Device1 name","encro_key":"device1 key"},{"name":"Device2 name","encro_key":"device2 key"}]
 
 KASA_PLUGS=[{"id":"lamp","name":"Lamp","ip":"192.168.1.50"}]
+KASA_POLL_INTERVAL_SECONDS=5
 
 PECRON_EMAIL=your pecron account email
 PECRON_PASSWORD=your pecron account password
