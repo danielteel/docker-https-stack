@@ -47,4 +47,5 @@ RTSP_DVR_CHANNELS=1,2,3,4 (add more or take away, this example has 4 cameras)
 RTSP_DVR_SUBTYPE=1 (1 is usually lower quality on lorex)
 RTSP_CAPTURE_INTERVAL_SECONDS=2
 RTSP_STREAM_STALL_SECONDS=15 (restart ffmpeg if no frames arrive for this many seconds; must be at least double RTSP_CAPTURE_INTERVAL_SECONDS)
+RTSP_RESTART_GRACE_SECONDS=5 (force-kill ffmpeg if it does not exit this many seconds after a stalled-stream restart)
 RTSP_DEVICE_ID_PATTERN=lorex-camera-{channel}

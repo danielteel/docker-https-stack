@@ -11,20 +11,7 @@ function createRtspPublisher() {
   };
 
   function start() {
-    state.config = {
-      username: getRequiredEnv("RTSP_DVR_USERNAME"),
-      password: getRequiredEnv("RTSP_DVR_PASSWORD"),
-      host: normalizeHost(getRequiredEnv("RTSP_DVR_HOST")),
-      rtspPort: getEnv("RTSP_DVR_PORT", "554"),
-      channels: parseChannels(getEnv("RTSP_DVR_CHANNELS", "1,2,3,4")),
-      subtype: getEnv("RTSP_DVR_SUBTYPE", "1"),
-      intervalSeconds: Number(getEnv("RTSP_CAPTURE_INTERVAL_SECONDS", "2")),
-      stallSeconds: getOptionalNumberEnv("RTSP_STREAM_STALL_SECONDS"),
-      deviceIdPattern: getEnv("RTSP_DEVICE_ID_PATTERN", "lorex-camera-{channel}"),
-      reconnectMs: 5000,
-      maxBufferedBytes: 5242880,
-    };
-
+    state.config = loadConfig();
     validateConfig(state.config);
     state.config.stallSeconds ??= Math.max(state.config.intervalSeconds * 5, 15);
 
@@ -49,10 +36,9 @@ function createRtspPublisher() {
     state.restartTimers.clear();
 
     for (const device of state.devices.values()) {
-      if (device.reconnectTimer) {
-        clearTimeout(device.reconnectTimer);
-        device.reconnectTimer = null;
-      }
+      if (device.reconnectTimer) clearTimeout(device.reconnectTimer);
+      device.reconnectTimer = null;
+
       if (device.ws) {
         device.ws.close(1000, "shutdown");
         device.ws = null;
@@ -63,8 +49,11 @@ function createRtspPublisher() {
   }
 
   function startCapture(channel) {
-    const config = state.config;
-    const ffmpegArgs = [
+    return spawnFfmpeg(channel, buildFfmpegArgs(channel));
+  }
+
+  function buildFfmpegArgs(channel) {
+    return [
       "-hide_banner",
       "-loglevel", "error",
       "-nostdin",
@@ -81,14 +70,12 @@ function createRtspPublisher() {
       "-an",
       "-sn",
       "-dn",
-      "-vf", `fps=1/${config.intervalSeconds}`,
+      "-vf", `fps=1/${state.config.intervalSeconds}`,
       "-q:v", "3",
       "-f", "image2pipe",
       "-vcodec", "mjpeg",
       "pipe:1",
     ];
-
-    return spawnFfmpeg(channel, ffmpegArgs);
   }
 
   function spawnFfmpeg(channel, ffmpegArgs) {
@@ -98,6 +85,8 @@ function createRtspPublisher() {
     });
 
     let lastFrameAt = Date.now();
+    let restartRequested = false;
+    let forceKillTimer = null;
     const frameParser = createJpegFrameParser((jpeg) => {
       lastFrameAt = Date.now();
       sendDeviceImage(channel, jpeg);
@@ -107,7 +96,7 @@ function createRtspPublisher() {
       if (stalledForMs < state.config.stallSeconds * 1000) return;
 
       console.warn(`[channel ${channel}] No frames from ffmpeg for ${Math.round(stalledForMs / 1000)}s; restarting stream`);
-      stopFfmpeg(child, true);
+      requestRestart();
     }, Math.max(1000, Math.min(state.config.stallSeconds * 500, 5000)));
     stallTimer.unref?.();
 
@@ -122,6 +111,7 @@ function createRtspPublisher() {
 
     child.on("exit", (code, signal) => {
       clearInterval(stallTimer);
+      if (forceKillTimer) clearTimeout(forceKillTimer);
       state.activeFfmpegProcesses.delete(child);
       frameParser.flush();
 
@@ -135,6 +125,20 @@ function createRtspPublisher() {
     });
 
     return child;
+
+    function requestRestart() {
+      if (restartRequested) return;
+      restartRequested = true;
+      clearInterval(stallTimer);
+      stopFfmpeg(child);
+
+      forceKillTimer = setTimeout(() => {
+        if (!state.activeFfmpegProcesses.has(child)) return;
+        console.warn(`[channel ${channel}] ffmpeg did not exit after ${state.config.restartGraceSeconds}s; forcing restart`);
+        stopFfmpeg(child, true);
+      }, state.config.restartGraceSeconds * 1000);
+      forceKillTimer.unref?.();
+    }
   }
 
   function scheduleFfmpegRestart(channel) {
@@ -147,10 +151,9 @@ function createRtspPublisher() {
   }
 
   function createDeviceConnection(channel) {
-    const deviceId = formatDeviceId(channel);
     const device = {
       channel,
-      deviceId,
+      deviceId: formatDeviceId(channel),
       ws: null,
       reconnectTimer: null,
     };
@@ -164,7 +167,7 @@ function createRtspPublisher() {
 
     const ws = new WebSocket(buildWsUrl(device.deviceId), {
       handshakeTimeout: 15000,
-      headers: buildWebSocketHeaders(),
+      headers: { "X-Forwarded-Proto": "https" },
     });
 
     device.ws = ws;
@@ -220,9 +223,7 @@ function createRtspPublisher() {
   }
 
   function stopAllFfmpeg(forceSync = false) {
-    for (const child of state.activeFfmpegProcesses) {
-      stopFfmpeg(child, forceSync);
-    }
+    state.activeFfmpegProcesses.forEach((child) => stopFfmpeg(child, forceSync));
   }
 
   function stopFfmpeg(child, forceSync = false) {
@@ -235,8 +236,9 @@ function createRtspPublisher() {
       return;
     }
 
+    const signal = forceSync ? "SIGKILL" : "SIGTERM";
     try {
-      child.kill("SIGTERM");
+      child.kill(signal);
     } catch (_) {
       // Process may already be gone.
     }
@@ -250,10 +252,6 @@ function createRtspPublisher() {
 
   function buildWsUrl(deviceId) {
     return `${backendWsBaseUrl()}?deviceId=${encodeURIComponent(deviceId)}`;
-  }
-
-  function buildWebSocketHeaders() {
-    return { "X-Forwarded-Proto": "https" };
   }
 
   function formatDeviceId(channel) {
@@ -309,22 +307,40 @@ function findMarker(buffer, firstByte, secondByte, offset) {
   return -1;
 }
 
+function loadConfig() {
+  return {
+    username: getRequiredEnv("RTSP_DVR_USERNAME"),
+    password: getRequiredEnv("RTSP_DVR_PASSWORD"),
+    host: normalizeHost(getRequiredEnv("RTSP_DVR_HOST")),
+    rtspPort: getEnv("RTSP_DVR_PORT", "554"),
+    channels: parseChannels(getEnv("RTSP_DVR_CHANNELS", "1,2,3,4")),
+    subtype: getEnv("RTSP_DVR_SUBTYPE", "1"),
+    intervalSeconds: Number(getEnv("RTSP_CAPTURE_INTERVAL_SECONDS", "2")),
+    stallSeconds: getOptionalNumberEnv("RTSP_STREAM_STALL_SECONDS"),
+    restartGraceSeconds: Number(getEnv("RTSP_RESTART_GRACE_SECONDS", "5")),
+    deviceIdPattern: getEnv("RTSP_DEVICE_ID_PATTERN", "lorex-camera-{channel}"),
+    reconnectMs: 5000,
+    maxBufferedBytes: 5242880,
+  };
+}
+
 function validateConfig(value) {
-  if (!Number.isFinite(value.intervalSeconds) || value.intervalSeconds <= 0) {
-    throw new Error("RTSP_CAPTURE_INTERVAL_SECONDS must be a positive number.");
+  assertConfig(Number.isFinite(value.intervalSeconds) && value.intervalSeconds > 0, "RTSP_CAPTURE_INTERVAL_SECONDS must be a positive number.");
+
+  if (value.stallSeconds !== undefined) {
+    assertConfig(
+      Number.isFinite(value.stallSeconds) && value.stallSeconds >= value.intervalSeconds * 2,
+      "RTSP_STREAM_STALL_SECONDS must be at least twice RTSP_CAPTURE_INTERVAL_SECONDS.",
+    );
   }
 
-  if (value.stallSeconds !== undefined && (!Number.isFinite(value.stallSeconds) || value.stallSeconds < value.intervalSeconds * 2)) {
-    throw new Error("RTSP_STREAM_STALL_SECONDS must be at least twice RTSP_CAPTURE_INTERVAL_SECONDS.");
-  }
+  assertConfig(Number.isFinite(value.restartGraceSeconds) && value.restartGraceSeconds > 0, "RTSP_RESTART_GRACE_SECONDS must be a positive number.");
+  assertConfig(Number.isFinite(value.reconnectMs) && value.reconnectMs >= 1000, "RTSP reconnect delay must be at least 1000.");
+  assertConfig(Number.isFinite(value.maxBufferedBytes) && value.maxBufferedBytes >= 0, "RTSP max buffered bytes must be zero or a positive number.");
+}
 
-  if (!Number.isFinite(value.reconnectMs) || value.reconnectMs < 1000) {
-    throw new Error("RTSP reconnect delay must be at least 1000.");
-  }
-
-  if (!Number.isFinite(value.maxBufferedBytes) || value.maxBufferedBytes < 0) {
-    throw new Error("RTSP max buffered bytes must be zero or a positive number.");
-  }
+function assertConfig(condition, message) {
+  if (!condition) throw new Error(message);
 }
 
 function sendJson(ws, value) {
