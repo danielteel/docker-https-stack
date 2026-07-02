@@ -1,3 +1,4 @@
+const { createCoopPublisher } = require("./coop");
 const { createDesecPublisher } = require("./desec");
 const { createKasaPublisher } = require("./kasa");
 const { createPecronPublisher } = require("./pecron");
@@ -8,6 +9,7 @@ const publishers = [
   createPecronPublisher(),
   createDesecPublisher(),
   createKasaPublisher(),
+  createCoopPublisher(),
 ];
 
 let stopping = false;

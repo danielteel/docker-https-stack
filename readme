@@ -28,6 +28,7 @@ EMAIL_PASS=the password to the email account
 EMAIL_PORT=465
 
 OMLET_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+COOP_POLL_INTERVAL_SECONDS=3
 
 DEVICES=[{"name":"Device1 name","encro_key":"device1 key"},{"name":"Device2 name","encro_key":"device2 key"}]
 

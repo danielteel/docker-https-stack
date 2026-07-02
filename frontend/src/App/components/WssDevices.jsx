@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Alert,
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
@@ -79,6 +80,12 @@ function upsertDevice(devices, nextDevice) {
 function toggleActions(device) {
     return Array.isArray(device.actions)
         ? device.actions.filter((action) => action?.type === "toggle" && action.stateKey)
+        : [];
+}
+
+function buttonActions(device) {
+    return Array.isArray(device.actions)
+        ? device.actions.filter((action) => action?.type !== "toggle")
         : [];
 }
 
@@ -201,6 +208,7 @@ export default function WssDevices() {
                     const info = deviceInfoEntries(device);
                     const telemetry = telemetryEntries(device);
                     const actions = toggleActions(device);
+                    const buttons = buttonActions(device);
                     const hasDetails = info.length > 0 || telemetry.length > 0;
 
                     return (
@@ -311,6 +319,34 @@ export default function WssDevices() {
                                                                     />
                                                                 </Stack>
                                                             </Stack>
+                                                            {error && (
+                                                                <Alert severity="error" sx={{ mt: 1 }}>
+                                                                    {error}
+                                                                </Alert>
+                                                            )}
+                                                        </Box>
+                                                    );
+                                                })}
+                                            </Stack>
+                                        )}
+
+                                        {buttons.length > 0 && (
+                                            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+                                                {buttons.map((action) => {
+                                                    const key = `${device.deviceId}:${action.name}`;
+                                                    const pending = pendingActions[key] === true;
+                                                    const error = actionErrors[key];
+
+                                                    return (
+                                                        <Box key={key}>
+                                                            <Button
+                                                                size="small"
+                                                                variant="contained"
+                                                                disabled={!device.online || pending || connectionState !== "connected"}
+                                                                onClick={() => sendAction(device, action, true)}
+                                                            >
+                                                                {pending ? <CircularProgress color="inherit" size={16} /> : action.label || formatLabel(action.name)}
+                                                            </Button>
                                                             {error && (
                                                                 <Alert severity="error" sx={{ mt: 1 }}>
                                                                     {error}

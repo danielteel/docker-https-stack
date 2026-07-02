@@ -30,7 +30,6 @@ function getConfiguredDevices(){
 }
 
 exports.seed = async function(knex) {
-    await knex('api_keys').del();
     await knex('user_changeemail').del();
     await knex('user_changepassword').del();
     await knex('users').del();
@@ -49,9 +48,4 @@ exports.seed = async function(knex) {
     if (devices.length) {
         await knex('devices').insert(devices);
     }
-
-    await knex("api_keys").insert({
-        name: "omlet",
-        api_key: process.env.OMLET_API_KEY,
-    });
 };
