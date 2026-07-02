@@ -1,9 +1,11 @@
+const { createDesecPublisher } = require("./desec");
 const { createPecronPublisher } = require("./pecron");
 const { createRtspPublisher } = require("./rtsp");
 
 const publishers = [
   createRtspPublisher(),
   createPecronPublisher(),
+  createDesecPublisher(),
 ];
 
 let stopping = false;

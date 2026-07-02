@@ -1,5 +1,14 @@
 const crypto = require("node:crypto");
 const WebSocket = require("ws");
+const {
+  WSS_HEADERS,
+  backendWsBaseUrl,
+  buildBackendWsUrl,
+  getEnv,
+  isWebSocketOpen,
+  sendJson,
+  validateDeviceId,
+} = require("./common");
 
 const APP_ID = "633";
 const APP_VERSION = "1.9.0";
@@ -543,9 +552,9 @@ function createPecronPublisher() {
   function connectDevice() {
     if (state.shuttingDown) return;
 
-    const ws = new WebSocket(buildWsUrl(config.deviceId), {
+    const ws = new WebSocket(buildBackendWsUrl(config.deviceId), {
       handshakeTimeout: 15000,
-      headers: buildWebSocketHeaders(),
+      headers: WSS_HEADERS,
     });
 
     state.ws = ws;
@@ -585,7 +594,7 @@ function createPecronPublisher() {
 
   async function publishStatus() {
     const ws = state.ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!isWebSocketOpen(ws)) return;
 
     let nextPollMs = config.pollIntervalSeconds * 1000;
     try {
@@ -710,9 +719,7 @@ function pecronTelemetry(status) {
 }
 
 function validatePublisherConfig(value) {
-  if (!value.deviceId || !/^[a-zA-Z0-9_.:-]+$/.test(value.deviceId)) {
-    throw new Error("PECRON_WSS_DEVICE_ID must contain only letters, numbers, underscore, period, colon, or dash.");
-  }
+  validateDeviceId(value.deviceId, "PECRON_WSS_DEVICE_ID");
 
   if (!Number.isFinite(value.pollIntervalSeconds) || value.pollIntervalSeconds < 5) {
     throw new Error("PECRON_WSS_POLL_INTERVAL_SECONDS must be at least 5.");
@@ -720,20 +727,6 @@ function validatePublisherConfig(value) {
 
   if (!Number.isFinite(value.reconnectMs) || value.reconnectMs < 1000) {
     throw new Error("Pecron reconnect delay must be at least 1000.");
-  }
-}
-
-function buildWsUrl(deviceId) {
-  return `${backendWsBaseUrl()}?deviceId=${encodeURIComponent(deviceId)}`;
-}
-
-function buildWebSocketHeaders() {
-  return { "X-Forwarded-Proto": "https" };
-}
-
-function sendJson(ws, value) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(value));
   }
 }
 
@@ -771,18 +764,6 @@ function compactObject(value) {
   return Object.fromEntries(
     Object.entries(value).filter(([, item]) => item !== null && item !== undefined && item !== ""),
   );
-}
-
-function formatPort(port) {
-  return port && port !== "443" ? `:${port}` : "";
-}
-
-function backendWsBaseUrl() {
-  return `ws://backend${formatPort(getEnv("API_PORT", "3000"))}/api/wss-devices/ws`;
-}
-
-function getEnv(name, fallback) {
-  return process.env[name] || fallback;
 }
 
 module.exports = {

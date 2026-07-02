@@ -104,6 +104,9 @@ services:
       - PECRON_DEVICE=${PECRON_DEVICE}
       - PECRON_WSS_DEVICE_ID=${PECRON_WSS_DEVICE_ID:-pecron-power-station}
       - PECRON_WSS_POLL_INTERVAL_SECONDS=${PECRON_WSS_POLL_INTERVAL_SECONDS:-30}
+      - DESEC_TOKEN=${DESEC_TOKEN}
+      - DESEC_DOMAIN=${DESEC_DOMAIN}
+      - DDNS_INTERVAL_SECONDS=${DDNS_INTERVAL_SECONDS:-300}
     depends_on:
       - backend
     networks:
@@ -122,15 +125,6 @@ services:
     networks:
       - database
     restart: unless-stopped
-      
-  desec-ddns:
-    build: ./desec-ddns
-    container_name: desec-ddns
-    environment:
-      DESEC_TOKEN: ${DESEC_TOKEN}
-      DESEC_DOMAIN: ${DESEC_DOMAIN}
-    restart: unless-stopped
-
 networks:
    web:
    database:

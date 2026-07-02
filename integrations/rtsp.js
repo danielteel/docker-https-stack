@@ -1,5 +1,15 @@
 const { spawn, spawnSync } = require("node:child_process");
 const WebSocket = require("ws");
+const {
+  WSS_HEADERS,
+  assertConfig,
+  backendWsBaseUrl,
+  buildBackendWsUrl,
+  getEnv,
+  getRequiredEnv,
+  isWebSocketOpen,
+  sendJson,
+} = require("./common");
 
 function createRtspPublisher() {
   const state = {
@@ -165,9 +175,9 @@ function createRtspPublisher() {
   function connectDevice(device) {
     if (state.shuttingDown) return;
 
-    const ws = new WebSocket(buildWsUrl(device.deviceId), {
+    const ws = new WebSocket(buildBackendWsUrl(device.deviceId), {
       handshakeTimeout: 15000,
-      headers: { "X-Forwarded-Proto": "https" },
+      headers: WSS_HEADERS,
     });
 
     device.ws = ws;
@@ -208,7 +218,7 @@ function createRtspPublisher() {
   function sendDeviceImage(channel, jpeg) {
     const device = state.devices.get(channel);
     const ws = device?.ws;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!isWebSocketOpen(ws)) return;
 
     if (ws.bufferedAmount > state.config.maxBufferedBytes) {
       console.warn(`[channel ${channel}] Dropping frame because websocket buffer is ${ws.bufferedAmount} bytes`);
@@ -248,10 +258,6 @@ function createRtspPublisher() {
     const user = encodeURIComponent(state.config.username);
     const pass = encodeURIComponent(state.config.password);
     return `rtsp://${user}:${pass}@${state.config.host}:${state.config.rtspPort}/cam/realmonitor?channel=${channel}&subtype=${state.config.subtype}`;
-  }
-
-  function buildWsUrl(deviceId) {
-    return `${backendWsBaseUrl()}?deviceId=${encodeURIComponent(deviceId)}`;
   }
 
   function formatDeviceId(channel) {
@@ -339,24 +345,6 @@ function validateConfig(value) {
   assertConfig(Number.isFinite(value.maxBufferedBytes) && value.maxBufferedBytes >= 0, "RTSP max buffered bytes must be zero or a positive number.");
 }
 
-function assertConfig(condition, message) {
-  if (!condition) throw new Error(message);
-}
-
-function sendJson(ws, value) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(value));
-  }
-}
-
-function formatPort(port) {
-  return port && port !== "443" ? `:${port}` : "";
-}
-
-function backendWsBaseUrl() {
-  return `ws://backend${formatPort(getEnv("API_PORT", "3000"))}/api/wss-devices/ws`;
-}
-
 function prefixLines(channel, chunk) {
   return chunk
     .toString()
@@ -382,19 +370,9 @@ function normalizeHost(value) {
   return value.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 }
 
-function getEnv(name, fallback) {
-  return process.env[name] || fallback;
-}
-
 function getOptionalNumberEnv(name) {
   const value = process.env[name];
   return value ? Number(value) : undefined;
-}
-
-function getRequiredEnv(name) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment value: ${name}`);
-  return value;
 }
 
 module.exports = {
